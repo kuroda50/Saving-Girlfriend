@@ -3,13 +3,13 @@ import 'package:saving_girlfriend/screen/home_screen.dart';
 import 'package:saving_girlfriend/screen/select_girlfriend_screen.dart';
 import 'package:saving_girlfriend/screen/select_story_screen.dart';
 import 'package:saving_girlfriend/screen/settings_screen.dart';
+import 'package:saving_girlfriend/screen/story_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:saving_girlfriend/screen/tribute_history_screen.dart';
 
 final router = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/story_screen',
   routes: [
-    StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {}, branches: []),
     GoRoute(
       path: '/',
       builder: (context, state) => HomeScreen(),
@@ -30,5 +30,11 @@ final router = GoRouter(
       path: '/tribute_history',
       builder: (context, state) => TributeHistoryScreen(),
     ),
-  ],
+  GoRoute(
+      path: '/story_screen',
+      builder: (context, state) => StoryScreen(),  
+    ),
+  ]
 );
+
+
