@@ -6,21 +6,19 @@ import 'package:saving_girlfriend/screen/settings_screen.dart';
 import 'package:saving_girlfriend/screen/tribute_history_screen.dart';
 
 final router = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/select_story',
   routes: [
-    StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {}, branches: []),
     GoRoute(
       path: '/',
       builder: (context, state) => HomeScreen(),
     ),
     GoRoute(
       path: '/select_story',
-      builder: (context, state) => SelectStoryScreen(),
+      builder: (context, state) => const EpisodeScreen(),
     ),
     GoRoute(
       path: '/select_girlfriend',
-      builder: (context, state) => SelectGirlfriendScreen(),
+      builder: (context, state) => SelectGirlfriendScreen()
     ),
     GoRoute(
       path: '/settings',
