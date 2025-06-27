@@ -8,8 +8,6 @@ import 'package:saving_girlfriend/screen/tribute_history_screen.dart';
 final router = GoRouter(
   initialLocation: '/',
   routes: [
-    StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {}, branches: []),
     GoRoute(
       path: '/',
       builder: (context, state) => HomeScreen(),
