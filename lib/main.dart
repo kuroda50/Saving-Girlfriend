@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
-import 'package:saving_girlfriend/screen/home_screen.dart';
 import 'package:saving_girlfriend/route/go_router.dart';
 
 void main() {

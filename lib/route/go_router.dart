@@ -3,8 +3,6 @@ import 'package:saving_girlfriend/screen/home_screen.dart';
 import 'package:saving_girlfriend/screen/select_girlfriend_screen.dart';
 import 'package:saving_girlfriend/screen/select_story_screen.dart';
 import 'package:saving_girlfriend/screen/settings_screen.dart';
-import 'package:saving_girlfriend/screen/story_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:saving_girlfriend/screen/tribute_history_screen.dart';
 import 'app_navigation_bar.dart';
 import 'package:flutter/material.dart';
@@ -77,5 +75,3 @@ final router = GoRouter(
         ]),
   ],
 );
-
-
