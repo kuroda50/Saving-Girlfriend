@@ -1,24 +1,5 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'UI Sample',
-      theme: ThemeData(
-        primarySwatch: Colors.pink,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: const HomeScreen(),
-    );
-  }
-}
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -48,7 +29,7 @@ class HomeScreen extends StatelessWidget {
                 // 1. 背景画像 (教室)
                 Positioned.fill(
                   child: Image.asset(
-                    'assets/classroom_background.png', // 教室の画像のパス
+                    'assets/images/classroom.png', // 教室の画像のパス
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -60,7 +41,7 @@ class HomeScreen extends StatelessWidget {
                   child: Align(
                     alignment: Alignment.bottomCenter,
                     child: Image.asset(
-                      'assets/character.png', // キャラクターの画像のパス
+                      'assets/images/suzunari.png', // キャラクターの画像のパス
                       fit: BoxFit.contain,
                       height: MediaQuery.of(context).size.height * 0.6, // 画面の高さに応じて調整
                     ),
@@ -173,35 +154,6 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          // ナビゲーションバー
-          BottomNavigationBar(
-            type: BottomNavigationBarType.fixed, // アイテムが4つの場合はfixedが良い
-            selectedItemColor: Colors.pink,
-            unselectedItemColor: Colors.grey,
-            backgroundColor: Colors.white,
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: 'ホーム',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person), // もし「彼女」を表すアイコンがあればそれを使用
-                label: '彼女',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.history), // 「思い出」を表すアイコン
-                label: '思い出',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.book), // 「記録」を表すアイコン
-                label: '記録',
-              ),
-            ],
-            onTap: (index) {
-              // タップされたアイテムに応じて処理
-              print('Selected tab: $index');
-            },
           ),
         ],
       ),

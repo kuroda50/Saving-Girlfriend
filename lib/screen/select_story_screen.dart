@@ -13,25 +13,6 @@ class Episode {
   Episode({required this.number, required this.title, this.isLocked = false});
 }
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Episode List UI',
-      theme: ThemeData(
-        fontFamily: 'sans-serif',
-      ),
-      home: const EpisodeScreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
 
 class EpisodeScreen extends StatefulWidget {
   const EpisodeScreen({super.key});
@@ -116,21 +97,6 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: '彼女'),
-          BottomNavigationBarItem(icon: Icon(Icons.book_outlined), label: '思い出'),
-          BottomNavigationBarItem(icon: Icon(Icons.description_outlined), label: '記録'),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: darkPinkText,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
-        showUnselectedLabels: true,
       ),
     );
   }
