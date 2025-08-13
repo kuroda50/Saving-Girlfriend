@@ -1,5 +1,24 @@
 import 'package:flutter/material.dart';
 
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'UI Sample',
+      theme: ThemeData(
+        primarySwatch: Colors.pink,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: const HomeScreen(),
+    );
+  }
+}
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -29,21 +48,48 @@ class HomeScreen extends StatelessWidget {
                 // 1. 背景画像 (教室)
                 Positioned.fill(
                   child: Image.asset(
-                    'assets/images/classroom.png', // 教室の画像のパス
+                    'assets/images/教室.png', // 教室の画像のパス
                     fit: BoxFit.cover,
+                    // エラー表示を避けるためのエラーハンドリング
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[200],
+                        child: Center(
+                          child: Text(
+                            '背景画像をロードできませんでした。\nパス: assets/classroom_background.png',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.red, fontSize: 16),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                // 2. キャラクター画像
+                // 2. キャラクター画像 (画面下部中央に調整)
                 Positioned(
-                  bottom: 0, // 必要に応じて調整
-                  left: 0, // 必要に応じて調整
-                  right: 0, // 必要に応じて調整
+                  bottom: 0, // 画面の最下部に配置
+                  left: 0,
+                  right: 0,
                   child: Align(
-                    alignment: Alignment.bottomCenter,
+                    alignment: Alignment.bottomCenter, // 水平方向は中央、垂直方向は下揃え
                     child: Image.asset(
                       'assets/images/suzunari.png', // キャラクターの画像のパス
                       fit: BoxFit.contain,
-                      height: MediaQuery.of(context).size.height * 0.6, // 画面の高さに応じて調整
+                      // 画面の高さの約75%に設定し、画面に収まるように調整
+                      height: MediaQuery.of(context).size.height * 0.5,
+                      // エラー表示を避けるためのエラーハンドリング
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.transparent, // 背景は透明
+                          child: Center(
+                            child: Text(
+                              'キャラクター画像をロードできませんでした。\nパス: assets/images/suzunari.png',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.red, fontSize: 16),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -91,8 +137,9 @@ class HomeScreen extends StatelessWidget {
                 ),
                 // 4. 吹き出し
                 Positioned(
-                  top: MediaQuery.of(context).size.height * 0.2, // キャラクターの位置と合わせて調整
-                  left: MediaQuery.of(context).size.width * 0.2, // キャラクターの位置と合わせて調整
+                  // キャラクターの頭の位置に合わせて調整
+                  top: MediaQuery.of(context).size.height * 0.15,
+                  left: MediaQuery.of(context).size.width * 0.2,
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
@@ -112,9 +159,9 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                // 5. 下部のハートと円のアイコン（画像から推測）
+                // 5. 下部の円のアイコン（画像から推測）
                 Positioned(
-                  bottom: MediaQuery.of(context).size.height * 0.05, // 画面下部からの位置を調整
+                  bottom: MediaQuery.of(context).size.height * 0.02, // 画面下部からの位置を調整
                   right: 20,
                   child: Column(
                     children: [
@@ -131,23 +178,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.favorite, color: Colors.white, size: 30),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.pink.withOpacity(0.8),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.pink.withOpacity(0.4),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(Icons.currency_yen, color: Colors.white, size: 30), // 円マークのアイコン
+                        child: const Icon(Icons.currency_yen, color: Colors.white, size: 45), // 円マークのアイコン
                       ),
                     ],
                   ),
@@ -155,6 +186,7 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
+          // ナビゲーションバー (もしあればここに追加)
         ],
       ),
     );
