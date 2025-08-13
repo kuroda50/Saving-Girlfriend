@@ -26,6 +26,7 @@ android {
     namespace "com.example.saving_girlfriend"
     compileSdk flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
+    compileSdkVersion 33
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -45,8 +46,8 @@ android {
         applicationId "com.example.saving_girlfriend"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
-        targetSdkVersion flutter.targetSdkVersion
+        minSdkVersion 22
+        targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
@@ -67,4 +68,20 @@ flutter {
 
 dependencies {
     implementation project(':unityLibrary')
+}
+
+// android/app/build.gradle の一番下にある古いブロックを削除し、
+// この新しいブロックに完全に置き換えてください。
+
+configurations.all {
+    resolutionStrategy {
+        force 'androidx.webkit:webkit:1.8.0'
+        force 'androidx.lifecycle:lifecycle-livedata:2.6.1'
+        force 'androidx.lifecycle:lifecycle-livedata-core:2.6.1'
+        force 'androidx.lifecycle:lifecycle-livedata-core-ktx:2.6.1'
+        force 'androidx.lifecycle:lifecycle-process:2.6.1'
+
+        force 'androidx.lifecycle:lifecycle-runtime:2.6.1' 
+        force 'androidx.lifecycle:lifecycle-viewmodel:2.6.1'
+    }
 }
