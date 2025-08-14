@@ -1,7 +1,10 @@
 import 'package:device_preview/device_preview.dart';
+import 'package:go_router/go_router.dart';
 /* ストーリー選択画面 */
 
 import 'package:flutter/material.dart';
+import 'package:saving_girlfriend/constants/assets.dart';
+import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 
 // --- データモデル ---
@@ -19,6 +22,7 @@ class Episode {
     this.showUnlockedIcon = false, // デフォルト値
   });
 }
+
 class EpisodeScreen extends StatefulWidget {
   const EpisodeScreen({super.key});
 
@@ -28,7 +32,6 @@ class EpisodeScreen extends StatefulWidget {
 
 class _EpisodeScreenState extends State<EpisodeScreen> {
   // --- UIの色の定義 ---
-  static const Color primaryPink = Color(0xFFF7AABF);
   static const Color lightPink = Color(0xFFFEDDE4);
   static const Color darkPinkText = Color(0xFFE5749A);
   static const Color playButtonColor = Color(0xFFF882A3);
@@ -36,7 +39,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
 
   final LocalStorageService _localStorageService = LocalStorageService();
 
-  Future<int> _loadLikeability (String characterId) async{
+  Future<int> _loadLikeability(String characterId) async {
     return await _localStorageService.getLikeability(characterId);
   }
 
@@ -72,7 +75,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    final likeability =_loadLikeability("a");
+    final likeability = _loadLikeability("a");
   }
 
   @override
@@ -88,7 +91,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(20.0),
         child: AppBar(
-          backgroundColor: primaryPink,
+          backgroundColor: AppColors.secondary,
           elevation: 0,
         ),
       ),
@@ -96,13 +99,12 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
         children: [
           // ★★★ ヘッダーをContainerで囲み、影を付けます ★★★
           Container(
-            decoration: BoxDecoration(
-              // ★★★ ここを変更しました ★★★
+            decoration: const BoxDecoration(
               // ヘッダー部分の背景色を白に変更
-              color: Colors.white,
+              color: AppColors.mainBackground,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: AppColors.shadow,
                   blurRadius: 4.0,
                   offset: const Offset(0, 2), // 下方向に影を伸ばす
                 ),
@@ -130,6 +132,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
                   return EpisodeListItem(
                     episode: episode,
                     onPlay: () {
+                      context.push("/select_story/story");
                       print('Play episode ${episode.number}');
                     },
                     onInfo: () {
@@ -156,13 +159,14 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
             width: 100,
             height: 100,
             child: Image.asset(
-              'assets/images/suzunari.png',
+              AppAssets.characterSuzunari,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
                 return const CircleAvatar(
                   radius: 40,
                   backgroundColor: lightPink,
-                  child: Icon(Icons.person, color: primaryPink, size: 50),
+                  child:
+                      Icon(Icons.person, color: AppColors.secondary, size: 50),
                 );
               },
             ),
@@ -181,6 +185,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
     );
   }
 }
+
 // --- 再利用可能なエピソード行ウィジェット（微調整版） ---
 class EpisodeListItem extends StatelessWidget {
   final Episode episode;
@@ -188,7 +193,6 @@ class EpisodeListItem extends StatelessWidget {
   final VoidCallback onInfo;
   static const Color playButtonColor = Color(0xFFF882A3);
   static const Color listItemColor = Color(0xFFFFFBEA);
-  static const Color lockColor = Color(0xFFF7AABF);
 
   const EpisodeListItem({
     super.key,
@@ -214,13 +218,13 @@ class EpisodeListItem extends StatelessWidget {
             decoration: BoxDecoration(
                 color: listItemColor,
                 borderRadius: BorderRadius.circular(30.0),
-               border: Border.all(color: Colors.grey[300]!, width: 1.5),
-                boxShadow: [
+                border: Border.all(color: AppColors.border, width: 1.5),
+                boxShadow: const [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: AppColors.shadow,
                     spreadRadius: 1,
                     blurRadius: 3,
-                    offset: const Offset(0, 2),
+                    offset: Offset(0, 2),
                   )
                 ]),
             child: Row(
@@ -252,7 +256,7 @@ class EpisodeListItem extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.play_arrow,
-                        color: Colors.white, size: 24),
+                        color: AppColors.mainIcon, size: 24),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -266,7 +270,7 @@ class EpisodeListItem extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.info_outline,
-                        color: Colors.white, size: 20),
+                        color: AppColors.mainIcon, size: 20),
                   ),
                 ),
               ],
@@ -283,8 +287,8 @@ class EpisodeListItem extends StatelessWidget {
                 height: iconSize,
                 child: Image.asset(
                   episode.isLocked
-                      ? 'assets/images/lock_closed.png'
-                      : 'assets/images/lock_open.png',
+                      ? AppAssets.iconLockClosed
+                      : AppAssets.iconLockOpen,
                   fit: BoxFit.contain,
                 ),
               ),

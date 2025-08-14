@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:saving_girlfriend/constants/assets.dart';
 
 class AppNavigationBar extends StatelessWidget {
   const AppNavigationBar({
@@ -18,14 +19,9 @@ class AppNavigationBar extends StatelessWidget {
         destinations: [
           const NavigationDestination(icon: Icon(Icons.home), label: 'ホーム'),
           const NavigationDestination(icon: Icon(Icons.person), label: '彼女'),
-          // NavigationDestination(
-          //   icon: Image.asset('images/Gemini_Generated_Image_9pzle39pzle39pzl.png',
-          //       width: 24, height: 24), // 画像のパスとサイズを指定
-          //   label: '思い出',
-          // ),
           const NavigationDestination(icon: Icon(Icons.menu_book), label: '思い出'),
           NavigationDestination(
-            icon: Image.asset('images/kiroku.png',
+            icon: Image.asset(AppAssets.iconKiroku,
                 width: 24, height: 24), // 画像のパスとサイズを指定
             label: '記録',
           ),
