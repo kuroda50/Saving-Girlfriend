@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
+
 class AppColors {
-  static const Color mainPink = Colors.pink;
-  static const Color subPink = Colors.pinkAccent;
-  static const Color firstPink = Color(0xFFE383AB);
-  static const Color secondPink = Color(0xFFEEB0CA);
-  static final Color thirdPink = Colors.pink[200]!;
-  static final Color forthPink = Colors.pink[300]!;
-  static const Color white = Colors.white;
-  static const Color firstBlack = Colors.black;
-  static const Color secondBlack = Colors.black26;
-  static const Color thirdBlack = Colors.black87;
-  static const Color firstGray = Colors.grey;
-  static final Color secondGray = Colors.grey[50]!;
-  static final Color thirdGray = Colors.grey[300]!;
-  static final Color forthGray = Colors.grey[800]!;
+  static const Color primary = Colors.pink;
+  static const Color secondary = Color(0xFFF7AABF);
+    
+  static const Color mainText = Colors.black;
+  static const Color subText = Colors.white;
+
+  static const Color mainBackground = Colors.white;
+  static const Color subBackground = Colors.black;
+  static final Color thirdBackground = Colors.grey.shade700;
+
+  static const Color mainIcon = Colors.white;
+  static const Color subIcon = Colors.grey;
+
+  static const Color shadow = Color.fromRGBO(0, 0, 0, 0.1);
+  static final Color border = Colors.grey[300]!;
+  static const Color nonActive = Colors.grey;//非アクティブカラー
+  
+  static const Color error = Colors.red;
+  static const Color errorBackground = Color(0xFFFFEBEE);//エラー時の背景
+
 }

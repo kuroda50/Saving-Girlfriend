@@ -1,8 +1,7 @@
 /*ストーリー画面*/
 
 import 'package:flutter/material.dart';
-
-
+import '../color/color.dart';
 
 class StoryScreen extends StatelessWidget {
   const StoryScreen({super.key});
@@ -10,7 +9,6 @@ class StoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // 背景ここに貼り付けて
       body: Stack(
         children: [
           //キャラ画像
@@ -28,7 +26,7 @@ class StoryScreen extends StatelessWidget {
               color: Colors.pink[300],
               child: const Text(
                 '第１話',
-                style: TextStyle(color: Colors.white, fontSize: 18),
+                style: TextStyle(color: AppColors.subText, fontSize: 18),
               ),
             ),
           ),
@@ -46,7 +44,7 @@ class StoryScreen extends StatelessWidget {
               child: const Text(
                 '鈴鳴 おと',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.subText,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -62,11 +60,11 @@ class StoryScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.95),
+                color: AppColors.mainBackground.withOpacity(0.95),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black26,
+                    color: AppColors.nonActive,
                     blurRadius: 4,
                     offset: Offset(0, 2),
                   ),
@@ -84,7 +82,7 @@ class StoryScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 8),
-                  Icon(Icons.favorite, color: Colors.pink),
+                  Icon(Icons.favorite, color: AppColors.primary),
                 ],
               ),
             ),
@@ -106,26 +104,6 @@ class StoryScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          // メニューの4つ
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  _MenuItem(icon: Icons.home, label: 'ホーム'),
-                  _MenuItem(icon: Icons.person, label: '彼女'),
-                  _MenuItem(icon: Icons.menu_book, label: '思い出'),
-                  _MenuItem(icon: Icons.description, label: '記録'),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -134,12 +112,12 @@ class StoryScreen extends StatelessWidget {
   Widget _circleButton(IconData icon) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.pinkAccent,
+        color: AppColors.primary,
         shape: BoxShape.circle,
       ),
       child: IconButton(
         icon: Icon(icon),
-        color: Colors.white,
+        color: AppColors.mainIcon,
         onPressed: () {},
       ),
     );

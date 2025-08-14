@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:saving_girlfriend/color/color.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../color/color.dart';
 
 class TributeHistoryScreen extends StatelessWidget {
   const TributeHistoryScreen({super.key});
@@ -110,7 +112,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
         ),
         borderData: FlBorderData(
           show: true,
-          border: Border.all(color: const Color(0xff37434d), width: 1),
+          border: Border.all(color: AppColors.border, width: 1),
         ),
         minX: 1,
         maxX: _getDaysInMonth(currentMonth).toDouble(),
@@ -138,9 +140,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: const Color(0xFFE383AB),
+          backgroundColor: AppColors.secondary,
         ),
-        backgroundColor: Colors.grey[50],
         body: SingleChildScrollView(
             child: Column(children: [
           // カレンダー部分
@@ -148,11 +149,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.mainBackground,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Colors.grey,
+                  color: AppColors.border,
                   spreadRadius: 1,
                   blurRadius: 4,
                   offset: Offset(0, 2),
@@ -213,14 +214,15 @@ class _BudgetScreenState extends State<BudgetScreen> {
                                 height: 30,
                                 decoration: BoxDecoration(
                                   color: day == '日' || day == '土'
-                                      ? Colors.grey[800]
-                                      : Colors.black,
+                                      ? 
+                                      AppColors.thirdBackground
+                                      : AppColors.subBackground,
                                 ),
                                 child: Center(
                                   child: Text(
                                     day,
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.subText,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
                                     ),
@@ -252,8 +254,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     return Container(
                       margin: const EdgeInsets.all(1),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey[300]!),
-                        color: Colors.white,
+                        border: Border.all(color: AppColors.border),
+                        color: AppColors.mainBackground,
                       ),
                       child: isCurrentMonthDay
                           ? Column(
@@ -284,11 +286,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.mainBackground,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Colors.grey,
+                  color: AppColors.shadow,
                   spreadRadius: 1,
                   blurRadius: 4,
                   offset: Offset(0, 2),
@@ -319,11 +321,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.mainBackground,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: AppColors.shadow,
                   spreadRadius: 1,
                   blurRadius: 4,
                   offset: const Offset(0, 2),
@@ -355,7 +357,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey),
+                                  border: Border.all(color: AppColors.border),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: const Text(
@@ -377,11 +379,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.mainBackground,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: AppColors.shadow,
                   spreadRadius: 1,
                   blurRadius: 4,
                   offset: const Offset(0, 2),
@@ -394,13 +396,13 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black,
+                    color: AppColors.subBackground,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text(
                     '目標設定',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.subText,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
