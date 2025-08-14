@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:saving_girlfriend/color/color.dart';
+import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../color/color.dart';
+import '../constants/color.dart';
 
 class TributeHistoryScreen extends StatelessWidget {
   const TributeHistoryScreen({super.key});

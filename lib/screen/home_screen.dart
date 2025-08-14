@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:saving_girlfriend/constants/assets.dart';
 import 'dart:convert';
-import '../color/color.dart';
+import '../constants/color.dart';
 import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -21,7 +22,7 @@ class HomeScreen extends StatelessWidget {
                 // 1. 背景画像 (教室)
                 Positioned.fill(
                   child: Image.asset(
-                    'assets/images/classroom.png', // 教室の画像のパス
+                    AppAssets.backgroundClassroom, // 教室の画像のパス
                     fit: BoxFit.cover,
                     // エラー表示を避けるためのエラーハンドリング
                     errorBuilder: (context, error, stackTrace) {
@@ -29,7 +30,7 @@ class HomeScreen extends StatelessWidget {
                         color: AppColors.errorBackground,
                         child: const Center(
                           child: Text(
-                            '背景画像をロードできませんでした。\nパス: assets/classroom_background.png',
+                            '背景画像をロードできませんでした。\nパス: ${AppAssets.backgroundClassroom}',
                             textAlign: TextAlign.center,
                             style:
                                 TextStyle(color: AppColors.error, fontSize: 16),
@@ -47,7 +48,7 @@ class HomeScreen extends StatelessWidget {
                   child: Align(
                     alignment: Alignment.bottomCenter, // 水平方向は中央、垂直方向は下揃え
                     child: Image.asset(
-                      'assets/images/suzunari.png', // キャラクターの画像のパス
+                      AppAssets.characterSuzunari, // キャラクターの画像のパス
                       fit: BoxFit.contain,
                       // 画面の高さの約75%に設定し、画面に収まるように調整
                       height: MediaQuery.of(context).size.height * 0.5,
@@ -57,7 +58,7 @@ class HomeScreen extends StatelessWidget {
                           color: AppColors.errorBackground, // 背景は透明
                           child: const Center(
                             child: Text(
-                              'キャラクター画像をロードできませんでした。\nパス: assets/images/suzunari.png',
+                              'キャラクター画像をロードできませんでした。\nパス: ${AppAssets.characterSuzunari}',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                   color: AppColors.error, fontSize: 16),

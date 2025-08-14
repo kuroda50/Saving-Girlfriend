@@ -1,7 +1,7 @@
 /*ストーリー画面*/
 
 import 'package:flutter/material.dart';
-import '../color/color.dart';
+import '../constants/color.dart';
 
 class StoryScreen extends StatelessWidget {
   const StoryScreen({super.key});

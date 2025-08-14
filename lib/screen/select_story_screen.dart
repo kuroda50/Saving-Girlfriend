@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 /* ストーリー選択画面 */
 
 import 'package:flutter/material.dart';
-import 'package:saving_girlfriend/color/color.dart';
+import 'package:saving_girlfriend/constants/assets.dart';
+import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 
 // --- データモデル ---
@@ -158,7 +159,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
             width: 100,
             height: 100,
             child: Image.asset(
-              'assets/images/suzunari.png',
+              AppAssets.characterSuzunari,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
                 return const CircleAvatar(
@@ -286,8 +287,8 @@ class EpisodeListItem extends StatelessWidget {
                 height: iconSize,
                 child: Image.asset(
                   episode.isLocked
-                      ? 'assets/images/lock_closed.png'
-                      : 'assets/images/lock_open.png',
+                      ? AppAssets.iconLockClosed
+                      : AppAssets.iconLockOpen,
                   fit: BoxFit.contain,
                 ),
               ),
