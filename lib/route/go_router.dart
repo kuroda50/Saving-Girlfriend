@@ -41,15 +41,6 @@ final router = GoRouter(
               ],
             ),
           ]),
-          StatefulShellBranch(navigatorKey: selectStoryNavigatorKey, routes: [
-            GoRoute(
-              path: '/select_story',
-              pageBuilder: (context, state) => NoTransitionPage(
-                key: state.pageKey,
-                child: const SelectStoryScreen(),
-              ),
-            ),
-          ]),
           StatefulShellBranch(
               navigatorKey: selectGirlfriendNavigatorKey,
               routes: [
@@ -61,6 +52,15 @@ final router = GoRouter(
                   ),
                 ),
               ]),
+          StatefulShellBranch(navigatorKey: selectStoryNavigatorKey, routes: [
+            GoRoute(
+              path: '/select_story',
+              pageBuilder: (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const EpisodeScreen(),
+              ),
+            ),
+          ]),
           StatefulShellBranch(
               navigatorKey: tributeHistoryNavigatorKey,
               routes: [
