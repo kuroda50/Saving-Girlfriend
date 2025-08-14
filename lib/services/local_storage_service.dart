@@ -88,3 +88,15 @@ class LocalStorageService {
     return prefs.getDouble(_bgmVolumeKey) ?? 0.75; // Default to 0.75
   }
 }
+
+// <データ設計>
+// current_character: "characterA" (String)
+// characterA_likeability: 85(int)
+// [
+//   {"character": "A", "date": "2024-06-25", "amount": 1000},
+//   {"character": "B", "date": "2024-06-26", "amount": 500}
+// ]List<String>
+// target_saving_amount: 100000 (int)
+// default_contribution_amount: 500 (int)
+// notifications_enabled: true (bool)
+// bgm_volume: 0.75 (double)

@@ -19,33 +19,6 @@ class Episode {
     this.showUnlockedIcon = false, // デフォルト値
   });
 }
-
-// void main() は、あなたのアプリの別のファイル(main.dartなど)にあるはずなので、ここではコメントアウトします。
-// もしこのファイルだけで動かす場合は、コメントを解除してください。
-/*
-void main() {
-  runApp(const MyApp());
-}
-*/
-
-// このファイルがメインの画面であることを想定してMyAppもここに含めます。
-// もし別のファイルにある場合は、この部分は不要です。
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Episode List UI',
-      theme: ThemeData(
-        fontFamily: 'sans-serif',
-      ),
-      home: const EpisodeScreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
-
 class EpisodeScreen extends StatefulWidget {
   const EpisodeScreen({super.key});
 

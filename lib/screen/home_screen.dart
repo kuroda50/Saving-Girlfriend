@@ -1,130 +1,168 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-// StatefulWidgetの名前をHomeScreenに変更
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _controller = TextEditingController();
-
-  int _totalSavings = 0;
-  String _girlfriendMessage = "今日からよろしくね！";
-  String _girlfriendImagePath = "assets/images/normal.png";
-  bool _isLoading = false;
-
-  // ★あなたのPCのIPアドレスをここに設定
-  final String _serverUrl = 'http://192.168.11.44:5000/girlfriend_reaction';
-
-  Future<void> _saveMoney() async {
-    final int amount = int.tryParse(_controller.text) ?? 0;
-    
-    setState(() {
-      _isLoading = true;
-      _girlfriendMessage = "えーっと・・・";
-    });
-
-    try {
-      final response = await http.post(
-        Uri.parse(_serverUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'savings_amount': amount}),
-      ).timeout(const Duration(seconds: 10));
-
-      String newReaction;
-      String newEmotion;
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
-        newReaction = data['reaction'];
-        newEmotion = data['emotion'];
-      } else {
-        newReaction = "ごめんね、今ちょっと考えごと…。";
-        newEmotion = "neutral";
-      }
-
-      setState(() {
-        _totalSavings += amount;
-        _girlfriendMessage = newReaction;
-        _girlfriendImagePath = _getImagePathForEmotion(newEmotion);
-      });
-
-    } catch (e) {
-      setState(() {
-        _girlfriendMessage = "電波が悪いみたい…。後で話そ？";
-        _girlfriendImagePath = _getImagePathForEmotion("neutral");
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-      _controller.clear();
-    }
-  }
-
-  String _getImagePathForEmotion(String emotion) {
-    switch (emotion) {
-      case 'very_happy':
-        return 'assets/images/very_happy.png';
-      case 'happy':
-        return 'assets/images/happy.png';
-      case 'curious':
-        return 'assets/images/curious.png';
-      case 'neutral':
-      default:
-        return 'assets/images/normal.png';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Scaffoldで画面全体を構成
-    return Scaffold(
-      appBar: AppBar(title: const Text('貯金彼女')),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(30.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                '合計貯金額: $_totalSavings円',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              Image.asset(_girlfriendImagePath, height: 250, gaplessPlayback: true),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: Colors.pink[50], borderRadius: BorderRadius.circular(12)),
-                child: Text(_girlfriendMessage, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
-              ),
-              const SizedBox(height: 30),
-              TextField(
-                controller: _controller,
-                keyboardType: const TextInputType.numberWithOptions(signed: true),
-                decoration: const InputDecoration(labelText: '貯金額を入力', border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 20),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _saveMoney,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                        textStyle: const TextStyle(fontSize: 18),
-                      ),
-                      child: const Text('貯金する！'),
-                    ),
-            ],
-          ),
+      appBar: AppBar(
+        title: const Text('無題', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: Colors.black, // または濃い灰色
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () {
+            // メニューアイコンの処理
+          },
         ),
+        actions: const [
+          // AppBarの右側に何か追加するならここに
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                // 1. 背景画像 (教室)
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/教室.png', // 教室の画像のパス
+                    fit: BoxFit.cover,
+                    // エラー表示を避けるためのエラーハンドリング
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[200],
+                        child: Center(
+                          child: Text(
+                            '背景画像をロードできませんでした。\nパス: assets/classroom_background.png',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.red, fontSize: 16),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                // 2. キャラクター画像 (画面下部中央に調整)
+                Positioned(
+                  bottom: 0, // 画面の最下部に配置
+                  left: 0,
+                  right: 0,
+                  child: Align(
+                    alignment: Alignment.bottomCenter, // 水平方向は中央、垂直方向は下揃え
+                    child: Image.asset(
+                      'assets/images/suzunari.png', // キャラクターの画像のパス
+                      fit: BoxFit.contain,
+                      // 画面の高さの約75%に設定し、画面に収まるように調整
+                      height: MediaQuery.of(context).size.height * 0.5,
+                      // エラー表示を避けるためのエラーハンドリング
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.transparent, // 背景は透明
+                          child: Center(
+                            child: Text(
+                              'キャラクター画像をロードできませんでした。\nパス: assets/images/suzunari.png',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.red, fontSize: 16),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                // 3. 上部の情報バー
+                Positioned(
+                  top: 20, // 適宜調整
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.settings, color: Colors.grey),
+                          onPressed: () {
+                            // 設定アイコンの処理
+                          },
+                        ),
+                        Text(
+                          '5回目継続中!!',
+                          style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: LinearProgressIndicator(
+                              value: 0.5, // プログレスの現在値（例: 0.5で50%）
+                              backgroundColor: Colors.grey.shade300,
+                              valueColor: const AlwaysStoppedAnimation<Color>(Colors.pink),
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.favorite, color: Colors.pink, size: 18),
+                        const Text('50', style: TextStyle(color: Colors.black, fontSize: 14)),
+                        const Text('/100', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ),
+                // 4. 吹き出し
+                Positioned(
+                  // キャラクターの頭の位置に合わせて調整
+                  top: MediaQuery.of(context).size.height * 0.15,
+                  left: MediaQuery.of(context).size.width * 0.2,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'いつもありがとうございます先輩！\n大好きです…',
+                      style: TextStyle(fontSize: 14, color: Colors.black87),
+                    ),
+                  ),
+                ),
+                // 5. 下部の円のアイコン（画像から推測）
+                Positioned(
+                  bottom: MediaQuery.of(context).size.height * 0.02, // 画面下部からの位置を調整
+                  right: 20,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.pink.withOpacity(0.8),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.pink.withOpacity(0.4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.currency_yen, color: Colors.white, size: 45), // 円マークのアイコン
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // ナビゲーションバー (もしあればここに追加)
+        ],
       ),
     );
   }
