@@ -9,12 +9,9 @@ import 'package:flutter/material.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
-final selectStoryNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'select_story');
-final selectGirlfriendNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'select_girlfriend');
-final tributeHistoryNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'tribute_history');
+final selectStoryNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'select_story');
+final selectGirlfriendNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'select_girlfriend');
+final tributeHistoryNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'tribute_history');
 
 final router = GoRouter(
   navigatorKey: rootNavigatorKey,
