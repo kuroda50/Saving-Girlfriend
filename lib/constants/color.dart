@@ -8,7 +8,7 @@ class AppColors {
   static const Color subText = Colors.white;
 
   static const Color mainBackground = Colors.white;
-  static const Color subBackground = Colors.black;
+  static const Color subBackground = Color.fromARGB(255, 16, 6, 6);
   static final Color thirdBackground = Colors.grey.shade700;
 
   static const Color mainIcon = Colors.white;
