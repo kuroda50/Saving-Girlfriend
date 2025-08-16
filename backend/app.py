@@ -76,7 +76,7 @@ def get_ai_reaction(user_input: str, saving_amount: int) -> dict:
         prompt_with_context = user_input
         
     completion = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4o",
         messages=[
             {
                 "role": "system",
