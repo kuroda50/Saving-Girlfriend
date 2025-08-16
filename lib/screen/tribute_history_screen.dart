@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../constants/color.dart';
+import 'package:intl/intl.dart';
 
 class TributeHistoryScreen extends StatelessWidget {
   const TributeHistoryScreen({super.key});
@@ -34,7 +34,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
   Future<void> _loadData() async {
     final tributeHistory = await _localStorageService.getTributeHistory();
-    final targetSavingAmount = await _localStorageService.getTargetSavingAmount() ?? 0;
+    final targetSavingAmount =
+        await _localStorageService.getTargetSavingAmount() ?? 0;
     setState(() {
       _tributeHistory = tributeHistory;
       _targetSavingAmount = targetSavingAmount;
@@ -49,10 +50,12 @@ class _BudgetScreenState extends State<BudgetScreen> {
       final int amount = tribute['amount'] as int;
       if (date != null && amount != null) {
         final DateTime tributeDate = DateTime.parse(date);
-        if (tributeDate.month == currentMonth && tributeDate.year == currentYear) {
+        if (tributeDate.month == currentMonth &&
+            tributeDate.year == currentYear) {
           final String formattedDate =
               '${tributeDate.year}-${tributeDate.month.toString().padLeft(2, '0')}-${tributeDate.day.toString().padLeft(2, '0')}';
-          _dailyTributes[formattedDate] = (_dailyTributes[formattedDate] ?? 0) + amount;
+          _dailyTributes[formattedDate] =
+              (_dailyTributes[formattedDate] ?? 0) + amount;
         }
       }
     }
@@ -71,15 +74,34 @@ class _BudgetScreenState extends State<BudgetScreen> {
   Widget _buildLineChart() {
     List<FlSpot> spots = [];
     double maxY = 0;
+    double minY = 0;
+
+    if (_dailyTributes.isNotEmpty) {
+      // データがある場合、初回値として最初に見つかった値をセット
+      maxY = _dailyTributes.values.first.toDouble();
+      minY = _dailyTributes.values.first.toDouble();
+    }
 
     for (int i = 1; i <= _getDaysInMonth(currentMonth); i++) {
       final String dateString =
           '${currentYear}-${currentMonth.toString().padLeft(2, '0')}-${i.toString().padLeft(2, '0')}';
       final int dailyTribute = _dailyTributes[dateString] ?? 0;
       spots.add(FlSpot(i.toDouble(), dailyTribute.toDouble()));
+      // maxとminを更新する
       if (dailyTribute > maxY) {
         maxY = dailyTribute.toDouble();
       }
+      if (dailyTribute < minY) {
+        minY = dailyTribute.toDouble();
+      }
+    }
+    // Y軸の表示範囲に少し余白を持たせる
+    double finalMaxY = maxY <= 0 ? 100 : maxY * 1.2;
+    double finalMinY = minY >= 0 ? 0 : minY * 1.2;
+
+    // もし最大値と最小値が同じなら、表示範囲を適切に設定
+    if (finalMaxY == finalMinY) {
+      finalMaxY += 100;
     }
 
     return LineChart(
@@ -107,8 +129,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
               },
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(
           show: true,
@@ -116,19 +140,19 @@ class _BudgetScreenState extends State<BudgetScreen> {
         ),
         minX: 1,
         maxX: _getDaysInMonth(currentMonth).toDouble(),
-        minY: 0,
-        maxY: maxY == 0 ? 100 : maxY * 1.2, // Adjust maxY for better visualization
+        minY: finalMinY,
+        maxY: finalMaxY,
         lineBarsData: [
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: Colors.pink,
+            color: AppColors.primary,
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.pink.withOpacity(0.3),
+              color: AppColors.primary.withOpacity(0.3),
             ),
           ),
         ],
@@ -156,7 +180,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   color: AppColors.border,
                   spreadRadius: 1,
                   blurRadius: 4,
-                  offset: Offset(0, 2),
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -167,7 +191,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.chevron_left, color: Colors.pink),
+                      icon: const Icon(Icons.chevron_left,
+                          color: AppColors.primary),
                       onPressed: () {
                         setState(() {
                           if (currentMonth == 1) {
@@ -188,7 +213,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.chevron_right, color: Colors.pink),
+                      icon: const Icon(Icons.chevron_right,
+                          color: AppColors.primary),
                       onPressed: () {
                         setState(() {
                           if (currentMonth == 12) {
@@ -214,8 +240,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                                 height: 30,
                                 decoration: BoxDecoration(
                                   color: day == '日' || day == '土'
-                                      ? 
-                                      AppColors.thirdBackground
+                                      ? AppColors.thirdBackground
                                       : AppColors.subBackground,
                                 ),
                                 child: Center(
@@ -242,13 +267,14 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     crossAxisCount: 7,
                     childAspectRatio: 1.0,
                   ),
-                  itemCount: _getDaysInMonth(currentMonth) + _getStartDayOfMonth(),
+                  itemCount:
+                      _getDaysInMonth(currentMonth) + _getStartDayOfMonth(),
                   itemBuilder: (context, index) {
                     final int day = index - _getStartDayOfMonth() + 1;
                     final bool isCurrentMonthDay =
                         day > 0 && day <= _getDaysInMonth(currentMonth);
                     final String dateString =
-                        '${DateTime.now().year}-${currentMonth.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+                        '$currentYear-${currentMonth.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
                     final int dailyTribute = _dailyTributes[dateString] ?? 0;
 
                     return Container(
@@ -265,52 +291,17 @@ class _BudgetScreenState extends State<BudgetScreen> {
                                   day.toString(),
                                   style: const TextStyle(fontSize: 12),
                                 ),
-                                if (dailyTribute > 0)
+                                if (dailyTribute != 0)
                                   Text(
                                     '${dailyTribute}円',
                                     style: const TextStyle(
-                                        fontSize: 10, color: Colors.pink),
+                                        fontSize: 10, color: AppColors.primary),
                                   ),
                               ],
                             )
                           : Container(),
                     );
                   },
-                ),
-              ],
-            ),
-          ),
-
-          // 折れ線グラフ部分
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.mainBackground,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.shadow,
-                  spreadRadius: 1,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '月間貢ぎ額推移',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 200,
-                  child: _buildLineChart(),
                 ),
               ],
             ),
@@ -323,12 +314,12 @@ class _BudgetScreenState extends State<BudgetScreen> {
             decoration: BoxDecoration(
               color: AppColors.mainBackground,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: AppColors.shadow,
                   spreadRadius: 1,
                   blurRadius: 4,
-                  offset: const Offset(0, 2),
+                  offset: Offset(0, 2),
                 ),
               ],
             ),
@@ -348,7 +339,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(expense['date']),
+                          Text(DateFormat('yyyy-MM-dd')
+                              .format(DateTime.parse(expense['date']))),
                           Row(
                             children: [
                               Text('${expense['amount']}円'),
@@ -381,12 +373,12 @@ class _BudgetScreenState extends State<BudgetScreen> {
             decoration: BoxDecoration(
               color: AppColors.mainBackground,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: AppColors.shadow,
                   spreadRadius: 1,
                   blurRadius: 4,
-                  offset: const Offset(0, 2),
+                  offset: Offset(0, 2),
                 ),
               ],
             ),
@@ -434,4 +426,3 @@ class ExpenseItem {
 
   const ExpenseItem({required this.date, required this.amount});
 }
-

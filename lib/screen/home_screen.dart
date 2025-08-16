@@ -4,6 +4,7 @@ import '../constants/color.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../services/local_storage_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,17 +14,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  var girlfriendText = 'いつもありがとうございます先輩！\n大好きです…';
+  var girlfriendText = 'おはようございます先輩！ 今日も可愛いですね❤';
 
-  Future<void> aiChat(message) async {
+  Future<void> aiChat(message, saveAmount) async {
     //デプロイするときは、URLを本番環境に変える
-    final url = Uri.parse('http://172.20.21.213:5000/girlfriend_reaction');
+    final url = Uri.parse('http://192.168.50.81:5000/girlfriend_reaction');
+    var userInput, saveInput;
+    if (saveAmount == 0) {
+      userInput = message;
+      saveInput = 0;
+    } else {
+      userInput = message;
+      saveInput = saveAmount;
+    }
     //デプロイするときは、URLを本番環境に変える
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'user_input': message}),
+        body:
+            jsonEncode({'user_input': userInput, 'savings_amount': saveInput}),
       );
 
       if (response.statusCode == 200) {
@@ -188,7 +198,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       GestureDetector(
-                        onTap: () => _showTransactionModal(context),
+                        onTap: () => _showTransactionModal(
+                          context,
+                          (category, amount) => aiChat(category, amount),
+                        ),
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -214,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: MediaQuery.of(context).size.width * 0.9,
                         child: ChatInputWidget(
                           onSendMessage: (message) {
-                            aiChat(message);
+                            aiChat(message, 0);
                             print('送信されたメッセージ: $message');
                           },
                           hintText: '彼女と会話しましょう！',
@@ -286,11 +299,11 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.all(Radius.circular(16)),
         color: widget.backgroundColor ?? theme.colorScheme.surface,
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: AppColors.shadow,
             blurRadius: 4,
-            offset: const Offset(0, -2),
+            offset: Offset(0, -2),
           ),
         ],
       ),
@@ -355,7 +368,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 }
 
 // 支出、収入を入力するモーダルウィンドウを表示する関数
-void _showTransactionModal(BuildContext context) {
+void _showTransactionModal(BuildContext context, Function(String, int) onSave) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true, // キーボード表示時にUIが隠れないようにする
@@ -368,7 +381,7 @@ void _showTransactionModal(BuildContext context) {
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: const TransactionInputModal(),
+        child: TransactionInputModal(onSave: onSave),
       );
     },
   );
@@ -376,22 +389,31 @@ void _showTransactionModal(BuildContext context) {
 
 // 収支入力モーダルのUIを定義するStatefulWidget
 class TransactionInputModal extends StatefulWidget {
-  const TransactionInputModal({super.key});
+  final Function(String, int) onSave;
+  const TransactionInputModal({required this.onSave, super.key});
 
   @override
   State<TransactionInputModal> createState() => _TransactionInputModalState();
 }
 
 class _TransactionInputModalState extends State<TransactionInputModal> {
-  // 状態管理用の変数
-  // 支出or収入、金額、日付、カテゴリ、メモがあっても良いかも
   bool _isExpense = true; // true: 支出, false: 収入
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+  final LocalStorageService _localStorageService = LocalStorageService();
 
-  // ダミーのカテゴリリスト（実際のアプリでは外部から取得・管理してください）
-  final List<String> _expenseCategories = ['食費', '交通費', '趣味', '交際費', 'その他'];
-  final List<String> _incomeCategories = ['給与', 'お小遣い', '副業', 'その他'];
+  String? _selectedCategory;
+  // 支出カテゴリのリスト
+  final List<String> _expenseCategories = [
+    '食費',
+    '交通費',
+    '趣味・娯楽',
+    '交際費',
+    '日用品',
+    'その他'
+  ];
+  // 収入カテゴリのリスト
+  final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
 
   @override
   void dispose() {
@@ -415,14 +437,21 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
   }
 
   // 保存ボタンが押されたときの処理
-  void _saveTransaction() {
+  void _saveTransaction() async {
     final amount = int.tryParse(_amountController.text);
 
-    // バリデーション
+    // 金額のバリデーション
     if (amount == null || amount <= 0) {
-      // エラーメッセージを表示するなどの処理
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('金額とカテゴリを正しく入力してください。')),
+        const SnackBar(content: Text('金額を正しく入力してください。')),
+      );
+      return;
+    }
+
+    // カテゴリ選択のバリデーション
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('カテゴリを選択してください。')),
       );
       return;
     }
@@ -431,19 +460,51 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     print('【保存データ】');
     print('種類: ${_isExpense ? "支出" : "収入"}');
     print('金額: $amount');
-    print('日付: $_selectedDate');
+    print('日付: ${_selectedDate.toIso8601String()}');
+    print('カテゴリ: $_selectedCategory'); // --- ◀ 修正 ---
+    List<Map<String, dynamic>> currentHistory =
+        await _localStorageService.getTributeHistory();
+    Map<String, dynamic> newTribute = {
+      "character": "A",
+      "date": _selectedDate.toIso8601String(),
+      "amount": _isExpense ? -amount : amount, //支出なら負の数にして保存
+      "category": _selectedCategory!
+    };
+    currentHistory.add(newTribute);
+    try {
+      await _localStorageService.saveTributeHistory(currentHistory);
+      widget.onSave(_selectedCategory!, _isExpense ? -amount : amount);
+    } catch (error) {
+      print("エラー: $error");
+      // ユーザーにSnackBarでエラーを通知
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'データの保存に失敗しました。もう一度お試しください。',
+            style: TextStyle(color: AppColors.error, fontSize: 16),
+          ),
+          backgroundColor: AppColors.errorBackground,
+        ),
+      );
+    }
 
     // モーダルを閉じる
+    if (!mounted) return;
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    // 支出/収入に応じて表示するカテゴリリストを切り替え
-    final currentCategories = _isExpense ? _expenseCategories : _incomeCategories;
-
+    final currentCategories =
+        _isExpense ? _expenseCategories : _incomeCategories;
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      // キーボード表示時にUIが隠れないようにPaddingを調整
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 24,
+          right: 24,
+          top: 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -462,11 +523,12 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
               onPressed: (index) {
                 setState(() {
                   _isExpense = index == 0;
+                  _selectedCategory = null;
                 });
               },
               borderRadius: BorderRadius.circular(8),
-              selectedColor: Colors.white,
-              fillColor: _isExpense ? AppColors.primary : Colors.blueAccent,
+              selectedColor: AppColors.subText,
+              fillColor: _isExpense ? AppColors.primary : AppColors.secondary,
               children: const [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24),
@@ -492,7 +554,30 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
+          // カテゴリ選択のドロップダウン
+          DropdownButtonFormField<String>(
+            value: _selectedCategory,
+            hint: const Text('カテゴリを選択'),
+            decoration: const InputDecoration(
+              labelText: 'カテゴリ',
+              prefixIcon: Icon(Icons.category_outlined),
+              border: OutlineInputBorder(),
+            ),
+            items: currentCategories.map((String category) {
+              return DropdownMenuItem<String>(
+                value: category,
+                child: Text(category),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedCategory = newValue;
+              });
+            },
+          ),
+          const SizedBox(height: 24),
+
           // 日付選択
           InkWell(
             onTap: () => _selectDate(context),
@@ -500,14 +585,16 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined, color: Colors.grey),
+                  const Icon(Icons.calendar_today_outlined,
+                      color: AppColors.subIcon),
                   const SizedBox(width: 12),
                   Text(
                     '日付: ${MaterialLocalizations.of(context).formatShortDate(_selectedDate)}',
                     style: const TextStyle(fontSize: 16),
                   ),
                   const Spacer(),
-                  const Icon(Icons.edit_outlined, color: Colors.grey, size: 20),
+                  const Icon(Icons.edit_outlined,
+                      color: AppColors.subIcon, size: 20),
                 ],
               ),
             ),
@@ -522,7 +609,8 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.mainIcon,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              textStyle:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             child: const Text('保存する'),
           ),
