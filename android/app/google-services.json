@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "843825700230",
+    "project_id": "saving-girlfriend",
+    "storage_bucket": "saving-girlfriend.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:843825700230:android:42e01764efe4fa3b71a007",
+        "android_client_info": {
+          "package_name": "com.example.saving_girlfriend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBg_zLdpVLoLkOZ0Ul9qBWlkmPYgzCt54Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
