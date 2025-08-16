@@ -9,14 +9,13 @@ class StoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.secondary,
+      ),
       body: Stack(
         children: [
           //キャラ画像
-          Positioned(
-            bottom: 150,
-            left: 40,
-            child:Text('ad')
-          ),
+          const Positioned(bottom: 150, left: 40, child: Text('ad')),
           // 第1話ラベル（画面左上）
           Positioned(
             top: 40,
@@ -62,7 +61,7 @@ class StoryScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.mainBackground.withOpacity(0.95),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: AppColors.nonActive,
                     blurRadius: 4,
@@ -70,10 +69,10 @@ class StoryScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Row(
+              child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  //吹き出し中イラスト                   
+                children: [
+                  //吹き出し中イラスト
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -120,25 +119,6 @@ class StoryScreen extends StatelessWidget {
         color: AppColors.mainIcon,
         onPressed: () {},
       ),
-    );
-  }
-}
-
-class _MenuItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _MenuItem({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 28),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 12)),
-      ],
     );
   }
 }

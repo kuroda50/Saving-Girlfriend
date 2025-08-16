@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 
 class TributeHistoryScreen extends StatelessWidget {
@@ -69,95 +68,6 @@ class _BudgetScreenState extends State<BudgetScreen> {
     return DateTime(currentYear, currentMonth, 1).weekday == 7
         ? 0
         : DateTime(currentYear, currentMonth, 1).weekday;
-  }
-
-  Widget _buildLineChart() {
-    List<FlSpot> spots = [];
-    double maxY = 0;
-    double minY = 0;
-
-    if (_dailyTributes.isNotEmpty) {
-      // データがある場合、初回値として最初に見つかった値をセット
-      maxY = _dailyTributes.values.first.toDouble();
-      minY = _dailyTributes.values.first.toDouble();
-    }
-
-    for (int i = 1; i <= _getDaysInMonth(currentMonth); i++) {
-      final String dateString =
-          '${currentYear}-${currentMonth.toString().padLeft(2, '0')}-${i.toString().padLeft(2, '0')}';
-      final int dailyTribute = _dailyTributes[dateString] ?? 0;
-      spots.add(FlSpot(i.toDouble(), dailyTribute.toDouble()));
-      // maxとminを更新する
-      if (dailyTribute > maxY) {
-        maxY = dailyTribute.toDouble();
-      }
-      if (dailyTribute < minY) {
-        minY = dailyTribute.toDouble();
-      }
-    }
-    // Y軸の表示範囲に少し余白を持たせる
-    double finalMaxY = maxY <= 0 ? 100 : maxY * 1.2;
-    double finalMinY = minY >= 0 ? 0 : minY * 1.2;
-
-    // もし最大値と最小値が同じなら、表示範囲を適切に設定
-    if (finalMaxY == finalMinY) {
-      finalMaxY += 100;
-    }
-
-    return LineChart(
-      LineChartData(
-        gridData: const FlGridData(show: false),
-        titlesData: FlTitlesData(
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 30,
-              getTitlesWidget: (value, meta) {
-                return SideTitleWidget(
-                  axisSide: meta.axisSide,
-                  child: Text(value.toInt().toString()),
-                );
-              },
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 40,
-              getTitlesWidget: (value, meta) {
-                return Text(value.toInt().toString());
-              },
-            ),
-          ),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        ),
-        borderData: FlBorderData(
-          show: true,
-          border: Border.all(color: AppColors.border, width: 1),
-        ),
-        minX: 1,
-        maxX: _getDaysInMonth(currentMonth).toDouble(),
-        minY: finalMinY,
-        maxY: finalMaxY,
-        lineBarsData: [
-          LineChartBarData(
-            spots: spots,
-            isCurved: true,
-            color: AppColors.primary,
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(
-              show: true,
-              color: AppColors.primary.withOpacity(0.3),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
