@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/local_storage_service.dart';
+import '../providers/tribute_history_provider.dart';
 
 // 1. LocalStorageServiceを提供するシンプルなProvider
 final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
@@ -40,7 +41,7 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
     // state = state.copyWith(isLoading: true); // ローディング開始
 
     final url = Uri.parse('http://192.168.0.126:5000/girlfriend_reaction');
-    
+
     try {
       final response = await http.post(
         url,
@@ -53,6 +54,18 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
         print('AIリアクション: ${data['reaction']} / 感情: ${data['emotion']}');
         // stateを更新してUIに変更を通知
         state = state.copyWith(girlfriendText: data['reaction']);
+        // 貢いだ金額が0でない場合のみ、履歴を追加する
+        if (saveAmount != 0) {
+          // 履歴に追加するデータを作成
+          final newTribute = {
+            'date': DateTime.now().toIso8601String(),
+            'amount': saveAmount,
+          };
+          // ref を使って他のProvider(tributeHistoryProvider)のメソッドを呼び出す
+          await ref
+              .read(tributeHistoryProvider.notifier)
+              .addTribute(newTribute);
+        }
       } else {
         print('APIエラー: ${response.body}');
         state = state.copyWith(girlfriendText: 'ごめんなさい、ちょっと調子が悪いです…');
@@ -67,6 +80,7 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
 }
 
 // 上記のNotifierをUIから使えるようにするためのProvider
-final homeScreenProvider = NotifierProvider<HomeScreenNotifier, HomeScreenState>(() {
+final homeScreenProvider =
+    NotifierProvider<HomeScreenNotifier, HomeScreenState>(() {
   return HomeScreenNotifier();
 });
