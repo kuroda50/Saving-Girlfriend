@@ -1,58 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import '../constants/color.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../services/local_storage_service.dart';
+import '../providers/home_screen_provider.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // ref.watchでProviderの状態を監視
+    final homeState = ref.watch(homeScreenProvider);
+    final girlfriendText = homeState.girlfriendText;
 
-class _HomeScreenState extends State<HomeScreen> {
-  var girlfriendText = 'おはようございます先輩！ 今日も可愛いですね❤';
-
-  Future<void> aiChat(message, saveAmount) async {
-    //デプロイするときは、URLを本番環境に変える
-    final url = Uri.parse('http://192.168.50.81:5000/girlfriend_reaction');
-    var userInput, saveInput;
-    if (saveAmount == 0) {
-      userInput = message;
-      saveInput = 0;
-    } else {
-      userInput = message;
-      saveInput = saveAmount;
+    // aiChatメソッドはNotifier経由で呼び出す
+    void handleSendMessage(String message, int amount) {
+      ref.read(homeScreenProvider.notifier).aiChat(message, amount);
     }
-    //デプロイするときは、URLを本番環境に変える
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body:
-            jsonEncode({'user_input': userInput, 'savings_amount': saveInput}),
-      );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('AIリアクション: ${data['reaction']} / 感情: ${data['emotion']}');
-        setState(() {
-          girlfriendText = data['reaction'];
-          // ここに表情差分
-        });
-      } else {
-        print('APIエラー: ${response.body}');
-      }
-    } catch (error) {
-      print('通信エラー: $error');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
@@ -200,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       GestureDetector(
                         onTap: () => _showTransactionModal(
                           context,
-                          (category, amount) => aiChat(category, amount),
+                          (category, amount) => handleSendMessage(category, amount),
                         ),
                         child: Container(
                           padding: const EdgeInsets.all(8),
@@ -227,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: MediaQuery.of(context).size.width * 0.9,
                         child: ChatInputWidget(
                           onSendMessage: (message) {
-                            aiChat(message, 0);
+                            handleSendMessage(message, 0);
                             print('送信されたメッセージ: $message');
                           },
                           hintText: '彼女と会話しましょう！',
