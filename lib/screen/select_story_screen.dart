@@ -43,16 +43,6 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
     return await _localStorageService.getLikeability(characterId);
   }
 
-  // --- ボトムナビゲーションバーの状態管理 ---
-  int _selectedIndex = 0;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    print('Tapped on tab: $index');
-  }
-
   // --- エピソードデータのリスト ---
   final List<Episode> episodes = [
     Episode(number: 0, title: '出会い', isLocked: false, showUnlockedIcon: true),
