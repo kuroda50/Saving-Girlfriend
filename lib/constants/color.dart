@@ -10,9 +10,12 @@ class AppColors {
   static const Color mainBackground = Colors.white;
   static const Color subBackground = Color.fromARGB(255, 16, 6, 6);
   static final Color thirdBackground = Colors.grey.shade700;
+  static const Color forthBackground = Color(0xFFE6F0F5);
 
   static const Color mainIcon = Colors.white;
   static const Color subIcon = Colors.grey;
+  
+  static const Color mainLogo = Color(0xFFE5749A);
 
   static const Color shadow = Color.fromRGBO(0, 0, 0, 0.1);
   static final Color border = Colors.grey[300]!;

@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/services/local_storage_service.dart';
 import 'package:saving_girlfriend/providers/home_screen_provider.dart';
 
 // --- ① UIに表示するデータ（お皿）の定義 ---
