@@ -31,10 +31,6 @@ class EpisodeScreen extends StatefulWidget {
 
 class _EpisodeScreenState extends State<EpisodeScreen> {
   // --- UIの色の定義 ---
-  static const Color lightPink = Color(0xFFFEDDE4);
-  static const Color darkPinkText = Color(0xFFE5749A);
-  static const Color playButtonColor = Color(0xFFF882A3);
-  static const Color backgroundColor = Color(0xFFE6F0F5);
 
   final LocalStorageService _localStorageService = LocalStorageService();
 
@@ -76,7 +72,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColors.forthBackground,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(20.0),
         child: AppBar(
@@ -153,7 +149,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
               errorBuilder: (context, error, stackTrace) {
                 return const CircleAvatar(
                   radius: 40,
-                  backgroundColor: lightPink,
+                  backgroundColor: AppColors.errorBackground,
                   child:
                       Icon(Icons.person, color: AppColors.secondary, size: 50),
                 );
@@ -166,7 +162,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: darkPinkText,
+              color: AppColors.mainLogo,
             ),
           ),
         ],
