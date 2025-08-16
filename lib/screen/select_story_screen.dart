@@ -1,4 +1,3 @@
-import 'package:device_preview/device_preview.dart';
 import 'package:go_router/go_router.dart';
 /* ストーリー選択画面 */
 
