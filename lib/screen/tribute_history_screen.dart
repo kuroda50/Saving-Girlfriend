@@ -234,55 +234,55 @@ class TributeHistoryScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.mainBackground,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: AppColors.shadow,
-                        spreadRadius: 1,
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.subBackground,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          '目標設定',
-                          style: TextStyle(
-                            color: AppColors.subText,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '合計金額  ${state.targetSavingAmount}円',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          const Text(
-                            '目標の    80%',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                // Container(
+                //   margin: const EdgeInsets.all(16),
+                //   padding: const EdgeInsets.all(16),
+                //   decoration: BoxDecoration(
+                //     color: AppColors.mainBackground,
+                //     borderRadius: BorderRadius.circular(12),
+                //     boxShadow: const [
+                //       BoxShadow(
+                //         color: AppColors.shadow,
+                //         spreadRadius: 1,
+                //         blurRadius: 4,
+                //         offset: Offset(0, 2),
+                //       ),
+                //     ],
+                //   ),
+                  // child: Row(
+                  //   children: [
+                  //     Container(
+                  //       padding: const EdgeInsets.symmetric(
+                  //           horizontal: 12, vertical: 6),
+                  //       decoration: BoxDecoration(
+                  //         color: AppColors.subBackground,
+                  //         borderRadius: BorderRadius.circular(4),
+                  //       ),
+                  //       child: const Text(
+                  //         '目標設定',
+                  //         style: TextStyle(
+                  //           color: AppColors.subText,
+                  //           fontWeight: FontWeight.bold,
+                  //         ),
+                  //       ),
+                  //     ),
+                  //     const Spacer(),
+                  //     Column(
+                  //       crossAxisAlignment: CrossAxisAlignment.end,
+                  //       children: [
+                  //         Text(
+                  //           '合計金額  ${state.targetSavingAmount}円',
+                  //           style: const TextStyle(fontSize: 12),
+                  //         ),
+                  //         const Text(
+                  //           '目標の    80%',
+                  //           style: TextStyle(fontSize: 12),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ],
+                  // ),
+                // ),
               ],
             ),
           );
