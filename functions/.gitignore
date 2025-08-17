@@ -1,9 +1,6 @@
-# 仮想環境フォルダ（これは巨大で不要なので無視する）
-venv/
-
-# APIキーなどの秘密情報ファイル（これは絶対に見せてはいけない）
-.env
-
-# Pythonが自動で生成するキャッシュファイル（これも不要）
+# Python bytecode
 __pycache__/
-*.pyc
+
+# Python virtual environment
+venv/
+*.local

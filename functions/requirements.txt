@@ -1,4 +1,4 @@
-Flask
+functions-framework
+flask
 flask-cors
 openai
-gunicorn

@@ -2,10 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from openai import OpenAI
-from dotenv import load_dotenv
-
-# .envファイルから環境変数を読み込む
-load_dotenv()
+import functions_framework
 
 # Flaskアプリケーションの初期化
 app = Flask(__name__)
@@ -120,7 +117,6 @@ def girlfriend_reaction_endpoint():
     response_data = get_ai_reaction(user_input, savings_amount)
     return jsonify(response_data)
 
-
-# Flaskサーバーを起動
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+@functions_framework.http
+def api(request):
+    return app(request)
