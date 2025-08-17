@@ -9,6 +9,7 @@ class AppAssets {
   static const String backgroundClassroom = '$_background/classroom.png';
   // --- Character ---
   static const String characterSuzunari = '$_character/suzunari.png';
+  static const String characterComingsoon = '$_character/comingsoon.webp';
   // --- Icon ---
   static const String iconKiroku = '$_icon/kiroku.png';
   static const String iconLockClosed = '$_icon/lock_closed.png';
