@@ -40,7 +40,7 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
   Future<void> aiChat(String message, int saveAmount) async {
     // state = state.copyWith(isLoading: true); // ローディング開始
 
-    final url = Uri.parse('http://172.20.10.2:5000/girlfriend_reaction');//ipアドレスに注意！
+    final url = Uri.parse('http://10.191.102.208:5000/girlfriend_reaction');//ipアドレスに注意！
 
     try {
       final response = await http.post(
