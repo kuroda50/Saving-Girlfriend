@@ -1,22 +1,22 @@
-import 'package:saving_girlfriend/widgets/transaction_modal.dart'; // ★これを追加
+import 'package:saving_girlfriend/widgets/transaction_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import '../constants/color.dart';
 import 'package:go_router/go_router.dart';
-import '../services/local_storage_service.dart';
 import '../providers/home_screen_provider.dart';
+
+// ChatInputWidgetが別のファイルにある場合は、そのimport文をここに追加してください
+// import '.../chat_input_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ref.watchでProviderの状態を監視
     final homeState = ref.watch(homeScreenProvider);
     final girlfriendText = homeState.girlfriendText;
 
-    // aiChatメソッドはNotifier経由で呼び出す
     void handleSendMessage(String message, int amount) {
       ref.read(homeScreenProvider.notifier).aiChat(message, amount);
     }
@@ -26,7 +26,6 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: AppColors.secondary,
       ),
       body: Column(
-
         children: [
           Expanded(
             child: Stack(
@@ -34,9 +33,8 @@ class HomeScreen extends ConsumerWidget {
                 // 1. 背景画像 (教室)
                 Positioned.fill(
                   child: Image.asset(
-                    AppAssets.backgroundClassroom, // 教室の画像のパス
+                    AppAssets.backgroundClassroom,
                     fit: BoxFit.cover,
-                    // エラー表示を避けるためのエラーハンドリング
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: AppColors.errorBackground,
@@ -54,20 +52,18 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 // 2. キャラクター画像 (画面下部中央に調整)
                 Positioned(
-                  bottom: 0, // 画面の最下部に配置
+                  bottom: 0,
                   left: 0,
                   right: 0,
                   child: Align(
-                    alignment: Alignment.bottomCenter, // 水平方向は中央、垂直方向は下揃え
+                    alignment: Alignment.bottomCenter,
                     child: Image.asset(
-                      AppAssets.characterSuzunari, // キャラクターの画像のパス
+                      AppAssets.characterSuzunari,
                       fit: BoxFit.contain,
-                      // 画面の高さの約75%に設定し、画面に収まるように調整
                       height: MediaQuery.of(context).size.height * 0.5,
-                      // エラー表示を避けるためのエラーハンドリング
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: AppColors.errorBackground, // 背景は透明
+                          color: AppColors.errorBackground,
                           child: const Center(
                             child: Text(
                               'キャラクター画像をロードできませんでした。\nパス: ${AppAssets.characterSuzunari}',
@@ -83,7 +79,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 // 3. 上部の情報バー
                 Positioned(
-                  top: 20, // 適宜調整
+                  top: 20,
                   left: 20,
                   right: 20,
                   child: Container(
@@ -113,7 +109,7 @@ class HomeScreen extends ConsumerWidget {
                           child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8.0),
                             child: LinearProgressIndicator(
-                              value: 0.5, // プログレスの現在値（例: 0.5で50%）
+                              value: 0.5,
                               backgroundColor: AppColors.nonActive,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                   AppColors.primary),
@@ -134,7 +130,6 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 // 4. 吹き出し
                 Positioned(
-                  // キャラクターの頭の位置に合わせて調整
                   top: MediaQuery.of(context).size.height * 0.15,
                   left: MediaQuery.of(context).size.width * 0.2,
                   child: Container(
@@ -158,24 +153,22 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                // 5. アイコンとチャット入力欄
+                // 5. チャット入力欄と支出入力ボタン
                 Positioned(
-                  bottom:
-                      MediaQuery.of(context).size.height * 0.02, // 画面下部からの位置を調整
+                  bottom: MediaQuery.of(context).size.height * 0.02,
                   right: 20,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       GestureDetector(
                         onTap: () => showTransactionModal(
-                              context,
-                              onSave: (newTributeData) {
-                                // ★ AIへの通知（handleSendMessage）だけを呼び出す
-                                final category = newTributeData['category'] as String;
-                                final amount = newTributeData['amount'] as int;
-                                handleSendMessage(category, amount);
-                              },
-                            ),
+                          context,
+                          onSave: (newTributeData) {
+                            final category = newTributeData['category'] as String;
+                            final amount = newTributeData['amount'] as int;
+                            handleSendMessage(category, amount);
+                          },
+                        ),
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -190,18 +183,16 @@ class HomeScreen extends ConsumerWidget {
                             ],
                           ),
                           child: const Icon(Icons.currency_yen,
-                              color: AppColors.mainIcon, size: 45), // 円マークのアイコン
+                              color: AppColors.mainIcon, size: 45),
                         ),
                       ),
-                      const SizedBox(
-                        height: 10,
-                      ),
+                      const SizedBox(height: 10),
                       SizedBox(
                         height: 70,
                         width: MediaQuery.of(context).size.width * 0.9,
                         child: ChatInputWidget(
                           onSendMessage: (message) {
-                            handleSendMessage(message, 0);
+                            handleSendMessage(message, 0); // 💡 `amount`を固定値に変更
                             print('送信されたメッセージ: $message');
                           },
                           hintText: '彼女と会話しましょう！',
@@ -221,6 +212,7 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
+// ChatInputWidget クラスは元のまま
 class ChatInputWidget extends StatefulWidget {
   final Function(String) onSendMessage;
   final String? hintText;
@@ -342,7 +334,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 }
 
 // 支出、収入を入力するモーダルウィンドウを表示する関数
-void _showTransactionModal(
+void showTransactionModal(
   BuildContext context, {
   required Function(Map<String, dynamic>) onSave,
   Map<String, dynamic>? initialTribute,
@@ -367,12 +359,12 @@ void _showTransactionModal(
 
 // 収支入力モーダルのUIを定義するStatefulWidget
 class TransactionInputModal extends StatefulWidget {
-  final Function(Map<String, dynamic>) onSave; // ★引数の型を変更
-  final Map<String, dynamic>? initialTribute;   // ★追加
+  final Function(Map<String, dynamic>) onSave;
+  final Map<String, dynamic>? initialTribute;
 
   const TransactionInputModal({
     required this.onSave,
-    this.initialTribute, // ★追加
+    this.initialTribute,
     super.key
   });
 
@@ -381,13 +373,13 @@ class TransactionInputModal extends StatefulWidget {
 }
 
 class _TransactionInputModalState extends State<TransactionInputModal> {
-  bool _isExpense = true; // true: 支出, false: 収入
+  bool _isExpense = true;
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  final LocalStorageService _localStorageService = LocalStorageService();
+  // LocalStorageServiceは適宜実装してください
+  // final LocalStorageService _localStorageService = LocalStorageService();
 
   String? _selectedCategory;
-  // 支出カテゴリのリスト
   final List<String> _expenseCategories = [
     '食費',
     '交通費',
@@ -396,7 +388,6 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     '日用品',
     'その他'
   ];
-  // 収入カテゴリのリスト
   final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
 
   @override
@@ -405,15 +396,12 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     super.dispose();
   }
 
-   // ★★★↓ このinitStateメソッドをまるごと追加 ↓★★★
   @override
   void initState() {
     super.initState();
-    // もし編集データが渡されたら、入力欄にその値を設定する
     if (widget.initialTribute != null) {
       final tribute = widget.initialTribute!;
       final amount = tribute['amount'] as int;
-
       _isExpense = amount < 0;
       _amountController.text = amount.abs().toString();
       _selectedDate = DateTime.parse(tribute['date']);
@@ -421,13 +409,12 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     }
   }
 
-  // 日付選択ダイアログを表示する関数
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)), // 1年先まで選択可能
+      lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -436,40 +423,32 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     }
   }
 
-  // 保存ボタンが押されたときの処理
-    // ★★★↓ _saveTransactionメソッドをこの内容に置き換え ↓★★★
   void _saveTransaction() {
-  final amount = int.tryParse(_amountController.text);
+    final amount = int.tryParse(_amountController.text);
+    if (amount == null || amount <= 0 || _selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('金額とカテゴリを正しく入力してください。')),
+      );
+      return;
+    }
 
-  // バリデーション
-  if (amount == null || amount <= 0 || _selectedCategory == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('金額とカテゴリを正しく入力してください。')),
-    );
-    return;
+    Map<String, dynamic> tributeData = {
+      'id': widget.initialTribute?['id'] ?? 'tribute_${DateTime.now().millisecondsSinceEpoch}',
+      'character': "A",
+      'date': _selectedDate.toIso8601String(),
+      'amount': _isExpense ? -amount : amount,
+      'category': _selectedCategory!
+    };
+
+    widget.onSave(tributeData);
+    Navigator.of(context).pop();
   }
-
-  // ★ 親に渡すためのデータを作成する
-  Map<String, dynamic> tributeData = {
-    // もし編集モードなら、元のIDを維持。新規なら、新しいIDを作成。
-    'id': widget.initialTribute?['id'] ?? 'tribute_${DateTime.now().millisecondsSinceEpoch}',
-    'character': "A", // この値は既存のロジックに合わせています
-    'date': _selectedDate.toIso8601String(),
-    'amount': _isExpense ? -amount : amount,
-    'category': _selectedCategory!
-  };
-
-  // ★ コールバックでMap全体を渡し、後の処理はすべて親に任せる
-  widget.onSave(tributeData);
-  Navigator.of(context).pop();
-}
 
   @override
   Widget build(BuildContext context) {
     final currentCategories =
         _isExpense ? _expenseCategories : _incomeCategories;
     return SingleChildScrollView(
-      // キーボード表示時にUIが隠れないようにPaddingを調整
       padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
           left: 24,
@@ -486,7 +465,6 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
           ),
           const SizedBox(height: 24),
 
-          // 支出/収入の切り替え
           Center(
             child: ToggleButtons(
               isSelected: [_isExpense, !_isExpense],
@@ -513,7 +491,6 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
           ),
           const SizedBox(height: 20),
 
-          // 金額入力
           TextField(
             controller: _amountController,
             keyboardType: TextInputType.number,
@@ -525,7 +502,6 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
           ),
           const SizedBox(height: 16),
 
-          // カテゴリ選択のドロップダウン
           DropdownButtonFormField<String>(
             value: _selectedCategory,
             hint: const Text('カテゴリを選択'),
@@ -548,7 +524,6 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
           ),
           const SizedBox(height: 24),
 
-          // 日付選択
           InkWell(
             onTap: () => _selectDate(context),
             child: Padding(
@@ -572,7 +547,6 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
           const Divider(),
           const SizedBox(height: 10),
 
-          // 保存ボタン
           ElevatedButton(
             onPressed: _saveTransaction,
             style: ElevatedButton.styleFrom(
