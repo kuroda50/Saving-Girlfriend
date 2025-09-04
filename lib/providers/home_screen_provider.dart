@@ -12,33 +12,58 @@ final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
 // 2. HomeScreenの状態を管理するためのNotifierとProvider
 // 画面の状態を定義するクラス
 class HomeScreenState {
+  final String userId;
   final String girlfriendText;
-  // 他にも管理したい状態があればここに追加（例: final bool isLoading;）
+  final bool isLoading;
 
   HomeScreenState({
+    this.userId = '', // userIdの初期値を追加
     this.girlfriendText = 'おはようございます先輩！ 今日も可愛いですね❤',
-    // this.isLoading = false,
+    this.isLoading = false, // isLoadingの初期値を追加
   });
 
-  // 状態をコピーして新しい状態を作るためのメソッド
-  HomeScreenState copyWith({String? girlfriendText, bool? isLoading}) {
+  HomeScreenState copyWith({
+    String? userId,
+    String? girlfriendText,
+    bool? isLoading,
+  }) {
     return HomeScreenState(
+      userId: userId ?? this.userId,
       girlfriendText: girlfriendText ?? this.girlfriendText,
-      // isLoading: isLoading ?? this.isLoading,
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 }
 
 // 状態とロジックを管理するNotifierクラス
 class HomeScreenNotifier extends Notifier<HomeScreenState> {
+  // LocalStorageServiceのインスタンスを取得
+  final _localStorageService = LocalStorageService();
+
   @override
   HomeScreenState build() {
-    return HomeScreenState(); // 初期状態
+    // Notifierの初期化時に、保存されているユーザーIDを読み込む
+    _loadUserId();
+    return HomeScreenState();
   }
 
-  // aiChatロジックをここに移動
+  // ★★★↓ このメソッドをまるごと追加 ↓★★★
+  Future<void> _loadUserId() async {
+    String? userId = await _localStorageService.getUserId();
+    if (userId == null || userId.isEmpty) {
+      userId = 'user_${DateTime.now().millisecondsSinceEpoch}'; 
+      await _localStorageService.saveUserId(userId);
+    }
+    state = state.copyWith(userId: userId);
+  }
+
+  // ★★★↓ aiChatメソッドをこの内容に置き換え ↓★★★
   Future<void> aiChat(String message, int saveAmount) async {
-    // state = state.copyWith(isLoading: true); // ローディング開始
+    if (state.userId.isEmpty) {
+      await _loadUserId();
+    }
+
+    state = state.copyWith(isLoading: true);
 
     final url = Uri.parse('http://10.191.102.208:5000/girlfriend_reaction');//ipアドレスに注意！
 
@@ -46,40 +71,38 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'user_input': message, 'savings_amount': saveAmount}),
+        // bodyにuser_idを追加
+        body: jsonEncode({
+          'user_id': state.userId, // ★ここでユーザーIDを送信
+          'user_input': message,
+          'savings_amount': saveAmount,
+        }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('AIリアクション: ${data['reaction']} / 感情: ${data['emotion']}');
-        // stateを更新してUIに変更を通知
         state = state.copyWith(girlfriendText: data['reaction']);
-        // 貢いだ金額が0でない場合のみ、履歴を追加する
+        
         if (saveAmount != 0) {
-          // 履歴に追加するデータを作成
           final newTribute = {
             'date': DateTime.now().toIso8601String(),
             'amount': saveAmount,
+            'category': message,
           };
-          // ref を使って他のProvider(tributeHistoryProvider)のメソッドを呼び出す
-          await ref
-              .read(tributeHistoryProvider.notifier)
-              .addTribute(newTribute);
+          await ref.read(tributeHistoryProvider.notifier).addTribute(newTribute);
         }
       } else {
-        print('APIエラー: ${response.body}');
         state = state.copyWith(girlfriendText: 'ごめんなさい、ちょっと調子が悪いです…');
       }
     } catch (error) {
-      print('通信エラー: $error');
       state = state.copyWith(girlfriendText: '通信エラーみたいです…電波届いてますか？');
     } finally {
-      // state = state.copyWith(isLoading: false); // ローディング終了
+      state = state.copyWith(isLoading: false);
     }
   }
 }
 
-// 上記のNotifierをUIから使えるようにするためのProvider
+// NotifierとStateをUIから使えるようにするためのProvider
 final homeScreenProvider =
     NotifierProvider<HomeScreenNotifier, HomeScreenState>(() {
   return HomeScreenNotifier();

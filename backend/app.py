@@ -62,37 +62,44 @@ SYSTEM_PROMPT = """
         出力例：「んー？ どうしたんですか、スマホの入力ミス？❤」「（笑）…先輩、もしかして眠いんですか？私が膝枕してあげましょうか？❤」 
     """
 
+# ユーザーごとの会話履歴を保存する場所
+conversation_histories = {}
 
-def get_ai_reaction(user_input: str, saving_amount: int) -> dict:
-    print(f"--- ユーザの入力: {user_input} 貢ぎ額: {saving_amount} ---")
-    if(saving_amount != 0):
-        prompt_with_context = f"""
-        ユーザーは家計簿をつけており、あなたにその内容を報告します。
-        報告は「金額（プラスが収入、マイナスが支出）」を含みます。
-        あなたはその内容に対して、恋人らしい自然な反応を返してください。
-        カテゴリ「{user_input}」で{saving_amount}円の収支がありました。
-        """
+# この関数をまるごと置き換え
+def get_ai_reaction(user_id: str, user_input: str, saving_amount: int) -> dict:
+    # ユーザーIDに対応する会話履歴を取得（なければ新規作成）
+    if user_id not in conversation_histories:
+        conversation_histories[user_id] = []
+    history = conversation_histories[user_id]
+
+    # 今回のユーザーの発言を履歴に追加
+    if saving_amount != 0:
+        prompt_with_context = f"カテゴリ「{user_input}」で{saving_amount}円の収支がありました。"
     else:
         prompt_with_context = user_input
-        
+    history.append({"role": "user", "content": prompt_with_context})
+
+    # AIに渡すためのメッセージリストを組み立てる
+    messages_for_api = [
+        {"role": "system", "content": SYSTEM_PROMPT}
+    ]
+    messages_for_api.extend(history) # ★過去の履歴をすべて追加
+
+    # AIを呼び出す
     completion = client.chat.completions.create(
         model="gpt-4o",
-        messages=[
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT,
-            },
-            {
-                "role": "user",
-                "content": prompt_with_context,
-            },
-        ],
+        messages=messages_for_api,
     )
     ai_message = completion.choices[0].message.content
-    print(ai_message)
-    # return {"reaction": completion.choices[0].message.content, "emotion": "very_happy"}
 
-    # 貯金額に応じて、あらかじめ用意したメッセージと感情を返す
+    # AIの返事も履歴に追加する
+    history.append({"role": "assistant", "content": ai_message})
+
+    # 古い履歴を削除して長くなりすぎないように制御（例: 直近10往復）
+    if len(history) > 20:
+        conversation_histories[user_id] = history[-20:]
+
+    # 感情を決定
     emotion = "neutral"
     if saving_amount > 10000:
         emotion = "very_happy"
@@ -100,26 +107,27 @@ def get_ai_reaction(user_input: str, saving_amount: int) -> dict:
         emotion = "happy"
     elif saving_amount < 0:
         emotion = "worried"
+        
     return {"reaction": ai_message, "emotion": emotion}
 
 
+# この関数もまるごと置き換え
 @app.route("/girlfriend_reaction", methods=["POST"])
 def girlfriend_reaction_endpoint():
     data = request.json
-    if not data or "savings_amount" not in data:
-        return jsonify({"error": "savings_amountが必要です"}), 400
+
+    # Flutter側から user_id を受け取るように変更
+    if not data or "user_id" not in data:
+        return jsonify({"error": "user_idが必要です"}), 400
     if not data or "user_input" not in data:
         return jsonify({"error": "user_inputが必要です"}), 400
 
-    try:
-        savings_amount = int(data["savings_amount"])
-    except (ValueError, TypeError):
-        return jsonify({"error": "savings_amountは整数である必要があります"}), 400
+    user_id = data["user_id"]
     user_input = data["user_input"]
+    savings_amount = data.get("savings_amount", 0)
 
-    response_data = get_ai_reaction(user_input, savings_amount)
+    response_data = get_ai_reaction(user_id, user_input, savings_amount)
     return jsonify(response_data)
-
 
 # Flaskサーバーを起動
 if __name__ == "__main__":
