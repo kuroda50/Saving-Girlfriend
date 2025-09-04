@@ -1,3 +1,5 @@
+import 'package:saving_girlfriend/widgets/transaction_modal.dart'; // ★これを追加
+import '../providers/tribute_history_provider.dart'; // ★これも追加
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -146,49 +148,55 @@ class TributeHistoryScreen extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: state.selectedDateTributes.isEmpty
-                    ? const Center(child: Text('この日の履歴はありません。'))
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        itemCount: state.selectedDateTributes.length,
-                        itemBuilder: (context, index) {
-                          final tribute = state.selectedDateTributes[index];
-                          final amount = tribute['amount'] as int;
-                          final category = tribute['category'] as String? ?? 'カテゴリなし';
-                          return Card(
-                            elevation: 1,
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            child: ListTile(
-                              leading: Icon(
-                                amount >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
-                                color: amount >= 0 ? Colors.green : Colors.red,
-                              ),
-                              title: Text(category),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    '${NumberFormat("#,###").format(amount)}円',
-                                    style: TextStyle(
-                                      color: amount >= 0 ? Colors.green : Colors.red,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
-                                    onPressed: () {
-                                      // ここに編集モーダルを開く処理を実装する
-                                      print('Edit tribute: $tribute');
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+  child: state.selectedDateTributes.isEmpty
+      ? const Center(child: Text('この日の履歴はありません。'))
+      : ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          itemCount: state.selectedDateTributes.length,
+          itemBuilder: (context, index) {
+            final tribute = state.selectedDateTributes[index];
+            final amount = tribute['amount'] as int;
+            final category = tribute['category'] as String? ?? 'カテゴリなし';
+            return Card(
+              elevation: 1,
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              child: ListTile(
+                leading: Icon(
+                  amount >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                  color: amount >= 0 ? Colors.green : Colors.red,
+                ),
+                title: Text(category),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${NumberFormat("#,###").format(amount)}円',
+                      style: TextStyle(
+                        color: amount >= 0 ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
+                      onPressed: () {
+                        showTransactionModal(
+                          context,
+                          onSave: (updatedData) {
+                            final tributeId = tribute['id'] as String;
+                            ref.read(tributeHistoryProvider.notifier).updateTribute(tributeId, updatedData);
+                          },
+                          initialTribute: tribute,
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
+            );
+          },
+        ),
+),
             ],
           );
         },

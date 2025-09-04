@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package.flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import '../constants/color.dart';
@@ -122,7 +122,7 @@ class HomeScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       GestureDetector(
-                        onTap: () => _showTransactionModal(
+                        onTap: () => showTransactionModal(
                           context,
                           onSave: (newTributeData) {
                             final category = newTributeData['category'] as String;
@@ -273,8 +273,11 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   }
 }
 
-
-void _showTransactionModal(BuildContext context, {required Function(String, int) onSave}) {
+void showTransactionModal(
+  BuildContext context, {
+  required Function(Map<String, dynamic>) onSave,
+  Map<String, dynamic>? initialTribute,
+}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -284,15 +287,24 @@ void _showTransactionModal(BuildContext context, {required Function(String, int)
     builder: (BuildContext context) {
       return Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: TransactionInputModal(onSave: onSave),
+        child: TransactionInputModal(
+          onSave: onSave,
+          initialTribute: initialTribute,
+        ),
       );
     },
   );
 }
 
 class TransactionInputModal extends StatefulWidget {
-  final Function(String, int) onSave;
-  const TransactionInputModal({required this.onSave, super.key});
+  final Function(Map<String, dynamic>) onSave;
+  final Map<String, dynamic>? initialTribute;
+
+  const TransactionInputModal({
+    required this.onSave,
+    this.initialTribute,
+    super.key
+  });
 
   @override
   State<TransactionInputModal> createState() => _TransactionInputModalState();
@@ -302,10 +314,22 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
   bool _isExpense = true;
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  final LocalStorageService _localStorageService = LocalStorageService();
   String? _selectedCategory;
   final List<String> _expenseCategories = ['食費', '交通費', '趣味・娯楽', '交際費', '日用品', 'その他'];
   final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialTribute != null) {
+      final tribute = widget.initialTribute!;
+      final amount = tribute['amount'] as int;
+      _isExpense = amount < 0;
+      _amountController.text = amount.abs().toString();
+      _selectedDate = DateTime.parse(tribute['date']);
+      _selectedCategory = tribute['category'];
+    }
+  }
 
   @override
   void dispose() {
@@ -327,43 +351,27 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     }
   }
 
-  void _saveTransaction() async {
+  void _saveTransaction() {
     final amount = int.tryParse(_amountController.text);
-
     if (amount == null || amount < 1 || amount > 99999) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('金額は1〜99999の範囲で入力してください。')),
       );
       return;
     }
-
     if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('カテゴリを選択してください。')),
       );
       return;
     }
-
-    List<Map<String, dynamic>> currentHistory = await _localStorageService.getTributeHistory();
-    Map<String, dynamic> newTribute = {
-      "character": "A",
-      "date": _selectedDate.toIso8601String(),
-      "amount": _isExpense ? -amount : amount,
-      "category": _selectedCategory!
+    Map<String, dynamic> tributeData = {
+      'id': widget.initialTribute?['id'] ?? 'tribute_${DateTime.now().millisecondsSinceEpoch}',
+      'date': _selectedDate.toIso8601String(),
+      'amount': _isExpense ? -amount : amount,
+      'category': _selectedCategory!
     };
-    currentHistory.add(newTribute);
-    try {
-      await _localStorageService.saveTributeHistory(currentHistory);
-      widget.onSave(_selectedCategory!, _isExpense ? -amount : amount);
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('データの保存に失敗しました。もう一度お試しください。'),
-        ),
-      );
-    }
-    if (!mounted) return;
+    widget.onSave(tributeData);
     Navigator.of(context).pop();
   }
 
@@ -381,7 +389,11 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('収支の入力', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            widget.initialTribute == null ? '収支の入力' : '履歴の編集',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge
+          ),
           const SizedBox(height: 24),
           Center(
             child: ToggleButtons(
@@ -393,6 +405,8 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
                 });
               },
               borderRadius: BorderRadius.circular(8),
+              selectedColor: AppColors.subText,
+              fillColor: _isExpense ? AppColors.primary : AppColors.secondary,
               children: const [
                 Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: Text('支出')),
                 Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: Text('収入')),
@@ -447,9 +461,14 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined),
+                  const Icon(Icons.calendar_today_outlined, color: AppColors.subIcon),
                   const SizedBox(width: 12),
-                  Text('日付: ${DateFormat('yyyy/MM/dd').format(_selectedDate)}'),
+                  Text(
+                    '日付: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.edit_outlined, color: AppColors.subIcon, size: 20),
                 ],
               ),
             ),
@@ -458,8 +477,15 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
           const SizedBox(height: 10),
           ElevatedButton(
             onPressed: _saveTransaction,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.mainIcon,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             child: const Text('保存する'),
           ),
+          const SizedBox(height: 8),
         ],
       ),
     );
