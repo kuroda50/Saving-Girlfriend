@@ -1,3 +1,4 @@
+import 'package:saving_girlfriend/widgets/transaction_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -149,11 +150,9 @@ class TributeHistoryScreen extends ConsumerWidget {
                                 ? Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text(day.toString(),
-                                          style: const TextStyle(fontSize: 12)),
+                                      Text(day.toString(), style: const TextStyle(fontSize: 12)),
                                       if (dailyTributes.containsKey(DateFormat('yyyy-MM-dd')
-                                          .format(DateTime(state.currentYear,
-                                              state.currentMonth, day))))
+                                          .format(DateTime(state.currentYear, state.currentMonth, day))))
                                         Text(
                                           formatAmount(dailyTributes[DateFormat('yyyy-MM-dd')
                                               .format(DateTime(
@@ -207,7 +206,7 @@ class TributeHistoryScreen extends ConsumerWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    formatAmount(amount), // ← ここでk/m表記に変換
+                                    formatAmount(amount), // k/m表記に変換
                                     style: TextStyle(
                                       color: amount >= 0 ? Colors.green : Colors.red,
                                       fontWeight: FontWeight.bold,
@@ -217,8 +216,14 @@ class TributeHistoryScreen extends ConsumerWidget {
                                   IconButton(
                                     icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
                                     onPressed: () {
-                                      // 編集モーダルの処理をここに実装
-                                      print('Edit tribute: $tribute');
+                                      showTransactionModal(
+                                        context,
+                                        onSave: (updatedData) {
+                                          final tributeId = updatedData['id'] as String;
+                                          ref.read(tributeHistoryProvider.notifier).updateTribute(tributeId, updatedData);
+                                        },
+                                        initialTribute: tribute,
+                                      );
                                     },
                                   ),
                                 ],
