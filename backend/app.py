@@ -107,7 +107,7 @@ def get_ai_reaction(user_id: str, user_input: str, saving_amount: int) -> dict:
         emotion = "happy"
     elif saving_amount < 0:
         emotion = "worried"
-
+        
     return {"reaction": ai_message, "emotion": emotion}
 
 

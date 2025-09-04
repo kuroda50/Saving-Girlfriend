@@ -65,7 +65,7 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
 
     state = state.copyWith(isLoading: true);
 
-    final url = Uri.parse('http://172.17.80.1:5000/girlfriend_reaction');
+    final url = Uri.parse('http://10.191.102.208:5000/girlfriend_reaction');//ipアドレスに注意！
 
     try {
       final response = await http.post(

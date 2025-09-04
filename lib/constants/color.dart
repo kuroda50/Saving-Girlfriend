@@ -23,5 +23,5 @@ class AppColors {
   
   static const Color error = Colors.red;
   static const Color errorBackground = Color(0xFFFFEBEE);//エラー時の背景
-
+  
 }
