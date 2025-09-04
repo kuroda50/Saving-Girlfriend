@@ -5,6 +5,7 @@ import '../constants/color.dart';
 import 'package:go_router/go_router.dart';
 import '../services/local_storage_service.dart';
 import '../providers/home_screen_provider.dart';
+import 'package:flutter/services.dart'; // ← 追加
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -288,11 +289,12 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                     borderRadius: BorderRadius.circular(24.0),
                     color: theme.colorScheme.background,
                   ),
+                  // ...既存のコード...
+
                   child: TextField(
                     controller: _textController,
-                    maxLines: null,
-                    minLines: 1,
-                    textInputAction: TextInputAction.newline,
+                    maxLines: 1, // 1行のみ入力
+                    textInputAction: TextInputAction.send, // エンターで送信
                     decoration: InputDecoration(
                       hintText: widget.hintText,
                       border: InputBorder.none,
@@ -306,8 +308,10 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                         _isComposing = text.trim().isNotEmpty;
                       });
                     },
-                    onSubmitted: _handleSubmitted,
+                    onSubmitted: _handleSubmitted, // エンターで送信
                   ),
+
+// ...既存のコード...
                 ),
               ),
               const SizedBox(width: 8.0),
@@ -402,15 +406,16 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
       });
     }
   }
+// ...既存のコード...
 
   // 保存ボタンが押されたときの処理
   void _saveTransaction() async {
     final amount = int.tryParse(_amountController.text);
 
-    // 金額のバリデーション
-    if (amount == null || amount <= 0) {
+    // 金額のバリデーション（1〜99999のみ許可）
+    if (amount == null || amount < 1 || amount > 99999) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('金額を正しく入力してください。')),
+        const SnackBar(content: Text('金額は1〜99999の範囲で入力してください。')),
       );
       return;
     }
@@ -428,13 +433,13 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     print('種類: ${_isExpense ? "支出" : "収入"}');
     print('金額: $amount');
     print('日付: ${_selectedDate.toIso8601String()}');
-    print('カテゴリ: $_selectedCategory'); // --- ◀ 修正 ---
+    print('カテゴリ: $_selectedCategory');
     List<Map<String, dynamic>> currentHistory =
         await _localStorageService.getTributeHistory();
     Map<String, dynamic> newTribute = {
       "character": "A",
       "date": _selectedDate.toIso8601String(),
-      "amount": _isExpense ? -amount : amount, //支出なら負の数にして保存
+      "amount": _isExpense ? -amount : amount,
       "category": _selectedCategory!
     };
     currentHistory.add(newTribute);
@@ -443,7 +448,6 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
       widget.onSave(_selectedCategory!, _isExpense ? -amount : amount);
     } catch (error) {
       print("エラー: $error");
-      // ユーザーにSnackBarでエラーを通知
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -456,10 +460,11 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
       );
     }
 
-    // モーダルを閉じる
     if (!mounted) return;
     Navigator.of(context).pop();
   }
+
+// ...既存のコード...
 
   @override
   Widget build(BuildContext context) {
@@ -510,40 +515,58 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
           ),
           const SizedBox(height: 20),
 
-          // 金額入力
-          TextField(
-            controller: _amountController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: '金額',
-              prefixIcon: Icon(Icons.currency_yen),
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 16),
+            // ...既存のコード...
 
-          // カテゴリ選択のドロップダウン
-          DropdownButtonFormField<String>(
-            value: _selectedCategory,
-            hint: const Text('カテゴリを選択'),
-            decoration: const InputDecoration(
-              labelText: 'カテゴリ',
-              prefixIcon: Icon(Icons.category_outlined),
-              border: OutlineInputBorder(),
+
+
+            // ...既存のコード...
+
+            // 金額入力
+            TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [ // ← 追加
+                FilteringTextInputFormatter.digitsOnly,
+              ],
+              decoration: const InputDecoration(
+                labelText: '金額',
+                prefixIcon: Icon(Icons.currency_yen),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                // 入力値が99999を超えたら自動で99999にする
+                final num = int.tryParse(value);
+                if (num != null && num > 99999) {
+                  _amountController.text = '99999';
+                  _amountController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: _amountController.text.length),
+                  );
+                }
+              },
             ),
-            items: currentCategories.map((String category) {
-              return DropdownMenuItem<String>(
-                value: category,
-                child: Text(category),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedCategory = newValue;
-              });
-            },
-          ),
-          const SizedBox(height: 24),
+            // ...既存のコード...
+            // カテゴリ選択のドロップダウン
+            DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              hint: const Text('カテゴリを選択'),
+              decoration: const InputDecoration(
+                labelText: 'カテゴリ',
+                prefixIcon: Icon(Icons.category_outlined),
+                border: OutlineInputBorder(),
+              ),
+              items: currentCategories.map((String category) {
+                return DropdownMenuItem<String>(
+                  value: category,
+                  child: Text(category),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedCategory = newValue;
+                });
+              },
+            ),
+            const SizedBox(height: 24),
 
           // 日付選択
           InkWell(
