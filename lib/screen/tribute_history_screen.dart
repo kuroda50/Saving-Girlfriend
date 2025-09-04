@@ -206,14 +206,13 @@ class TributeHistoryScreen extends ConsumerWidget {
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                Text(
-                                              formatAmount(amount), // ← ここでk/m表記に変換
-                                       style: TextStyle(
-                                  color: amount >= 0 ? Colors.green : Colors.red,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                         ),
-
+                                  Text(
+                                    formatAmount(amount), // ← ここでk/m表記に変換
+                                    style: TextStyle(
+                                      color: amount >= 0 ? Colors.green : Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                   const SizedBox(width: 8),
                                   IconButton(
                                     icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
