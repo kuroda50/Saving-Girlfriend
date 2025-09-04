@@ -1,5 +1,4 @@
-import 'package:saving_girlfriend/widgets/transaction_modal.dart'; // ★これを追加
-import '../providers/tribute_history_provider.dart'; // ★これも追加
+import 'package:saving_girlfriend/widgets/transaction_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +12,22 @@ class TributeHistoryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tributeHistoryAsync = ref.watch(tributeHistoryProvider);
 
+    // --- 金額フォーマット関数 ---
+    String formatAmount(int amount) {
+      final absAmount = amount.abs();
+      String formatted;
+
+      if (absAmount >= 1000000) {
+        formatted = '${(absAmount / 1000000).toStringAsFixed(1)}m';
+      } else if (absAmount >= 10000) {
+        formatted = '${(absAmount / 1000).toStringAsFixed(1)}k';
+      } else {
+        formatted = '$absAmount円';
+      }
+
+      return amount < 0 ? '-$formatted' : formatted;
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
@@ -21,29 +36,32 @@ class TributeHistoryScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('エラー: $err')),
         data: (state) {
-          // --- 計算ロジック ---
+          // --- 日別の合計献金金額を計算 ---
           Map<String, int> calculateDailyTributes() {
             final dailyTributes = <String, int>{};
             for (var tribute in state.tributeHistory) {
               final date = DateTime.parse(tribute['date']);
               if (date.month == state.currentMonth && date.year == state.currentYear) {
                 final formattedDate = DateFormat('yyyy-MM-dd').format(date);
-                dailyTributes[formattedDate] = (dailyTributes[formattedDate] ?? 0) + (tribute['amount'] as int);
+                dailyTributes[formattedDate] =
+                    (dailyTributes[formattedDate] ?? 0) + (tribute['amount'] as int);
               }
             }
             return dailyTributes;
           }
+
           int getDaysInMonth() => DateTime(state.currentYear, state.currentMonth + 1, 0).day;
+
           int getStartDayOfMonth() {
             final weekday = DateTime(state.currentYear, state.currentMonth, 1).weekday;
             return weekday == 7 ? 0 : weekday;
           }
+
           final dailyTributes = calculateDailyTributes();
 
-          // --- UI部分 ---
           return Column(
             children: [
-              // --- カレンダー ---
+              // --- カレンダー部分 ---
               Container(
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
@@ -81,55 +99,73 @@ class TributeHistoryScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Row(
-                        children: ['日', '月', '火', '水', '木', '金', '土'].map((day) => Expanded(
-                          child: Center(child: Text(day, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.subText))),
-                        )).toList(),
+                        children: ['日', '月', '火', '水', '木', '金', '土']
+                            .map((day) => Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      day,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          color: AppColors.subText),
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
                       ),
                     ),
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
                       itemCount: getDaysInMonth() + getStartDayOfMonth(),
                       itemBuilder: (context, index) {
-                         final startDay = getStartDayOfMonth();
-                         final day = index - startDay + 1;
-                         final isCurrentMonthDay = day > 0 && day <= getDaysInMonth();
-                         
-                         return GestureDetector(
-                            onTap: () {
-                              if (isCurrentMonthDay) {
-                                final date = DateTime(state.currentYear, state.currentMonth, day);
-                                ref.read(tributeHistoryProvider.notifier).selectDate(date);
-                              }
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: isCurrentMonthDay && DateUtils.isSameDay(state.selectedDate, DateTime(state.currentYear, state.currentMonth, day))
-                                      ? AppColors.primary
-                                      : Colors.transparent,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
+                        final startDay = getStartDayOfMonth();
+                        final day = index - startDay + 1;
+                        final isCurrentMonthDay = day > 0 && day <= getDaysInMonth();
+
+                        return GestureDetector(
+                          onTap: () {
+                            if (isCurrentMonthDay) {
+                              final date = DateTime(state.currentYear, state.currentMonth, day);
+                              ref.read(tributeHistoryProvider.notifier).selectDate(date);
+                            }
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: isCurrentMonthDay &&
+                                        DateUtils.isSameDay(
+                                            state.selectedDate,
+                                            DateTime(state.currentYear, state.currentMonth, day))
+                                    ? AppColors.primary
+                                    : Colors.transparent,
+                                width: 2,
                               ),
-                              child: isCurrentMonthDay
-                                  ? Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text(day.toString(), style: const TextStyle(fontSize: 12)),
-                                        if (dailyTributes.containsKey(DateFormat('yyyy-MM-dd').format(DateTime(state.currentYear, state.currentMonth, day))))
-                                          Text(
-                                            '${dailyTributes[DateFormat('yyyy-MM-dd').format(DateTime(state.currentYear, state.currentMonth, day))]}円',
-                                            style: const TextStyle(fontSize: 10, color: AppColors.primary),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                      ],
-                                    )
-                                  : null,
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                         );
+                            child: isCurrentMonthDay
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(day.toString(), style: const TextStyle(fontSize: 12)),
+                                      if (dailyTributes.containsKey(DateFormat('yyyy-MM-dd')
+                                          .format(DateTime(state.currentYear, state.currentMonth, day))))
+                                        Text(
+                                          formatAmount(dailyTributes[DateFormat('yyyy-MM-dd')
+                                              .format(DateTime(
+                                                  state.currentYear, state.currentMonth, day))]!),
+                                          style: const TextStyle(
+                                              fontSize: 10, color: AppColors.primary),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                    ],
+                                  )
+                                : null,
+                          ),
+                        );
                       },
                     ),
                   ],
@@ -148,55 +184,55 @@ class TributeHistoryScreen extends ConsumerWidget {
                 ),
               ),
               Expanded(
-  child: state.selectedDateTributes.isEmpty
-      ? const Center(child: Text('この日の履歴はありません。'))
-      : ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          itemCount: state.selectedDateTributes.length,
-          itemBuilder: (context, index) {
-            final tribute = state.selectedDateTributes[index];
-            final amount = tribute['amount'] as int;
-            final category = tribute['category'] as String? ?? 'カテゴリなし';
-            return Card(
-              elevation: 1,
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              child: ListTile(
-                leading: Icon(
-                  amount >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
-                  color: amount >= 0 ? Colors.green : Colors.red,
-                ),
-                title: Text(category),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${NumberFormat("#,###").format(amount)}円',
-                      style: TextStyle(
-                        color: amount >= 0 ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.bold,
+                child: state.selectedDateTributes.isEmpty
+                    ? const Center(child: Text('この日の履歴はありません。'))
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        itemCount: state.selectedDateTributes.length,
+                        itemBuilder: (context, index) {
+                          final tribute = state.selectedDateTributes[index];
+                          final amount = tribute['amount'] as int;
+                          final category = tribute['category'] as String? ?? 'カテゴリなし';
+                          return Card(
+                            elevation: 1,
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            child: ListTile(
+                              leading: Icon(
+                                amount >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                                color: amount >= 0 ? Colors.green : Colors.red,
+                              ),
+                              title: Text(category),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    formatAmount(amount), // k/m表記に変換
+                                    style: TextStyle(
+                                      color: amount >= 0 ? Colors.green : Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
+                                    onPressed: () {
+                                      showTransactionModal(
+                                        context,
+                                        onSave: (updatedData) {
+                                          final tributeId = updatedData['id'] as String;
+                                          ref.read(tributeHistoryProvider.notifier).updateTribute(tributeId, updatedData);
+                                        },
+                                        initialTribute: tribute,
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
-                      onPressed: () {
-                        showTransactionModal(
-                          context,
-                          onSave: (updatedData) {
-                            final tributeId = tribute['id'] as String;
-                            ref.read(tributeHistoryProvider.notifier).updateTribute(tributeId, updatedData);
-                          },
-                          initialTribute: tribute,
-                        );
-                      },
-                    ),
-                  ],
-                ),
               ),
-            );
-          },
-        ),
-),
             ],
           );
         },
