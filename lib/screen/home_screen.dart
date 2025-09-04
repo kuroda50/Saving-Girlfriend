@@ -610,3 +610,4 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     );
   }
 }
+
