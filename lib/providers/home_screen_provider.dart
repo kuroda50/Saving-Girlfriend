@@ -51,7 +51,7 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
   Future<void> _loadUserId() async {
     String? userId = await _localStorageService.getUserId();
     if (userId == null || userId.isEmpty) {
-      userId = 'user_${DateTime.now().millisecondsSinceEpoch}'; 
+      userId = 'user_${DateTime.now().millisecondsSinceEpoch}';
       await _localStorageService.saveUserId(userId);
     }
     state = state.copyWith(userId: userId);
@@ -65,7 +65,7 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
 
     state = state.copyWith(isLoading: true);
 
-    final url = Uri.parse('http://10.191.102.208:5000/girlfriend_reaction');//ipアドレスに注意！
+    final url = Uri.parse('http://172.17.80.1:5000/girlfriend_reaction');//ipアドレスに注意！
 
     try {
       final response = await http.post(
@@ -82,7 +82,7 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         state = state.copyWith(girlfriendText: data['reaction']);
-        
+
         if (saveAmount != 0) {
           final newTribute = {
             'date': DateTime.now().toIso8601String(),

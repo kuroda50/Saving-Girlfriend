@@ -1,3 +1,4 @@
+import 'package:saving_girlfriend/widgets/transaction_modal.dart'; // ★これを追加
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
@@ -25,6 +26,7 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: AppColors.secondary,
       ),
       body: Column(
+
         children: [
           Expanded(
             child: Stack(
@@ -165,10 +167,15 @@ class HomeScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       GestureDetector(
-                        onTap: () => _showTransactionModal(
-                          context,
-                          (category, amount) => handleSendMessage(category, amount),
-                        ),
+                        onTap: () => showTransactionModal(
+                              context,
+                              onSave: (newTributeData) {
+                                // ★ AIへの通知（handleSendMessage）だけを呼び出す
+                                final category = newTributeData['category'] as String;
+                                final amount = newTributeData['amount'] as int;
+                                handleSendMessage(category, amount);
+                              },
+                            ),
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -335,20 +342,24 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 }
 
 // 支出、収入を入力するモーダルウィンドウを表示する関数
-void _showTransactionModal(BuildContext context, Function(String, int) onSave) {
+void _showTransactionModal(
+  BuildContext context, {
+  required Function(Map<String, dynamic>) onSave,
+  Map<String, dynamic>? initialTribute,
+}) {
   showModalBottomSheet(
     context: context,
-    isScrollControlled: true, // キーボード表示時にUIが隠れないようにする
+    isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (BuildContext context) {
-      // キーボードの表示に合わせてpaddingを調整
       return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: TransactionInputModal(
+          onSave: onSave,
+          initialTribute: initialTribute,
         ),
-        child: TransactionInputModal(onSave: onSave),
       );
     },
   );
@@ -356,8 +367,14 @@ void _showTransactionModal(BuildContext context, Function(String, int) onSave) {
 
 // 収支入力モーダルのUIを定義するStatefulWidget
 class TransactionInputModal extends StatefulWidget {
-  final Function(String, int) onSave;
-  const TransactionInputModal({required this.onSave, super.key});
+  final Function(Map<String, dynamic>) onSave; // ★引数の型を変更
+  final Map<String, dynamic>? initialTribute;   // ★追加
+
+  const TransactionInputModal({
+    required this.onSave,
+    this.initialTribute, // ★追加
+    super.key
+  });
 
   @override
   State<TransactionInputModal> createState() => _TransactionInputModalState();
@@ -388,6 +405,22 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     super.dispose();
   }
 
+   // ★★★↓ このinitStateメソッドをまるごと追加 ↓★★★
+  @override
+  void initState() {
+    super.initState();
+    // もし編集データが渡されたら、入力欄にその値を設定する
+    if (widget.initialTribute != null) {
+      final tribute = widget.initialTribute!;
+      final amount = tribute['amount'] as int;
+
+      _isExpense = amount < 0;
+      _amountController.text = amount.abs().toString();
+      _selectedDate = DateTime.parse(tribute['date']);
+      _selectedCategory = tribute['category'];
+    }
+  }
+
   // 日付選択ダイアログを表示する関数
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -404,62 +437,32 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
   }
 
   // 保存ボタンが押されたときの処理
-  void _saveTransaction() async {
-    final amount = int.tryParse(_amountController.text);
+    // ★★★↓ _saveTransactionメソッドをこの内容に置き換え ↓★★★
+  void _saveTransaction() {
+  final amount = int.tryParse(_amountController.text);
 
-    // 金額のバリデーション
-    if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('金額を正しく入力してください。')),
-      );
-      return;
-    }
-
-    // カテゴリ選択のバリデーション
-    if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('カテゴリを選択してください。')),
-      );
-      return;
-    }
-
-    // ここで入力データをデータベースに保存したり、APIに送信したりする
-    print('【保存データ】');
-    print('種類: ${_isExpense ? "支出" : "収入"}');
-    print('金額: $amount');
-    print('日付: ${_selectedDate.toIso8601String()}');
-    print('カテゴリ: $_selectedCategory'); // --- ◀ 修正 ---
-    List<Map<String, dynamic>> currentHistory =
-        await _localStorageService.getTributeHistory();
-    Map<String, dynamic> newTribute = {
-      "character": "A",
-      "date": _selectedDate.toIso8601String(),
-      "amount": _isExpense ? -amount : amount, //支出なら負の数にして保存
-      "category": _selectedCategory!
-    };
-    currentHistory.add(newTribute);
-    try {
-      await _localStorageService.saveTributeHistory(currentHistory);
-      widget.onSave(_selectedCategory!, _isExpense ? -amount : amount);
-    } catch (error) {
-      print("エラー: $error");
-      // ユーザーにSnackBarでエラーを通知
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'データの保存に失敗しました。もう一度お試しください。',
-            style: TextStyle(color: AppColors.error, fontSize: 16),
-          ),
-          backgroundColor: AppColors.errorBackground,
-        ),
-      );
-    }
-
-    // モーダルを閉じる
-    if (!mounted) return;
-    Navigator.of(context).pop();
+  // バリデーション
+  if (amount == null || amount <= 0 || _selectedCategory == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('金額とカテゴリを正しく入力してください。')),
+    );
+    return;
   }
+
+  // ★ 親に渡すためのデータを作成する
+  Map<String, dynamic> tributeData = {
+    // もし編集モードなら、元のIDを維持。新規なら、新しいIDを作成。
+    'id': widget.initialTribute?['id'] ?? 'tribute_${DateTime.now().millisecondsSinceEpoch}',
+    'character': "A", // この値は既存のロジックに合わせています
+    'date': _selectedDate.toIso8601String(),
+    'amount': _isExpense ? -amount : amount,
+    'category': _selectedCategory!
+  };
+
+  // ★ コールバックでMap全体を渡し、後の処理はすべて親に任せる
+  widget.onSave(tributeData);
+  Navigator.of(context).pop();
+}
 
   @override
   Widget build(BuildContext context) {
