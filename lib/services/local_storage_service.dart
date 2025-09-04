@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LocalStorageService {
   // インスタンスは最初に取得する
   static late SharedPreferences prefs;
+  static const String _userIdKey = 'user_id';
   // 各データのキーを定数として定義しておくとタイプミスを防げます
   static const String _currentCharacterKey = 'current_character';
   static const String _likeabilityKeyPrefix = '_likeability'; // キャラごとに好感度を保存
@@ -18,6 +19,16 @@ class LocalStorageService {
 
   static Future<void> init() async {
     prefs = await SharedPreferences.getInstance();
+  }
+
+/// ユーザーIDを保存する
+  Future<void> saveUserId(String userId) async {
+    await prefs.setString(_userIdKey, userId);
+  }
+
+  /// ユーザーIDを読み込む
+  Future<String?> getUserId() async {
+    return prefs.getString(_userIdKey);
   }
 
   Future<void> saveCurrentCharacter(String characterId) async {
