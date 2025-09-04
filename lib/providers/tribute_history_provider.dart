@@ -90,17 +90,23 @@ class TributeHistoryNotifier extends AsyncNotifier<TributeHistoryState> {
   }
 
   Future<void> addTribute(Map<String, dynamic> newTribute) async {
-    final localStorageService = ref.read(localStorageServiceProvider);
-    final currentHistory =
-        List<Map<String, dynamic>>.from(state.value!.tributeHistory);
-    currentHistory.add(newTribute);
-    await localStorageService.saveTributeHistory(currentHistory);
+  final localStorageService = ref.read(localStorageServiceProvider);
+  final currentHistory =
+      List<Map<String, dynamic>>.from(state.value!.tributeHistory);
 
-    state = AsyncData(state.value!.copyWith(
-      tributeHistory: currentHistory,
-    ));
-  }
+  // ★ idがなければ付与する
+  final tributeWithId = {
+    ...newTribute,
+    'id': newTribute['id'] ?? 'tribute_${DateTime.now().millisecondsSinceEpoch}',
+  };
 
+  currentHistory.add(tributeWithId);
+  await localStorageService.saveTributeHistory(currentHistory);
+
+  state = AsyncData(state.value!.copyWith(
+    tributeHistory: currentHistory,
+  ));
+}
   // ★★★↓ このメソッドをまるごと追加 ↓★★★
   Future<void> updateTribute(String id, Map<String, dynamic> updatedTribute) async {
     final localStorageService = ref.read(localStorageServiceProvider);
