@@ -1,13 +1,13 @@
-import 'package:saving_girlfriend/widgets/transaction_modal.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import '../constants/color.dart';
 import 'package:go_router/go_router.dart';
+import '../services/local_storage_service.dart';
 import '../providers/home_screen_provider.dart';
-
-// ChatInputWidgetが別のファイルにある場合は、そのimport文をここに追加してください
-// import '.../chat_input_widget.dart';
+import '../providers/tribute_history_provider.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -30,27 +30,12 @@ class HomeScreen extends ConsumerWidget {
           Expanded(
             child: Stack(
               children: [
-                // 1. 背景画像 (教室)
                 Positioned.fill(
                   child: Image.asset(
                     AppAssets.backgroundClassroom,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: AppColors.errorBackground,
-                        child: const Center(
-                          child: Text(
-                            '背景画像をロードできませんでした。\nパス: ${AppAssets.backgroundClassroom}',
-                            textAlign: TextAlign.center,
-                            style:
-                                TextStyle(color: AppColors.error, fontSize: 16),
-                          ),
-                        ),
-                      );
-                    },
                   ),
                 ),
-                // 2. キャラクター画像 (画面下部中央に調整)
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -61,30 +46,15 @@ class HomeScreen extends ConsumerWidget {
                       AppAssets.characterSuzunari,
                       fit: BoxFit.contain,
                       height: MediaQuery.of(context).size.height * 0.5,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.errorBackground,
-                          child: const Center(
-                            child: Text(
-                              'キャラクター画像をロードできませんでした。\nパス: ${AppAssets.characterSuzunari}',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: AppColors.error, fontSize: 16),
-                            ),
-                          ),
-                        );
-                      },
                     ),
                   ),
                 ),
-                // 3. 上部の情報バー
                 Positioned(
                   top: 20,
                   left: 20,
                   right: 20,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: AppColors.mainBackground.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(20),
@@ -94,16 +64,14 @@ class HomeScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.settings,
-                              color: AppColors.subIcon),
+                          icon: const Icon(Icons.settings, color: AppColors.subIcon),
                           onPressed: () {
                             context.push('/home/settings');
                           },
                         ),
                         const Text(
                           '5回目継続中!!',
-                          style: TextStyle(
-                              color: AppColors.mainText, fontSize: 12),
+                          style: TextStyle(color: AppColors.mainText, fontSize: 12),
                         ),
                         const Expanded(
                           child: Padding(
@@ -111,49 +79,43 @@ class HomeScreen extends ConsumerWidget {
                             child: LinearProgressIndicator(
                               value: 0.5,
                               backgroundColor: AppColors.nonActive,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppColors.primary),
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                             ),
                           ),
                         ),
-                        const Icon(Icons.favorite,
-                            color: AppColors.primary, size: 18),
-                        const Text('50',
-                            style: TextStyle(
-                                color: AppColors.mainText, fontSize: 14)),
-                        const Text('/100',
-                            style: TextStyle(
-                                color: AppColors.mainText, fontSize: 12)),
+                        const Icon(Icons.favorite, color: AppColors.primary, size: 18),
+                        const Text('50', style: TextStyle(color: AppColors.mainText, fontSize: 14)),
+                        const Text('/100', style: TextStyle(color: AppColors.mainText, fontSize: 12)),
                       ],
                     ),
                   ),
                 ),
-                // 4. 吹き出し
                 Positioned(
                   top: MediaQuery.of(context).size.height * 0.15,
-                  left: MediaQuery.of(context).size.width * 0.2,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    width: MediaQuery.of(context).size.width * 0.7,
-                    decoration: BoxDecoration(
-                      color: AppColors.mainBackground,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: AppColors.shadow,
-                          blurRadius: 5,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      girlfriendText,
-                      style: const TextStyle(
-                          fontSize: 14, color: AppColors.mainText),
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      width: MediaQuery.of(context).size.width * 0.7,
+                      decoration: BoxDecoration(
+                        color: AppColors.mainBackground,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.shadow,
+                            blurRadius: 5,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        girlfriendText,
+                        style: const TextStyle(fontSize: 14, color: AppColors.mainText),
+                      ),
                     ),
                   ),
                 ),
-                // 5. チャット入力欄と支出入力ボタン
                 Positioned(
                   bottom: MediaQuery.of(context).size.height * 0.02,
                   right: 20,
@@ -182,8 +144,7 @@ class HomeScreen extends ConsumerWidget {
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.currency_yen,
-                              color: AppColors.mainIcon, size: 45),
+                          child: const Icon(Icons.currency_yen, color: AppColors.mainIcon, size: 45),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -192,8 +153,7 @@ class HomeScreen extends ConsumerWidget {
                         width: MediaQuery.of(context).size.width * 0.9,
                         child: ChatInputWidget(
                           onSendMessage: (message) {
-                            handleSendMessage(message, 0); // 💡 `amount`を固定値に変更
-                            print('送信されたメッセージ: $message');
+                            handleSendMessage(message, 0);
                           },
                           hintText: '彼女と会話しましょう！',
                           backgroundColor: AppColors.secondary,
@@ -212,16 +172,12 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// ChatInputWidget クラスは元のまま
 class ChatInputWidget extends StatefulWidget {
   final Function(String) onSendMessage;
   final String? hintText;
   final Color? backgroundColor;
   final Color? sendButtonColor;
   final IconData? sendIcon;
-  final int maxLines;
-  final bool enabled;
-
   const ChatInputWidget({
     Key? key,
     required this.onSendMessage,
@@ -229,8 +185,6 @@ class ChatInputWidget extends StatefulWidget {
     this.backgroundColor,
     this.sendButtonColor,
     this.sendIcon = Icons.send,
-    this.maxLines = 5,
-    this.enabled = true,
   }) : super(key: key);
 
   @override
@@ -249,7 +203,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 
   void _handleSubmitted(String text) {
     if (text.trim().isEmpty) return;
-
     widget.onSendMessage(text.trim());
     _textController.clear();
     setState(() {
@@ -260,7 +213,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Container(
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.all(Radius.circular(16)),
@@ -281,24 +233,18 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withOpacity(0.3),
-                    ),
+                    border: Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
                     borderRadius: BorderRadius.circular(24.0),
                     color: theme.colorScheme.background,
                   ),
                   child: TextField(
                     controller: _textController,
-                    maxLines: null,
-                    minLines: 1,
-                    textInputAction: TextInputAction.newline,
+                    maxLines: 1,
+                    textInputAction: TextInputAction.send,
                     decoration: InputDecoration(
                       hintText: widget.hintText,
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 12.0,
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                     ),
                     onChanged: (text) {
                       setState(() {
@@ -316,13 +262,8 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  onPressed: _isComposing
-                      ? () => _handleSubmitted(_textController.text)
-                      : null,
-                  icon: Icon(
-                    widget.sendIcon,
-                    color: AppColors.mainIcon,
-                  ),
+                  onPressed: _isComposing ? () => _handleSubmitted(_textController.text) : null,
+                  icon: Icon(widget.sendIcon, color: AppColors.mainIcon),
                 ),
               ),
             ],
@@ -333,7 +274,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   }
 }
 
-// 支出、収入を入力するモーダルウィンドウを表示する関数
 void showTransactionModal(
   BuildContext context, {
   required Function(Map<String, dynamic>) onSave,
@@ -357,7 +297,6 @@ void showTransactionModal(
   );
 }
 
-// 収支入力モーダルのUIを定義するStatefulWidget
 class TransactionInputModal extends StatefulWidget {
   final Function(Map<String, dynamic>) onSave;
   final Map<String, dynamic>? initialTribute;
@@ -376,25 +315,9 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
   bool _isExpense = true;
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  // LocalStorageServiceは適宜実装してください
-  // final LocalStorageService _localStorageService = LocalStorageService();
-
   String? _selectedCategory;
-  final List<String> _expenseCategories = [
-    '食費',
-    '交通費',
-    '趣味・娯楽',
-    '交際費',
-    '日用品',
-    'その他'
-  ];
+  final List<String> _expenseCategories = ['食費', '交通費', '趣味・娯楽', '交際費', '日用品', 'その他'];
   final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    super.dispose();
-  }
 
   @override
   void initState() {
@@ -407,6 +330,12 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
       _selectedDate = DateTime.parse(tribute['date']);
       _selectedCategory = tribute['category'];
     }
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -425,46 +354,48 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
 
   void _saveTransaction() {
     final amount = int.tryParse(_amountController.text);
-    if (amount == null || amount <= 0 || _selectedCategory == null) {
+    if (amount == null || amount < 1 || amount > 99999) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('金額とカテゴリを正しく入力してください。')),
+        const SnackBar(content: Text('金額は1〜99999の範囲で入力してください。')),
       );
       return;
     }
-
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('カテゴリを選択してください。')),
+      );
+      return;
+    }
     Map<String, dynamic> tributeData = {
       'id': widget.initialTribute?['id'] ?? 'tribute_${DateTime.now().millisecondsSinceEpoch}',
-      'character': "A",
       'date': _selectedDate.toIso8601String(),
       'amount': _isExpense ? -amount : amount,
       'category': _selectedCategory!
     };
-
     widget.onSave(tributeData);
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentCategories =
-        _isExpense ? _expenseCategories : _incomeCategories;
+    final currentCategories = _isExpense ? _expenseCategories : _incomeCategories;
     return SingleChildScrollView(
       padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 24,
-          right: 24,
-          top: 20),
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 24,
+        right: 24,
+        top: 20
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '収支の入力',
+            widget.initialTribute == null ? '収支の入力' : '履歴の編集',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge,
+            style: Theme.of(context).textTheme.titleLarge
           ),
           const SizedBox(height: 24),
-
           Center(
             child: ToggleButtons(
               isSelected: [_isExpense, !_isExpense],
@@ -478,30 +409,32 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
               selectedColor: AppColors.subText,
               fillColor: _isExpense ? AppColors.primary : AppColors.secondary,
               children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24),
-                  child: Text('支出'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24),
-                  child: Text('収入'),
-                ),
+                Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: Text('支出')),
+                Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: Text('収入')),
               ],
             ),
           ),
           const SizedBox(height: 20),
-
           TextField(
             controller: _amountController,
             keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: const InputDecoration(
               labelText: '金額',
               prefixIcon: Icon(Icons.currency_yen),
               border: OutlineInputBorder(),
             ),
+            onChanged: (value) {
+              final num = int.tryParse(value);
+              if (num != null && num > 99999) {
+                _amountController.text = '99999';
+                _amountController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _amountController.text.length),
+                );
+              }
+            },
           ),
           const SizedBox(height: 16),
-
           DropdownButtonFormField<String>(
             value: _selectedCategory,
             hint: const Text('カテゴリを選択'),
@@ -523,38 +456,33 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
             },
           ),
           const SizedBox(height: 24),
-
           InkWell(
             onTap: () => _selectDate(context),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      color: AppColors.subIcon),
+                  const Icon(Icons.calendar_today_outlined, color: AppColors.subIcon),
                   const SizedBox(width: 12),
                   Text(
-                    '日付: ${MaterialLocalizations.of(context).formatShortDate(_selectedDate)}',
+                    '日付: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}',
                     style: const TextStyle(fontSize: 16),
                   ),
                   const Spacer(),
-                  const Icon(Icons.edit_outlined,
-                      color: AppColors.subIcon, size: 20),
+                  const Icon(Icons.edit_outlined, color: AppColors.subIcon, size: 20),
                 ],
               ),
             ),
           ),
           const Divider(),
           const SizedBox(height: 10),
-
           ElevatedButton(
             onPressed: _saveTransaction,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.mainIcon,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             child: const Text('保存する'),
           ),
