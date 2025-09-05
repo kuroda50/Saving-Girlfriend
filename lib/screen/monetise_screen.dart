@@ -4,21 +4,31 @@ import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import '../providers/home_screen_provider.dart';
 import '../services/local_storage_service.dart';
+import 'package:flutter/services.dart';
 
 class TransactionInputScreen extends ConsumerStatefulWidget {
   const TransactionInputScreen({super.key});
 
   @override
-  ConsumerState<TransactionInputScreen> createState() => _TransactionInputScreenState();
+  ConsumerState<TransactionInputScreen> createState() =>
+      _TransactionInputScreenState();
 }
 
-class _TransactionInputScreenState extends ConsumerState<TransactionInputScreen> {
+class _TransactionInputScreenState
+    extends ConsumerState<TransactionInputScreen> {
   bool _isExpense = true;
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   final LocalStorageService _localStorageService = LocalStorageService();
   String? _selectedCategory;
-  final List<String> _expenseCategories = ['食費', '交通費', '趣味・娯楽', '交際費', '日用品', 'その他'];
+  final List<String> _expenseCategories = [
+    '食費',
+    '交通費',
+    '趣味・娯楽',
+    '交際費',
+    '日用品',
+    'その他'
+  ];
   final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
 
   @override
@@ -45,15 +55,18 @@ class _TransactionInputScreenState extends ConsumerState<TransactionInputScreen>
     final amount = int.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('金額を正しく入力してください。')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('金額を正しく入力してください。')));
       return;
     }
     if (_selectedCategory == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('カテゴリを選択してください。')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('カテゴリを選択してください。')));
       return;
     }
-    List<Map<String, dynamic>> currentHistory = await _localStorageService.getTributeHistory();
+    List<Map<String, dynamic>> currentHistory =
+        await _localStorageService.getTributeHistory();
     Map<String, dynamic> newTribute = {
       "character": "A",
       "date": _selectedDate.toIso8601String(),
@@ -63,7 +76,9 @@ class _TransactionInputScreenState extends ConsumerState<TransactionInputScreen>
     currentHistory.add(newTribute);
     try {
       await _localStorageService.saveTributeHistory(currentHistory);
-      ref.read(homeScreenProvider.notifier).aiChat(_selectedCategory!, _isExpense ? -amount : amount);
+      ref
+          .read(homeScreenProvider.notifier)
+          .aiChat(_selectedCategory!, _isExpense ? -amount : amount);
       // フォームをリセット
       _amountController.clear();
       setState(() {
@@ -87,7 +102,8 @@ class _TransactionInputScreenState extends ConsumerState<TransactionInputScreen>
 
   @override
   Widget build(BuildContext context) {
-    final currentCategories = _isExpense ? _expenseCategories : _incomeCategories;
+    final currentCategories =
+        _isExpense ? _expenseCategories : _incomeCategories;
     return Scaffold(
       appBar: AppBar(
         title: const Text('収支の入力'),
@@ -95,13 +111,14 @@ class _TransactionInputScreenState extends ConsumerState<TransactionInputScreen>
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 20),
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 24,
+            right: 24,
+            top: 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('収支の入力', textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 24),
             Center(
               child: ToggleButtons(
                 isSelected: [_isExpense, !_isExpense],
@@ -113,10 +130,14 @@ class _TransactionInputScreenState extends ConsumerState<TransactionInputScreen>
                 },
                 borderRadius: BorderRadius.circular(8),
                 selectedColor: AppColors.subText,
-                fillColor: _isExpense ? AppColors.primary : AppColors.secondary,
+                fillColor: AppColors.primary,
                 children: const [
-                  Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: Text('支出')),
-                  Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: Text('収入')),
+                  Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Text('支出')),
+                  Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Text('収入')),
                 ],
               ),
             ),
@@ -124,11 +145,21 @@ class _TransactionInputScreenState extends ConsumerState<TransactionInputScreen>
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: const InputDecoration(
                 labelText: '金額',
                 prefixIcon: Icon(Icons.currency_yen),
                 border: OutlineInputBorder(),
               ),
+              onChanged: (value) {
+                final num = int.tryParse(value);
+                if (num != null && num > 99999) {
+                  _amountController.text = '99999';
+                  _amountController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: _amountController.text.length),
+                  );
+                }
+              },
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -158,11 +189,15 @@ class _TransactionInputScreenState extends ConsumerState<TransactionInputScreen>
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today_outlined, color: AppColors.subIcon),
+                    const Icon(Icons.calendar_today_outlined,
+                        color: AppColors.subIcon),
                     const SizedBox(width: 12),
-                    Text('日付: ${MaterialLocalizations.of(context).formatShortDate(_selectedDate)}', style: const TextStyle(fontSize: 16)),
+                    Text(
+                        '日付: ${MaterialLocalizations.of(context).formatShortDate(_selectedDate)}',
+                        style: const TextStyle(fontSize: 16)),
                     const Spacer(),
-                    const Icon(Icons.edit_outlined, color: AppColors.subIcon, size: 20),
+                    const Icon(Icons.edit_outlined,
+                        color: AppColors.subIcon, size: 20),
                   ],
                 ),
               ),
@@ -175,7 +210,8 @@ class _TransactionInputScreenState extends ConsumerState<TransactionInputScreen>
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.mainIcon,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textStyle:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               child: const Text('保存する'),
             ),
