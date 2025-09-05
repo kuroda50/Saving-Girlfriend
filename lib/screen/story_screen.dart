@@ -17,14 +17,20 @@ class StoryScreen extends StatefulWidget {
 class _StoryScreenState extends State<StoryScreen> {
   late int _story_index;
   int _lineIndex = 0;
+  bool _isValidIndex = true;
 
   @override
   void initState() {
     super.initState();
-    _story_index = widget.story_index; // コンストラクタで受け取った値をセット
+    _story_index = widget.story_index;
+    if (_story_index < 0 ||
+        _story_index >= EpisodeSuzunariOto.suzunariOtoStory.length) {
+      _isValidIndex = false;
+    }
   }
 
   void nextLine() {
+    if (!_isValidIndex) return;
     if (_lineIndex <
         EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1)
       setState(() {
@@ -37,6 +43,41 @@ class _StoryScreenState extends State<StoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isValidIndex)
+      // 範囲外の場合のエラー画面
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: AppColors.secondary,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error, color: Colors.red, size: 64),
+              SizedBox(height: 16),
+              Text(
+                'ストーリーが見つかりません',
+                style: TextStyle(fontSize: 20, color: AppColors.error),
+              ),
+              SizedBox(height: 16),
+              SizedBox(
+                width: 150,
+                child: ElevatedButton(
+                  onPressed: () => context.pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.mainIcon,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  child: const Text('戻る'),
+                ),
+              )
+            ],
+          ),
+        ),
+      );
     return Scaffold(
         appBar: AppBar(
           backgroundColor: AppColors.secondary,
@@ -89,7 +130,7 @@ class _StoryScreenState extends State<StoryScreen> {
                             horizontal: 16, vertical: 8),
                         color: Colors.pink[300],
                         child: Text(
-                          '第${_story_index + 1}話',
+                          '第${_story_index}話',
                           style:
                               TextStyle(color: AppColors.subText, fontSize: 18),
                         ),
