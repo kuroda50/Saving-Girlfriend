@@ -20,7 +20,7 @@ class AppNavigationBar extends StatelessWidget {
           const NavigationDestination(icon: Icon(Icons.home), label: 'ホーム'),
           const NavigationDestination(icon: Icon(Icons.person), label: '彼女'),
           const NavigationDestination(
-              icon: Icon(Icons.currency_yen), label: '支出入'), // 新しい記録アイコンを追加
+              icon: Icon(Icons.currency_yen), label: '支出'),
           const NavigationDestination(
               icon: Icon(Icons.menu_book), label: '思い出'),
           NavigationDestination(
