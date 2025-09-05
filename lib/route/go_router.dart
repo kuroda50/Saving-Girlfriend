@@ -5,7 +5,7 @@ import 'package:saving_girlfriend/screen/select_story_screen.dart';
 import 'package:saving_girlfriend/screen/story_screen.dart';
 import 'package:saving_girlfriend/screen/settings_screen.dart';
 import 'package:saving_girlfriend/screen/tribute_history_screen.dart';
-import 'package:saving_girlfriend/screen/monetise_screen.dart';
+import 'package:saving_girlfriend/screen/transaction_input_screen.dart';
 import 'app_navigation_bar.dart';
 import 'package:flutter/material.dart';
 // 新しい画面をインポート
@@ -72,7 +72,7 @@ final router = GoRouter(
           routes: [
             GoRoute(
               path: '/transaction_input',
-              pageBuilder: (context, state) => NoTransitionPage(
+              pageBuilder: (context, state) => const NoTransitionPage(
                 child: TransactionInputScreen(),
               ),
             ),
@@ -87,15 +87,6 @@ final router = GoRouter(
               // `EpisodeScreen`に修正
               child: const EpisodeScreen(),
             ),
-            routes: [
-              GoRoute(
-                path: 'story',
-                parentNavigatorKey: rootNavigatorKey,
-                pageBuilder: (context, state) {
-                  return const MaterialPage(child: StoryScreen());
-                },
-              )
-            ],
           ),
         ]),
         // 4. 貢ぎ履歴ブランチ
@@ -110,5 +101,12 @@ final router = GoRouter(
         ]),
       ],
     ),
+    GoRoute(
+      path: '/story',
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) {
+        return const MaterialPage(child: StoryScreen());
+      },
+    )
   ],
 );

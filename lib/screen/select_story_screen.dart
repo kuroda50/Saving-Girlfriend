@@ -1,6 +1,5 @@
 import 'package:go_router/go_router.dart';
 /* ストーリー選択画面 */
-
 import 'package:flutter/material.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
@@ -82,16 +81,14 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
       ),
       body: Column(
         children: [
-          // ★★★ ヘッダーをContainerで囲み、影を付けます ★★★
           Container(
             decoration: const BoxDecoration(
-              // ヘッダー部分の背景色を白に変更
               color: AppColors.mainBackground,
               boxShadow: [
                 BoxShadow(
                   color: AppColors.shadow,
                   blurRadius: 4.0,
-                  offset: const Offset(0, 2), // 下方向に影を伸ばす
+                  offset: Offset(0, 2), // 下方向に影を伸ばす
                 ),
               ],
             ),
@@ -117,7 +114,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
                   return EpisodeListItem(
                     episode: episode,
                     onPlay: () {
-                      context.push("/select_story/story");
+                      context.push("/story");
                       print('Play episode ${episode.number}');
                     },
                     onInfo: () {
@@ -231,33 +228,37 @@ class EpisodeListItem extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                GestureDetector(
-                  onTap: onPlay,
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: const BoxDecoration(
-                      color: playButtonColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.play_arrow,
-                        color: AppColors.mainIcon, size: 24),
-                  ),
-                ),
+                !episode.isLocked
+                    ? GestureDetector(
+                        onTap: onPlay,
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: const BoxDecoration(
+                            color: playButtonColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.play_arrow,
+                              color: AppColors.mainIcon, size: 24),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
                 const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: onInfo,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                      color: playButtonColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.info_outline,
-                        color: AppColors.mainIcon, size: 20),
-                  ),
-                ),
+                !episode.isLocked
+                    ? GestureDetector(
+                        onTap: onInfo,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            color: playButtonColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.info_outline,
+                              color: AppColors.mainIcon, size: 20),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ],
             ),
           ),
