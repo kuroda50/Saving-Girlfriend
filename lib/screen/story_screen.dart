@@ -7,22 +7,31 @@ import 'package:saving_girlfriend/constants/assets.dart';
 import '../constants/color.dart';
 
 class StoryScreen extends StatefulWidget {
-  const StoryScreen({super.key});
+  final int story_index;
+  const StoryScreen({super.key, required this.story_index});
 
   @override
   State<StoryScreen> createState() => _StoryScreenState();
 }
 
 class _StoryScreenState extends State<StoryScreen> {
-  int _currentIndex = 0;
+  late int _story_index;
+  int _lineIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _story_index = widget.story_index; // コンストラクタで受け取った値をセット
+  }
 
   void nextLine() {
-    if (_currentIndex < EpisodeSuzunariOto.suzunariOtoStory.length - 1)
+    if (_lineIndex <
+        EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1)
       setState(() {
-        _currentIndex++;
+        _lineIndex++;
       });
-    // 最後のセリフなら戻る
-    else if (_currentIndex >= EpisodeSuzunariOto.suzunariOtoStory.length - 1)
+    else if (_lineIndex >=
+        EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1)
       context.pop();
   }
 
@@ -54,7 +63,7 @@ class _StoryScreenState extends State<StoryScreen> {
                           ),
                           ChatWidget(
                               text: EpisodeSuzunariOto
-                                  .suzunariOtoStory[_currentIndex]),
+                                  .suzunariOtoStory[_story_index][_lineIndex]),
                           SizedBox(
                             height: 15,
                           ),
@@ -79,8 +88,8 @@ class _StoryScreenState extends State<StoryScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         color: Colors.pink[300],
-                        child: const Text(
-                          '第１話',
+                        child: Text(
+                          '第${_story_index + 1}話',
                           style:
                               TextStyle(color: AppColors.subText, fontSize: 18),
                         ),

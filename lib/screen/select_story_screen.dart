@@ -114,7 +114,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
                   return EpisodeListItem(
                     episode: episode,
                     onPlay: () {
-                      context.push("/story");
+                      context.push("/story", extra: episode.number);
                       print('Play episode ${episode.number}');
                     },
                     onInfo: () {

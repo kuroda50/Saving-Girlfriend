@@ -105,7 +105,8 @@ final router = GoRouter(
       path: '/story',
       parentNavigatorKey: rootNavigatorKey,
       pageBuilder: (context, state) {
-        return const MaterialPage(child: StoryScreen());
+        final story_index = state.extra as int;
+        return MaterialPage(child: StoryScreen(story_index: story_index));
       },
     )
   ],
