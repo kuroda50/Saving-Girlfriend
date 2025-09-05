@@ -5,10 +5,11 @@ import 'package:saving_girlfriend/screen/select_story_screen.dart';
 import 'package:saving_girlfriend/screen/story_screen.dart';
 import 'package:saving_girlfriend/screen/settings_screen.dart';
 import 'package:saving_girlfriend/screen/tribute_history_screen.dart';
+import 'package:saving_girlfriend/screen/monetise_screen.dart';
 import 'app_navigation_bar.dart';
 import 'package:flutter/material.dart';
 // 新しい画面をインポート
-import 'package:saving_girlfriend/screen/monetise';
+// import 'package:saving_girlfriend/screen/monetise';
 
 // 各ブランチのナビゲーションスタックを管理するためのGlobalKey
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -71,7 +72,7 @@ final router = GoRouter(
           routes: [
             GoRoute(
               path: '/transaction_input',
-              pageBuilder: (context, state) => const NoTransitionPage(
+              pageBuilder: (context, state) => NoTransitionPage(
                 child: TransactionInputScreen(),
               ),
             ),

@@ -4,9 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import '../constants/color.dart';
 import 'package:go_router/go_router.dart';
-import '../services/local_storage_service.dart';
 import '../providers/home_screen_provider.dart';
-import '../providers/tribute_history_provider.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -122,32 +120,32 @@ class HomeScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      GestureDetector(
-                        onTap: () => showTransactionModal(
-                          context,
-                          onSave: (newTributeData) {
-                            final category = newTributeData['category'] as String;
-                            final amount = newTributeData['amount'] as int;
-                            handleSendMessage(category, amount);
-                          },
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.8),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withOpacity(0.4),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(Icons.currency_yen, color: AppColors.mainIcon, size: 45),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+                      // GestureDetector(
+                      //   onTap: () => showTransactionModal(
+                      //     context,
+                      //     onSave: (newTributeData) {
+                      //       final category = newTributeData['category'] as String;
+                      //       final amount = newTributeData['amount'] as int;
+                      //       handleSendMessage(category, amount);
+                      //     },
+                      //   ),
+                      //   child: Container(
+                      //     padding: const EdgeInsets.all(8),
+                      //     decoration: BoxDecoration(
+                      //       color: AppColors.primary.withOpacity(0.8),
+                      //       shape: BoxShape.circle,
+                      //       boxShadow: [
+                      //         BoxShadow(
+                      //           color: AppColors.primary.withOpacity(0.4),
+                      //           blurRadius: 8,
+                      //           offset: const Offset(0, 4),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //     child: const Icon(Icons.currency_yen, color: AppColors.mainIcon, size: 45),
+                      //   ),
+                      // ),
+                      // const SizedBox(height: 10),
                       SizedBox(
                         height: 70,
                         width: MediaQuery.of(context).size.width * 0.9,
