@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/providers/home_screen_provider.dart';
+import '../services/local_storage_service.dart';
 
 // --- ① UIに表示するデータ（お皿）の定義 ---
 // この部分は generator を使う場合と全く同じです。
@@ -16,8 +16,8 @@ class TributeHistoryState {
     this.targetSavingAmount = 0,
     required this.currentYear,
     required this.currentMonth,
-    required this.selectedDate, // ★追加
-    required this.selectedDateTributes, // ★追加
+    required this.selectedDate,
+    required this.selectedDateTributes,
   });
 
   TributeHistoryState copyWith({
@@ -25,26 +25,29 @@ class TributeHistoryState {
     int? targetSavingAmount,
     int? currentYear,
     int? currentMonth,
-    DateTime? selectedDate, // ★追加
-    List<Map<String, dynamic>>? selectedDateTributes, // ★追加
+    DateTime? selectedDate,
+    List<Map<String, dynamic>>? selectedDateTributes,
   }) {
     return TributeHistoryState(
       tributeHistory: tributeHistory ?? this.tributeHistory,
       targetSavingAmount: targetSavingAmount ?? this.targetSavingAmount,
       currentYear: currentYear ?? this.currentYear,
       currentMonth: currentMonth ?? this.currentMonth,
-      selectedDate: selectedDate ?? this.selectedDate, // ★追加
-      selectedDateTributes: selectedDateTributes ?? this.selectedDateTributes, // ★追加
+      selectedDate: selectedDate ?? this.selectedDate,
+      selectedDateTributes: selectedDateTributes ?? this.selectedDateTributes,
     );
   }
 }
 
+final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
+  return LocalStorageService();
+});
+
 // --- ② データを操作するロジック（お料理人）の定義 ---
-// `extends _$TributeHistory` ではなく `extends AsyncNotifier<TributeHistoryState>` と書きます。
 class TributeHistoryNotifier extends AsyncNotifier<TributeHistoryState> {
   @override
   Future<TributeHistoryState> build() async {
-    final localStorageService = ref.watch(localStorageServiceProvider);
+    final localStorageService = LocalStorageService();
     final history = await localStorageService.getTributeHistory();
     final target = await localStorageService.getTargetSavingAmount() ?? 0;
 
@@ -67,8 +70,6 @@ class TributeHistoryNotifier extends AsyncNotifier<TributeHistoryState> {
     );
   }
 
-
-  // 他のメソッド（changeMonth, addTribute）も全く同じです。
   void changeMonth(int direction) {
     final currentState = state.value!;
 
@@ -90,28 +91,32 @@ class TributeHistoryNotifier extends AsyncNotifier<TributeHistoryState> {
   }
 
   Future<void> addTribute(Map<String, dynamic> newTribute) async {
-  final localStorageService = ref.read(localStorageServiceProvider);
-  final currentHistory =
-      List<Map<String, dynamic>>.from(state.value!.tributeHistory);
+    final localStorageService = ref.read(localStorageServiceProvider);
+    final currentHistory =
+        List<Map<String, dynamic>>.from(state.value!.tributeHistory);
+    // ★ idがなければ付与する
+    final tributeWithId = {
+      ...newTribute,
+      'id': newTribute['id'] ??
+          'tribute_${DateTime.now().millisecondsSinceEpoch}',
+    };
 
-  // ★ idがなければ付与する
-  final tributeWithId = {
-    ...newTribute,
-    'id': newTribute['id'] ?? 'tribute_${DateTime.now().millisecondsSinceEpoch}',
-  };
+    currentHistory.add(tributeWithId);
+    await localStorageService.saveTributeHistory(currentHistory);
 
-  currentHistory.add(tributeWithId);
-  await localStorageService.saveTributeHistory(currentHistory);
+    final newState = state.value!.copyWith(
+      tributeHistory: currentHistory,
+    );
+    state = AsyncData(newState);
+    selectDate(newState.selectedDate);
+  }
 
-  state = AsyncData(state.value!.copyWith(
-    tributeHistory: currentHistory,
-  ));
-}
-  // ★★★↓ このメソッドをまるごと追加 ↓★★★
-  Future<void> updateTribute(String id, Map<String, dynamic> updatedTribute) async {
+  Future<void> updateTribute(
+      String id, Map<String, dynamic> updatedTribute) async {
     final localStorageService = ref.read(localStorageServiceProvider);
     // state.value! で現在の状態（データ）を安全に取得
-    final currentHistory = List<Map<String, dynamic>>.from(state.value!.tributeHistory);
+    final currentHistory =
+        List<Map<String, dynamic>>.from(state.value!.tributeHistory);
 
     // 更新対象の履歴をIDで探す
     final index = currentHistory.indexWhere((tribute) => tribute['id'] == id);
@@ -132,7 +137,6 @@ class TributeHistoryNotifier extends AsyncNotifier<TributeHistoryState> {
     }
   }
 
-  // ★★★↓ このメソッドをまるごと追加 ↓★★★
   void selectDate(DateTime date) {
     final currentState = state.value;
     if (currentState == null) return;
@@ -153,13 +157,15 @@ class TributeHistoryNotifier extends AsyncNotifier<TributeHistoryState> {
   }
 }
 
-
 // --- ③ Provider（メニュー表）の定義 ---
-// ★★★ ここが一番大きな違いです！ ★★★
-// generatorが自動生成していたProviderを、このように手で書きます。
 final tributeHistoryProvider =
     AsyncNotifierProvider<TributeHistoryNotifier, TributeHistoryState>(() {
-  // 「このメニューを注文されたら、TributeHistoryNotifierというお料理人を準備してください」
-  // という意味になります。
   return TributeHistoryNotifier();
+});
+
+final selectedTributesProvider = Provider<List<Map<String, dynamic>>>((ref) {
+  final tributes = ref.watch(tributeHistoryProvider.select(
+    (asyncState) => asyncState.value?.selectedDateTributes ?? [],
+  ));
+  return tributes;
 });

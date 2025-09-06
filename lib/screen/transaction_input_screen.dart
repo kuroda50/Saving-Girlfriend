@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import '../providers/home_screen_provider.dart';
-import '../services/local_storage_service.dart';
+import '../providers/tribute_history_provider.dart';
 import 'package:flutter/services.dart';
 
 class TransactionInputScreen extends ConsumerStatefulWidget {
@@ -19,7 +19,6 @@ class _TransactionInputScreenState
   bool _isExpense = true;
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  final LocalStorageService _localStorageService = LocalStorageService();
   String? _selectedCategory;
   final List<String> _expenseCategories = [
     '食費',
@@ -65,20 +64,21 @@ class _TransactionInputScreenState
           .showSnackBar(const SnackBar(content: Text('カテゴリを選択してください。')));
       return;
     }
-    List<Map<String, dynamic>> currentHistory =
-        await _localStorageService.getTributeHistory();
-    Map<String, dynamic> newTribute = {
+
+    final newTribute = {
       "character": "A",
       "date": _selectedDate.toIso8601String(),
       "amount": _isExpense ? -amount : amount,
-      "category": _selectedCategory!
+      "category": _selectedCategory!,
     };
-    currentHistory.add(newTribute);
+
     try {
-      await _localStorageService.saveTributeHistory(currentHistory);
+      await ref.read(tributeHistoryProvider.notifier).addTribute(newTribute);
+
       ref
           .read(homeScreenProvider.notifier)
           .aiChat(_selectedCategory!, _isExpense ? -amount : amount);
+          
       // フォームをリセット
       _amountController.clear();
       setState(() {
@@ -97,7 +97,7 @@ class _TransactionInputScreenState
       );
     }
     if (!mounted) return;
-    context.go('/home'); // 修正: 保存後にホーム画面に遷移
+    context.go('/home');
   }
 
   @override
