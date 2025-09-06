@@ -5,7 +5,6 @@ import '../providers/tribute_history_provider.dart';
 
 // 1. LocalStorageServiceを提供するシンプルなProvider
 
-
 // 2. HomeScreenの状態を管理するためのNotifierとProvider
 // 画面の状態を定義するクラス
 class HomeScreenState {
@@ -40,10 +39,10 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
 
   // ★★★↓ aiChatメソッドをこの内容に置き換え ↓★★★
   Future<void> aiChat(String message, int saveAmount) async {
-
     state = state.copyWith(isLoading: true);
 
-    final url = Uri.parse('http://172.17.80.1:5000/girlfriend_reaction');//ipアドレスに注意！
+    final url =
+        Uri.parse('http://172.20.10.2:5000/girlfriend_reaction'); //ipアドレスに注意！
 
     try {
       final response = await http.post(
@@ -51,10 +50,12 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
         headers: {'Content-Type': 'application/json'},
         // bodyにuser_idを追加
         body: jsonEncode({
+          'user_id': 'test_user',
           'user_input': message,
           'savings_amount': saveAmount,
         }),
       );
+      print("ステータスコード：${response.statusCode}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -66,7 +67,9 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
             'amount': saveAmount,
             'category': message,
           };
-          await ref.read(tributeHistoryProvider.notifier).addTribute(newTribute);
+          await ref
+              .read(tributeHistoryProvider.notifier)
+              .addTribute(newTribute);
         }
       } else {
         state = state.copyWith(girlfriendText: 'ごめんなさい、ちょっと調子が悪いです…');

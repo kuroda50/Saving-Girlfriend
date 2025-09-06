@@ -114,6 +114,7 @@ def get_ai_reaction(user_id: str, user_input: str, saving_amount: int) -> dict:
 # この関数もまるごと置き換え
 @app.route("/girlfriend_reaction", methods=["POST"])
 def girlfriend_reaction_endpoint():
+    print("呼ばれたよ")
     data = request.json
 
     # Flutter側から user_id を受け取るように変更
