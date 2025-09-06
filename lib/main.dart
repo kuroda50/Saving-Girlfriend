@@ -10,7 +10,7 @@ void main() async {
   runApp(
     DevicePreview(
       enabled: !kReleaseMode,
-      builder: (context) => ProviderScope(child: MyApp()), // Wrap your app
+      builder: (context) => ProviderScope(child: MyApp()),
     ),
   );
 }

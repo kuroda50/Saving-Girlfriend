@@ -71,10 +71,8 @@ class LocalStorageService {
   Future<List<Map<String, dynamic>>> getTributeHistory() async {
     final jsonString = prefs.getString(_tributeHistoryKey);
     if (jsonString != null && jsonString.isNotEmpty) {
-      // JSON文字列をデコードして List<Map> に変換
       final List<dynamic> decodedList = jsonDecode(jsonString);
-      print(
-          decodedList.map((item) => Map<String, dynamic>.from(item)).toList());
+      print(decodedList.map((item) => Map<String, dynamic>.from(item)).toList());
       return decodedList
           .map((item) => Map<String, dynamic>.from(item))
           .toList();

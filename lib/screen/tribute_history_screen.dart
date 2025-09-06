@@ -11,6 +11,7 @@ class TributeHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tributeHistoryAsync = ref.watch(tributeHistoryProvider);
+    final selectedTributes = ref.watch(selectedTributesProvider);
 
     // --- 金額フォーマット関数 ---
     String formatAmount(int amount) {
@@ -184,13 +185,13 @@ class TributeHistoryScreen extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: state.selectedDateTributes.isEmpty
+                child: selectedTributes.isEmpty
                     ? const Center(child: Text('この日の履歴はありません。'))
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        itemCount: state.selectedDateTributes.length,
+                        itemCount: selectedTributes.length,
                         itemBuilder: (context, index) {
-                          final tribute = state.selectedDateTributes[index];
+                          final tribute = selectedTributes[index];
                           final amount = tribute['amount'] as int;
                           final category = tribute['category'] as String? ?? 'カテゴリなし';
                           return Card(
