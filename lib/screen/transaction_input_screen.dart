@@ -78,7 +78,7 @@ class _TransactionInputScreenState
       ref
           .read(homeScreenProvider.notifier)
           .aiChat(_selectedCategory!, _isExpense ? -amount : amount);
-          
+
       // フォームをリセット
       _amountController.clear();
       setState(() {

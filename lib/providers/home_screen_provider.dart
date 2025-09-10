@@ -42,13 +42,12 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
     state = state.copyWith(isLoading: true);
 
     final url =
-        Uri.parse('http://172.20.10.2:5000/girlfriend_reaction'); //ipアドレスに注意！
+        Uri.parse('http://192.168.50.37:5000/girlfriend_reaction'); //ipアドレスに注意！
 
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        // bodyにuser_idを追加
         body: jsonEncode({
           'user_id': 'test_user',
           'user_input': message,
@@ -60,17 +59,6 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         state = state.copyWith(girlfriendText: data['reaction']);
-
-        if (saveAmount != 0) {
-          final newTribute = {
-            'date': DateTime.now().toIso8601String(),
-            'amount': saveAmount,
-            'category': message,
-          };
-          await ref
-              .read(tributeHistoryProvider.notifier)
-              .addTribute(newTribute);
-        }
       } else {
         state = state.copyWith(girlfriendText: 'ごめんなさい、ちょっと調子が悪いです…');
       }

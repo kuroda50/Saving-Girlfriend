@@ -19,7 +19,7 @@ class _GirlfriendWidgetState extends State<GirlfriendWidget> {
   bool _isLoading = false;
 
   // ★あなたのPCのIPアドレス
-  final String _serverUrl = 'http://172.20.10.2:5000/girlfriend_reaction';
+  final String _serverUrl = 'http://192.168.50.37:5000/girlfriend_reaction';
 
   Future<void> _saveMoney() async {
     final int amount = int.tryParse(_controller.text) ?? 0;
