@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import '../constants/color.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/home_screen_provider.dart';
-import 'package:intl/intl.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -13,123 +11,77 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final homeState = ref.watch(homeScreenProvider);
-    final girlfriendText = homeState.girlfriendText;
+    final comments = homeState.comments;
 
-    void handleSendMessage(String message, int amount) {
-      ref.read(homeScreenProvider.notifier).aiChat(message, amount);
-    }
+    // handleSendMessage と girlfriendText は不要なので削除
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
       ),
-      body: Column(
+      body: Stack( // bodyを直接Stackに変更
         children: [
-          Expanded(
-            child: Stack(
+          // 1. 背景画像
+          Positioned.fill(
+            child: Image.asset(
+              AppAssets.backgroundClassroom,
+              fit: BoxFit.cover,
+            ),
+          ),
+          // 2. キャラクター画像
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Image.asset(
+                AppAssets.characterSuzunari,
+                fit: BoxFit.contain,
+                height: MediaQuery.of(context).size.height * 0.5,
+              ),
+            ),
+          ),
+
+          // ★★★↓ LIVEバッジと視聴者数を追加 ↓★★★
+          Positioned(
+            top: 80,
+            right: 20,
+            child: Row(
               children: [
-                Positioned.fill(
-                  child: Image.asset(
-                    AppAssets.backgroundClassroom,
-                    fit: BoxFit.cover,
+                // LIVEバッジ
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Image.asset(
-                      AppAssets.characterSuzunari,
-                      fit: BoxFit.contain,
-                      height: MediaQuery.of(context).size.height * 0.5,
+                  child: const Text(
+                    'LIVE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 20,
-                  left: 20,
-                  right: 20,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppColors.mainBackground.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.settings, color: AppColors.subIcon),
-                          onPressed: () {
-                            context.push('/home/settings');
-                          },
-                        ),
-                        const Text(
-                          '5回目継続中!!',
-                          style: TextStyle(color: AppColors.mainText, fontSize: 12),
-                        ),
-                        const Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8.0),
-                            child: LinearProgressIndicator(
-                              value: 0.5,
-                              backgroundColor: AppColors.nonActive,
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                            ),
-                          ),
-                        ),
-                        const Icon(Icons.favorite, color: AppColors.primary, size: 18),
-                        const Text('50', style: TextStyle(color: AppColors.mainText, fontSize: 14)),
-                        const Text('/100', style: TextStyle(color: AppColors.mainText, fontSize: 12)),
-                      ],
-                    ),
+                const SizedBox(width: 8),
+                // 視聴者数
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                ),
-                Positioned(
-                  top: MediaQuery.of(context).size.height * 0.15,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      width: MediaQuery.of(context).size.width * 0.7,
-                      decoration: BoxDecoration(
-                        color: AppColors.mainBackground,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: AppColors.shadow,
-                            blurRadius: 5,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        girlfriendText,
-                        style: const TextStyle(fontSize: 14, color: AppColors.mainText),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: MediaQuery.of(context).size.height * 0.02,
-                  right: 20,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  child: Row(
                     children: [
-                      SizedBox(
-                        height: 70,
-                        width: MediaQuery.of(context).size.width * 0.9,
-                        child: ChatInputWidget(
-                          onSendMessage: (message) {
-                            handleSendMessage(message, 0);
-                          },
-                          hintText: '彼女と会話しましょう！',
-                          backgroundColor: AppColors.secondary,
-                          sendButtonColor: AppColors.primary,
+                      const Icon(Icons.visibility, color: Colors.white, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${homeState.viewers}', // ★Providerから視聴者数を取得
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
@@ -138,109 +90,112 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class ChatInputWidget extends StatefulWidget {
-  final Function(String) onSendMessage;
-  final String? hintText;
-  final Color? backgroundColor;
-  final Color? sendButtonColor;
-  final IconData? sendIcon;
-  const ChatInputWidget({
-    Key? key,
-    required this.onSendMessage,
-    this.hintText = 'メッセージを入力...',
-    this.backgroundColor,
-    this.sendButtonColor,
-    this.sendIcon = Icons.send,
-  }) : super(key: key);
-
-  @override
-  State<ChatInputWidget> createState() => _ChatInputWidgetState();
-}
-
-class _ChatInputWidgetState extends State<ChatInputWidget> {
-  final TextEditingController _textController = TextEditingController();
-  bool _isComposing = false;
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
-
-  void _handleSubmitted(String text) {
-    if (text.trim().isEmpty) return;
-    widget.onSendMessage(text.trim());
-    _textController.clear();
-    setState(() {
-      _isComposing = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        color: widget.backgroundColor ?? theme.colorScheme.surface,
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 4,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
-                    borderRadius: BorderRadius.circular(24.0),
-                    color: theme.colorScheme.background,
+          // ★★★↑↑↑ 追加はここまで ↑↑↑★★★
+          // 3. 上部の情報バー（元のまま）
+          Positioned(
+            top: 20,
+            left: 20,
+            right: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.mainBackground.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.settings, color: AppColors.subIcon),
+                    onPressed: () => context.push('/home/settings'),
                   ),
-                  child: TextField(
-                    controller: _textController,
-                    maxLines: 1,
-                    textInputAction: TextInputAction.send,
-                    decoration: InputDecoration(
-                      hintText: widget.hintText,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  const Text('5回目継続中!!', style: TextStyle(color: AppColors.mainText, fontSize: 12)),
+                  const Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: LinearProgressIndicator(
+                        value: 0.5,
+                        backgroundColor: AppColors.nonActive,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
                     ),
-                    onChanged: (text) {
-                      setState(() {
-                        _isComposing = text.trim().isNotEmpty;
-                      });
-                    },
-                    onSubmitted: _handleSubmitted,
                   ),
-                ),
+                  const Icon(Icons.favorite, color: AppColors.primary, size: 18),
+                  const Text('50', style: TextStyle(color: AppColors.mainText, fontSize: 14)),
+                  const Text('/100', style: TextStyle(color: AppColors.mainText, fontSize: 12)),
+                ],
               ),
-              const SizedBox(width: 8.0),
-              Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  onPressed: _isComposing ? () => _handleSubmitted(_textController.text) : null,
-                  icon: Icon(widget.sendIcon, color: AppColors.mainIcon),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          // 4. 吹き出し（元のまま）
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.15,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                width: MediaQuery.of(context).size.width * 0.7,
+                decoration: BoxDecoration(
+                  color: AppColors.mainBackground,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.shadow,
+                      blurRadius: 5,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Text(
+                  "見に来てくれてありがとう！", // ★固定テキストに変更
+                  style: TextStyle(fontSize: 14, color: AppColors.mainText),
+                ),
+              ),
+            ),
+          ),
+
+          // ★★★↓ コメント表示エリアを追加 ↓★★★
+          // ★★★ コメント表示エリア ★★★
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: Container( // ★Containerを追加
+              width: MediaQuery.of(context).size.width * 0.4,
+              height: 250,
+              padding: const EdgeInsets.all(8.0), // ★内側の余白を追加
+              decoration: BoxDecoration( // ★背景の装飾を設定
+                color: Colors.black.withOpacity(0.4), // ★黒で透明度40%
+                borderRadius: BorderRadius.circular(10), // ★角を丸くする
+              ),
+              child: ListView.builder(
+                reverse: true,
+                itemCount: comments.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Text(
+                      comments[index],
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 5.0,
+                            color: Colors.black,
+                            offset: Offset(2.0, 2.0),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

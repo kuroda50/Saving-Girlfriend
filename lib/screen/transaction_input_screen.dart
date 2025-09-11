@@ -75,10 +75,10 @@ class _TransactionInputScreenState
     try {
       await ref.read(tributeHistoryProvider.notifier).addTribute(newTribute);
 
-      ref
-          .read(homeScreenProvider.notifier)
-          .aiChat(_selectedCategory!, _isExpense ? -amount : amount);
-          
+      //ref
+          //.read(homeScreenProvider.notifier)
+          //.aiChat(_selectedCategory!, _isExpense ? -amount : amount);
+
       // フォームをリセット
       _amountController.clear();
       setState(() {

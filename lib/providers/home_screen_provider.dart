@@ -1,88 +1,86 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../providers/tribute_history_provider.dart';
 
-// 1. LocalStorageServiceを提供するシンプルなProvider
-
-// 2. HomeScreenの状態を管理するためのNotifierとProvider
 // 画面の状態を定義するクラス
 class HomeScreenState {
-  final String girlfriendText;
-  final bool isLoading;
+  final List<String> comments;
+  final int viewers;
 
   HomeScreenState({
-    this.girlfriendText = 'おはようございます先輩！ 今日も可愛いですね❤',
-    this.isLoading = false, // isLoadingの初期値を追加
+    this.comments = const [],
+    this.viewers = 0,
   });
 
-  HomeScreenState copyWith({
-    String? userId,
-    String? girlfriendText,
-    bool? isLoading,
-  }) {
+  // ★ カンマを修正
+  HomeScreenState copyWith({List<String>? comments, int? viewers}) {
     return HomeScreenState(
-      girlfriendText: girlfriendText ?? this.girlfriendText,
-      isLoading: isLoading ?? this.isLoading,
+      comments: comments ?? this.comments,
+      viewers: viewers ?? this.viewers,
     );
   }
 }
 
 // 状態とロジックを管理するNotifierクラス
 class HomeScreenNotifier extends Notifier<HomeScreenState> {
-  // LocalStorageServiceのインスタンスを取得
+  final _presetComments = [
+    'かわいい！', '草', 'www', 'すごい！', '888888',
+    'なるほど', '初見です', 'すき', '天才か？',
+    '尊い', '最高', 'いいね！', 'がんばれー', 'ファイト！',
+    'ワイは応援してるで', 'ナイス！','wwwwww', 'かわいすぎる', '天使', '癒される',
+    'あ','めっちゃすげ～','ワイは明日も残業やで','!?','さすがやねw','すずなりちゃん大好き',
+    'あつ～','うますぎ','いいねいいね','すごいなぁ','ええやん！',
+  ];
+  Timer? _timer;
 
   @override
   HomeScreenState build() {
-    return HomeScreenState();
+    // ★ 2つあったbuildメソッドを1つに統合
+    // 最初にランダムな視聴者数を設定
+    final initialState = HomeScreenState(viewers: Random().nextInt(50) + 10);
+
+    // 最初のコメントを予約する
+    _scheduleNextComment();
+
+    // 画面が閉じられたときにタイマーを止める
+    ref.onDispose(() {
+      _timer?.cancel();
+    });
+
+    return initialState;
   }
 
-  // ★★★↓ aiChatメソッドをこの内容に置き換え ↓★★★
-  Future<void> aiChat(String message, int saveAmount) async {
-    state = state.copyWith(isLoading: true);
+  // ランダムな時間で次のコメントを予約するメソッド
+  void _scheduleNextComment() {
+    // 1秒から5秒までのランダムな秒数を生成
+    final randomSeconds = Random().nextInt(5) + 1;
 
-    final url =
-        Uri.parse('http://172.20.10.2:5000/girlfriend_reaction'); //ipアドレスに注意！
+    _timer = Timer(Duration(seconds: randomSeconds), () {
+      // コメントを追加
+      final randomComment = _presetComments[Random().nextInt(_presetComments.length)];
+      _addComment(randomComment);
 
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        // bodyにuser_idを追加
-        body: jsonEncode({
-          'user_id': 'test_user',
-          'user_input': message,
-          'savings_amount': saveAmount,
-        }),
-      );
-      print("ステータスコード：${response.statusCode}");
+      // 視聴者数を変動させる
+      final currentViewers = state.viewers;
+      final change = Random().nextInt(5) - 2; // -2人 〜 +2人
+      state = state.copyWith(viewers: (currentViewers + change).clamp(5, 100));
+      
+      // 次のコメントを予約
+      _scheduleNextComment();
+    });
+  }
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        state = state.copyWith(girlfriendText: data['reaction']);
-
-        if (saveAmount != 0) {
-          final newTribute = {
-            'date': DateTime.now().toIso8601String(),
-            'amount': saveAmount,
-            'category': message,
-          };
-          await ref
-              .read(tributeHistoryProvider.notifier)
-              .addTribute(newTribute);
-        }
-      } else {
-        state = state.copyWith(girlfriendText: 'ごめんなさい、ちょっと調子が悪いです…');
-      }
-    } catch (error) {
-      state = state.copyWith(girlfriendText: '通信エラーみたいです…電波届いてますか？');
-    } finally {
-      state = state.copyWith(isLoading: false);
+  void _addComment(String newComment) {
+    final currentComments = List<String>.from(state.comments);
+    currentComments.insert(0, newComment);
+    if (currentComments.length > 8) {
+      currentComments.removeLast();
     }
+    state = state.copyWith(comments: currentComments);
   }
 }
 
-// NotifierとStateをUIから使えるようにするためのProvider
+// Providerの定義
 final homeScreenProvider =
     NotifierProvider<HomeScreenNotifier, HomeScreenState>(() {
   return HomeScreenNotifier();
