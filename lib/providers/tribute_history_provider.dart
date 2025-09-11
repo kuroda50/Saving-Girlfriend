@@ -132,8 +132,6 @@ class TributeHistoryNotifier extends AsyncNotifier<TributeHistoryState> {
       state = AsyncData(state.value!.copyWith(
         tributeHistory: currentHistory,
       ));
-      // 選択中の日付のリストも更新する
-      selectDate(state.value!.selectedDate);
     }
   }
 
