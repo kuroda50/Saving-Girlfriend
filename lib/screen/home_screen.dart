@@ -148,9 +148,9 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                child: const Text(
-                  "見に来てくれてありがとう！", // ★固定テキストに変更
-                  style: TextStyle(fontSize: 14, color: AppColors.mainText),
+                child: Text(
+                  homeState.characterDialogue, // ★Providerからセリフを受け取る
+                  style: const TextStyle(fontSize: 14, color: AppColors.mainText),
                 ),
               ),
             ),
