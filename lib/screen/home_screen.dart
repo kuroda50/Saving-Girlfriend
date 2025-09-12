@@ -6,7 +6,7 @@ import '../constants/color.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/home_screen_provider.dart';
 import 'package:intl/intl.dart';
-
+import 'package:saving_girlfriend/screen/settings_screen.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
