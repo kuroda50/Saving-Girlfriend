@@ -9,7 +9,9 @@ void main() async {
   await LocalStorageService.init();
   runApp(
     DevicePreview(
-      enabled: !kReleaseMode,
+      enabled: !kReleaseMode
+      
+      ,
       builder: (context) => ProviderScope(child: MyApp()),
     ),
   );

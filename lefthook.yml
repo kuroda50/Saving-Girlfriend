@@ -2,4 +2,4 @@ pre-commit:
   commands:
     format:
       glob: "*.dart"
-      run: dart format {staged_files} && git add {staged_files}
+      run: powershell.exe -Command "& 'C:/Users/kokok/src/flutter/bin/dart.exe' format {staged_files}; git add {staged_files}"
