@@ -6,7 +6,9 @@ import 'package:saving_girlfriend/route/go_router.dart';
 import 'services/local_storage_service.dart';
 
 void main() async {
-  await LocalStorageService.init();
+  await LocalStorageService.init()
+  
+  ;
   runApp(
     DevicePreview(
       enabled: !kReleaseMode,
