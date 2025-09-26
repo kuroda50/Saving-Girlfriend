@@ -2,5 +2,15 @@ pre-commit:
   commands:
     format:
       glob: "*.dart"
-      run: echo "Current shell and dart location" && which dart && echo $PATH
+      run: |
+        echo "=== Shell Debug Info ===" > shell_debug.log
+        echo "Shell: $SHELL" >> shell_debug.log
+        echo "Current process: $0" >> shell_debug.log
+        echo "PWD: $PWD" >> shell_debug.log
+        echo "USER: $USER" >> shell_debug.log
+        echo "OS: $OS" >> shell_debug.log
+        echo "ComSpec: $COMSPEC" >> shell_debug.log
+        echo "Which dart: $(which dart)" >> shell_debug.log
+        echo "PATH: $PATH" >> shell_debug.log
+        echo "Date: $(date)" >> shell_debug.log
       # run: dart format {staged_files} && git add {staged_files}
