@@ -1,16 +1,24 @@
 pre-commit:
   commands:
-    format:
-      glob: "*.dart"
+    debug-env:
       run: |
-        echo "=== Shell Debug Info ===" > shell_debug.log
-        echo "Shell: $SHELL" >> shell_debug.log
-        echo "Current process: $0" >> shell_debug.log
-        echo "PWD: $PWD" >> shell_debug.log
-        echo "USER: $USER" >> shell_debug.log
-        echo "OS: $OS" >> shell_debug.log
-        echo "ComSpec: $COMSPEC" >> shell_debug.log
-        echo "Which dart: $(which dart)" >> shell_debug.log
-        echo "PATH: $PATH" >> shell_debug.log
-        echo "Date: $(date)" >> shell_debug.log
-      # run: dart format {staged_files} && git add {staged_files}
+        echo "--- Lefthook Debug Log ---" > lefthook-debug.log
+        echo "Date: $(date)" >> lefthook-debug.log
+        echo "User: $(whoami)" >> lefthook-debug.log
+        echo "PWD: $(pwd)" >> lefthook-debug.log
+        echo "--- SHELL ---" >> lefthook-debug.log
+        echo "$SHELL" >> lefthook-debug.log
+        echo "--- PATH ---" >> lefthook-debug.log
+        echo "$PATH" >> lefthook-debug.log
+        echo "--- which git ---" >> lefthook-debug.log
+        which git >> lefthook-debug.log 2>&1
+        echo "--- which dart ---" >> lefthook-debug.log
+        which dart >> lefthook-debug.log 2>&1
+        echo "--- end of log ---" >> lefthook-debug.log
+        exit 1
+
+# 元の設定は一時的に無効化しておきます
+#   commands:
+#     format:
+#       glob: "*.dart"
+#       run: dart format {staged_files} && git add {staged_files}
