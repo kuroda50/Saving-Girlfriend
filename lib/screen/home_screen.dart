@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import '../constants/color.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/home_screen_provider.dart';
-import 'package:intl/intl.dart';
-import 'package:saving_girlfriend/screen/settings_screen.dart';
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -52,7 +50,8 @@ class HomeScreen extends ConsumerWidget {
                   left: 20,
                   right: 20,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: AppColors.mainBackground.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(20),
@@ -62,14 +61,16 @@ class HomeScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.settings, color: AppColors.subIcon),
+                          icon: const Icon(Icons.settings,
+                              color: AppColors.subIcon),
                           onPressed: () {
                             context.push('/home/settings');
                           },
                         ),
                         const Text(
                           '5回目継続中!!',
-                          style: TextStyle(color: AppColors.mainText, fontSize: 12),
+                          style: TextStyle(
+                              color: AppColors.mainText, fontSize: 12),
                         ),
                         const Expanded(
                           child: Padding(
@@ -77,13 +78,19 @@ class HomeScreen extends ConsumerWidget {
                             child: LinearProgressIndicator(
                               value: 0.5,
                               backgroundColor: AppColors.nonActive,
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.primary),
                             ),
                           ),
                         ),
-                        const Icon(Icons.favorite, color: AppColors.primary, size: 18),
-                        const Text('50', style: TextStyle(color: AppColors.mainText, fontSize: 14)),
-                        const Text('/100', style: TextStyle(color: AppColors.mainText, fontSize: 12)),
+                        const Icon(Icons.favorite,
+                            color: AppColors.primary, size: 18),
+                        const Text('50',
+                            style: TextStyle(
+                                color: AppColors.mainText, fontSize: 14)),
+                        const Text('/100',
+                            style: TextStyle(
+                                color: AppColors.mainText, fontSize: 12)),
                       ],
                     ),
                   ),
@@ -109,7 +116,8 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       child: Text(
                         girlfriendText,
-                        style: const TextStyle(fontSize: 14, color: AppColors.mainText),
+                        style: const TextStyle(
+                            fontSize: 14, color: AppColors.mainText),
                       ),
                     ),
                   ),
@@ -205,7 +213,8 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
+                    border: Border.all(
+                        color: theme.colorScheme.outline.withOpacity(0.3)),
                     borderRadius: BorderRadius.circular(24.0),
                     color: theme.colorScheme.background,
                   ),
@@ -216,7 +225,8 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                     decoration: InputDecoration(
                       hintText: widget.hintText,
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 12.0),
                     ),
                     onChanged: (text) {
                       setState(() {
@@ -234,7 +244,9 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  onPressed: _isComposing ? () => _handleSubmitted(_textController.text) : null,
+                  onPressed: _isComposing
+                      ? () => _handleSubmitted(_textController.text)
+                      : null,
                   icon: Icon(widget.sendIcon, color: AppColors.mainIcon),
                 ),
               ),

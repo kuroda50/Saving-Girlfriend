@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:saving_girlfriend/constants/color.dart';
-import '../providers/tribute_history_provider.dart';
+import '../providers/transaction_history_provider.dart';
 
-class TributeHistoryScreen extends ConsumerWidget {
-  const TributeHistoryScreen({super.key});
+class TransactionHistoryScreen extends ConsumerWidget {
+  const TransactionHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tributeHistoryAsync = ref.watch(tributeHistoryProvider);
-    final selectedTributes = ref.watch(selectedTributesProvider);
+    final transactionHistoryAsync = ref.watch(transactionHistoryProvider);
+    final selectedTransactions = ref.watch(selectedTransactionsProvider);
 
     // --- 金額フォーマット関数 ---
     String formatAmount(int amount) {
@@ -33,32 +33,36 @@ class TributeHistoryScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
       ),
-      body: tributeHistoryAsync.when(
+      body: transactionHistoryAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('エラー: $err')),
         data: (state) {
           // --- 日別の合計献金金額を計算 ---
-          Map<String, int> calculateDailyTributes() {
-            final dailyTributes = <String, int>{};
-            for (var tribute in state.tributeHistory) {
-              final date = DateTime.parse(tribute['date']);
-              if (date.month == state.currentMonth && date.year == state.currentYear) {
+          Map<String, int> calculateDailyTransactions() {
+            final dailyTransaction = <String, int>{};
+            for (var transaction in state.transactionHistory) {
+              final date = DateTime.parse(transaction['date']);
+              if (date.month == state.currentMonth &&
+                  date.year == state.currentYear) {
                 final formattedDate = DateFormat('yyyy-MM-dd').format(date);
-                dailyTributes[formattedDate] =
-                    (dailyTributes[formattedDate] ?? 0) + (tribute['amount'] as int);
+                dailyTransaction[formattedDate] =
+                    (dailyTransaction[formattedDate] ?? 0) +
+                        (transaction['amount'] as int);
               }
             }
-            return dailyTributes;
+            return dailyTransaction;
           }
 
-          int getDaysInMonth() => DateTime(state.currentYear, state.currentMonth + 1, 0).day;
+          int getDaysInMonth() =>
+              DateTime(state.currentYear, state.currentMonth + 1, 0).day;
 
           int getStartDayOfMonth() {
-            final weekday = DateTime(state.currentYear, state.currentMonth, 1).weekday;
+            final weekday =
+                DateTime(state.currentYear, state.currentMonth, 1).weekday;
             return weekday == 7 ? 0 : weekday;
           }
 
-          final dailyTributes = calculateDailyTributes();
+          final dailyTransaction = calculateDailyTransactions();
 
           return Column(
             children: [
@@ -84,16 +88,23 @@ class TributeHistoryScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.chevron_left, color: AppColors.primary),
-                          onPressed: () => ref.read(tributeHistoryProvider.notifier).changeMonth(-1),
+                          icon: const Icon(Icons.chevron_left,
+                              color: AppColors.primary),
+                          onPressed: () => ref
+                              .read(transactionHistoryProvider.notifier)
+                              .changeMonth(-1),
                         ),
                         Text(
                           '${state.currentYear}年 ${state.currentMonth}月',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.chevron_right, color: AppColors.primary),
-                          onPressed: () => ref.read(tributeHistoryProvider.notifier).changeMonth(1),
+                          icon: const Icon(Icons.chevron_right,
+                              color: AppColors.primary),
+                          onPressed: () => ref
+                              .read(transactionHistoryProvider.notifier)
+                              .changeMonth(1),
                         ),
                       ],
                     ),
@@ -119,18 +130,23 @@ class TributeHistoryScreen extends ConsumerWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 7),
                       itemCount: getDaysInMonth() + getStartDayOfMonth(),
                       itemBuilder: (context, index) {
                         final startDay = getStartDayOfMonth();
                         final day = index - startDay + 1;
-                        final isCurrentMonthDay = day > 0 && day <= getDaysInMonth();
+                        final isCurrentMonthDay =
+                            day > 0 && day <= getDaysInMonth();
 
                         return GestureDetector(
                           onTap: () {
                             if (isCurrentMonthDay) {
-                              final date = DateTime(state.currentYear, state.currentMonth, day);
-                              ref.read(tributeHistoryProvider.notifier).selectDate(date);
+                              final date = DateTime(
+                                  state.currentYear, state.currentMonth, day);
+                              ref
+                                  .read(transactionHistoryProvider.notifier)
+                                  .selectDate(date);
                             }
                           },
                           child: Container(
@@ -140,7 +156,8 @@ class TributeHistoryScreen extends ConsumerWidget {
                                 color: isCurrentMonthDay &&
                                         DateUtils.isSameDay(
                                             state.selectedDate,
-                                            DateTime(state.currentYear, state.currentMonth, day))
+                                            DateTime(state.currentYear,
+                                                state.currentMonth, day))
                                     ? AppColors.primary
                                     : Colors.transparent,
                                 width: 2,
@@ -151,15 +168,22 @@ class TributeHistoryScreen extends ConsumerWidget {
                                 ? Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text(day.toString(), style: const TextStyle(fontSize: 12)),
-                                      if (dailyTributes.containsKey(DateFormat('yyyy-MM-dd')
-                                          .format(DateTime(state.currentYear, state.currentMonth, day))))
+                                      Text(day.toString(),
+                                          style: const TextStyle(fontSize: 12)),
+                                      if (dailyTransaction.containsKey(
+                                          DateFormat('yyyy-MM-dd').format(
+                                              DateTime(state.currentYear,
+                                                  state.currentMonth, day))))
                                         Text(
-                                          formatAmount(dailyTributes[DateFormat('yyyy-MM-dd')
-                                              .format(DateTime(
-                                                  state.currentYear, state.currentMonth, day))]!),
+                                          formatAmount(dailyTransaction[
+                                              DateFormat('yyyy-MM-dd').format(
+                                                  DateTime(
+                                                      state.currentYear,
+                                                      state.currentMonth,
+                                                      day))]!),
                                           style: const TextStyle(
-                                              fontSize: 10, color: AppColors.primary),
+                                              fontSize: 10,
+                                              color: AppColors.primary),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                     ],
@@ -180,26 +204,30 @@ class TributeHistoryScreen extends ConsumerWidget {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     '${DateFormat('yyyy年MM月dd日').format(state.selectedDate)}の履歴',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
               Expanded(
-                child: selectedTributes.isEmpty
+                child: selectedTransactions.isEmpty
                     ? const Center(child: Text('この日の履歴はありません。'))
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        itemCount: selectedTributes.length,
+                        itemCount: selectedTransactions.length,
                         itemBuilder: (context, index) {
-                          final tribute = selectedTributes[index];
-                          final amount = tribute['amount'] as int;
-                          final category = tribute['category'] as String? ?? 'カテゴリなし';
+                          final transaction = selectedTransactions[index];
+                          final amount = transaction['amount'] as int;
+                          final category =
+                              transaction['category'] as String? ?? 'カテゴリなし';
                           return Card(
                             elevation: 1,
                             margin: const EdgeInsets.symmetric(vertical: 4),
                             child: ListTile(
                               leading: Icon(
-                                amount >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                                amount >= 0
+                                    ? Icons.arrow_upward
+                                    : Icons.arrow_downward,
                                 color: amount >= 0 ? Colors.green : Colors.red,
                               ),
                               title: Text(category),
@@ -209,21 +237,29 @@ class TributeHistoryScreen extends ConsumerWidget {
                                   Text(
                                     formatAmount(amount), // k/m表記に変換
                                     style: TextStyle(
-                                      color: amount >= 0 ? Colors.green : Colors.red,
+                                      color: amount >= 0
+                                          ? Colors.green
+                                          : Colors.red,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   IconButton(
-                                    icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
+                                    icon: const Icon(Icons.edit,
+                                        size: 20, color: Colors.grey),
                                     onPressed: () {
                                       showTransactionModal(
                                         context,
                                         onSave: (updatedData) {
-                                          final tributeId = updatedData['id'] as String;
-                                          ref.read(tributeHistoryProvider.notifier).updateTribute(tributeId, updatedData);
+                                          final TransactionId =
+                                              updatedData['id'] as String;
+                                          ref
+                                              .read(transactionHistoryProvider
+                                                  .notifier)
+                                              .updateTransaction(
+                                                  TransactionId, updatedData);
                                         },
-                                        initialTribute: tribute,
+                                        initialTransaction: transaction,
                                       );
                                     },
                                   ),

@@ -4,7 +4,7 @@ import 'package:saving_girlfriend/screen/select_girlfriend_screen.dart';
 import 'package:saving_girlfriend/screen/select_story_screen.dart';
 import 'package:saving_girlfriend/screen/story_screen.dart';
 import 'package:saving_girlfriend/screen/settings_screen.dart';
-import 'package:saving_girlfriend/screen/tribute_history_screen.dart';
+import 'package:saving_girlfriend/screen/transaction_history_screen.dart';
 import 'package:saving_girlfriend/screen/transaction_input_screen.dart';
 import 'app_navigation_bar.dart';
 import 'package:flutter/material.dart';
@@ -18,8 +18,8 @@ final selectStoryNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'select_story');
 final selectGirlfriendNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'select_girlfriend');
-final tributeHistoryNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'tribute_history');
+final transactionHistoryNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'transaction_history');
 // 新しい画面用のGlobalKeyを追加
 final transactionInputNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'transaction_input');
@@ -90,22 +90,25 @@ final router = GoRouter(
           ),
         ]),
         // 4. 貢ぎ履歴ブランチ
-        StatefulShellBranch(navigatorKey: tributeHistoryNavigatorKey, routes: [
-          GoRoute(
-            path: '/tribute_history',
-            pageBuilder: (context, state) => NoTransitionPage(
-              key: state.pageKey,
-              child: const TributeHistoryScreen(),
-            ),
-          ),
-        ]),
+        StatefulShellBranch(
+            navigatorKey: transactionHistoryNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/transaction_history',
+                pageBuilder: (context, state) => NoTransitionPage(
+                  key: state.pageKey,
+                  child: const TransactionHistoryScreen(),
+                ),
+              ),
+            ]),
       ],
     ),
     GoRoute(
       path: '/story',
       parentNavigatorKey: rootNavigatorKey,
       pageBuilder: (context, state) {
-        final story_index = state.extra is int ? state.extra as int : 0;;
+        final story_index = state.extra is int ? state.extra as int : 0;
+        ;
         return MaterialPage(child: StoryScreen(story_index: story_index));
       },
     )

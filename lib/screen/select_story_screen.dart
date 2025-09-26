@@ -1,55 +1,32 @@
 import 'package:go_router/go_router.dart';
-/* ストーリー選択画面 */
 import 'package:flutter/material.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
-import 'package:saving_girlfriend/services/local_storage_service.dart';
+import 'package:saving_girlfriend/models/episode.dart';
+import 'package:saving_girlfriend/providers/likeability_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// --- データモデル ---
-// 各エピソードのデータを保持するクラス
-class Episode {
-  final int number;
-  final String title;
-  final bool isLocked;
-  final bool showUnlockedIcon; // クリア済みの印
-
-  Episode({
-    required this.number,
-    required this.title,
-    this.isLocked = false,
-    this.showUnlockedIcon = false, // デフォルト値
-  });
-}
-
-class EpisodeScreen extends StatefulWidget {
+class EpisodeScreen extends ConsumerStatefulWidget {
   const EpisodeScreen({super.key});
 
   @override
-  State<EpisodeScreen> createState() => _EpisodeScreenState();
+  ConsumerState<EpisodeScreen> createState() => _EpisodeScreenState();
 }
 
-class _EpisodeScreenState extends State<EpisodeScreen> {
-  // --- UIの色の定義 ---
-
-  final LocalStorageService _localStorageService = LocalStorageService();
-
-  Future<int> _loadLikeability(String characterId) async {
-    return await _localStorageService.getLikeability(characterId);
-  }
-
+class _EpisodeScreenState extends ConsumerState<EpisodeScreen> {
   // --- エピソードデータのリスト ---
-  final List<Episode> episodes = [
-    Episode(number: 0, title: '出会い', isLocked: false, showUnlockedIcon: true),
-    Episode(number: 1, title: '？？？', isLocked: true),
-    Episode(number: 2, title: '？？？', isLocked: true),
-    Episode(number: 3, title: '？？？', isLocked: true),
-    Episode(number: 4, title: '？？？', isLocked: true),
-    Episode(number: 5, title: '？？？', isLocked: true),
-    Episode(number: 6, title: '？？？', isLocked: true),
-    Episode(number: 7, title: '？？？', isLocked: true),
-    Episode(number: 8, title: '？？？', isLocked: true),
-    Episode(number: 9, title: '？？？', isLocked: true),
-    Episode(number: 10, title: '？？？', isLocked: true),
+  final List<Episode> _baseEpisodes = [
+    Episode(number: 0, title: '出会い', requiredLikeability: 0),
+    Episode(number: 1, title: '初めての会話', requiredLikeability: 10),
+    Episode(number: 2, title: '公園の散歩', requiredLikeability: 20),
+    Episode(number: 3, title: '好きな食べ物', requiredLikeability: 30),
+    Episode(number: 4, title: '休日の過ごし方', requiredLikeability: 40),
+    Episode(number: 5, title: '趣味の話', requiredLikeability: 50),
+    Episode(number: 6, title: '小さなプレゼント', requiredLikeability: 60),
+    Episode(number: 7, title: '雨の日の思い出', requiredLikeability: 70),
+    Episode(number: 8, title: '喧嘩と仲直り', requiredLikeability: 80),
+    Episode(number: 9, title: '伝えたい言葉', requiredLikeability: 90),
+    Episode(number: 10, title: 'そして未来へ', requiredLikeability: 100),
   ];
 
   // ScrollControllerの準備
@@ -59,7 +36,6 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    final likeability = _loadLikeability("a");
   }
 
   @override
@@ -70,6 +46,7 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final likeabilityAsync = ref.watch(likeabilityProvider);
     return Scaffold(
       backgroundColor: AppColors.forthBackground,
       appBar: PreferredSize(
@@ -99,32 +76,64 @@ class _EpisodeScreenState extends State<EpisodeScreen> {
             ),
           ),
           Expanded(
-            child: Scrollbar(
-              controller: _scrollController,
-              thumbVisibility: true,
-              thickness: 8.0,
-              radius: const Radius.circular(10),
-              child: ListView.builder(
+              child: likeabilityAsync.when(
+            data: (likeability) {
+              final episodes = _baseEpisodes.map((episode) {
+                final bool isLocked = likeability < episode.requiredLikeability;
+                return Episode(
+                  number: episode.number,
+                  title: isLocked ? '？？？' : episode.title, // ロック中はタイトルを隠す
+                  requiredLikeability: episode.requiredLikeability,
+                  isLocked: isLocked,
+                );
+              }).toList();
+              return Scrollbar(
                 controller: _scrollController,
-                padding: const EdgeInsets.only(
-                    left: 16.0, right: 16.0, top: 10.0, bottom: 10.0),
-                itemCount: episodes.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final episode = episodes[index];
-                  return EpisodeListItem(
-                    episode: episode,
-                    onPlay: () {
-                      context.push("/story", extra: episode.number);
-                      print('Play episode ${episode.number}');
-                    },
-                    onInfo: () {
-                      print('Info for episode ${episode.number}');
-                    },
-                  );
-                },
+                thumbVisibility: true,
+                thickness: 8.0,
+                radius: const Radius.circular(10),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.only(
+                      left: 16.0, right: 16.0, top: 10.0, bottom: 10.0),
+                  itemCount: episodes.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final episode = episodes[index];
+                    return EpisodeListItem(
+                      episode: episode,
+                      onPlay: () {
+                        context.push("/story", extra: episode.number);
+                        print('Play episode ${episode.number}');
+                      },
+                      onInfo: () {
+                        print('Info for episode ${episode.number}');
+                      },
+                    );
+                  },
+                ),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 12.0, horizontal: 20.0),
+                margin: const EdgeInsets.symmetric(horizontal: 24.0),
+                decoration: BoxDecoration(
+                  color: AppColors.errorBackground, // 背景色を指定
+                  borderRadius: BorderRadius.circular(12.0), // 角を丸くする
+                ),
+                child: Text(
+                  'エラーが発生しました:\n$err',
+                  style: const TextStyle(
+                    color: AppColors.error, // テキストの色を指定
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center, // 文字を中央揃えに
+                ),
               ),
             ),
-          ),
+          )),
         ],
       ),
     );
@@ -264,21 +273,20 @@ class EpisodeListItem extends StatelessWidget {
           ),
 
           // --- 2. アイコン ---
-          if (episode.isLocked || episode.showUnlockedIcon)
-            Positioned(
-              left: -(iconSize / 2),
-              top: 1.0, // ← ここを調整しました
-              child: SizedBox(
-                width: iconSize,
-                height: iconSize,
-                child: Image.asset(
-                  episode.isLocked
-                      ? AppAssets.iconLockClosed
-                      : AppAssets.iconLockOpen,
-                  fit: BoxFit.contain,
-                ),
+          Positioned(
+            left: -(iconSize / 2),
+            top: 1.0, // ← ここを調整しました
+            child: SizedBox(
+              width: iconSize,
+              height: iconSize,
+              child: Image.asset(
+                episode.isLocked
+                    ? AppAssets.iconLockClosed
+                    : AppAssets.iconLockOpen,
+                fit: BoxFit.contain,
               ),
             ),
+          ),
         ],
       ),
     );
