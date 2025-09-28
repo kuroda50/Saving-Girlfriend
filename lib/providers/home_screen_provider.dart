@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../providers/tribute_history_provider.dart';
 
 // 1. LocalStorageServiceを提供するシンプルなProvider
 
