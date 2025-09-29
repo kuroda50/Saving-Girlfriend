@@ -4,6 +4,7 @@ import 'package:saving_girlfriend/screen/select_girlfriend_screen.dart';
 import 'package:saving_girlfriend/screen/select_story_screen.dart';
 import 'package:saving_girlfriend/screen/story_screen.dart';
 import 'package:saving_girlfriend/screen/settings_screen.dart';
+import 'package:saving_girlfriend/screen/title_screen.dart';
 import 'package:saving_girlfriend/screen/transaction_history_screen.dart';
 import 'package:saving_girlfriend/screen/transaction_input_screen.dart';
 import 'app_navigation_bar.dart';
@@ -26,7 +27,7 @@ final transactionInputNavigatorKey =
 
 final router = GoRouter(
   navigatorKey: rootNavigatorKey,
-  initialLocation: '/home',
+  initialLocation: '/title',
   routes: [
     StatefulShellRoute.indexedStack(
       parentNavigatorKey: rootNavigatorKey,
@@ -107,9 +108,15 @@ final router = GoRouter(
       path: '/story',
       parentNavigatorKey: rootNavigatorKey,
       pageBuilder: (context, state) {
-        final story_index = state.extra is int ? state.extra as int : 0;
-        ;
-        return MaterialPage(child: StoryScreen(story_index: story_index));
+        final storyIndex = state.extra is int ? state.extra as int : 0;
+        return MaterialPage(child: StoryScreen(story_index: storyIndex));
+      },
+    ),
+    GoRoute(
+      path: '/title',
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) {
+        return const MaterialPage(child: TitleScreen());
       },
     )
   ],
