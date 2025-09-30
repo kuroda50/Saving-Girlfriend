@@ -10,6 +10,7 @@ void main() async {
       enabled: !kReleaseMode,
       builder: (context) => ProviderScope(
         child: MyApp(),
+        // 変更を追加
       ),
     ),
   );
