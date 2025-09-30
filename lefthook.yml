@@ -1,5 +1,8 @@
 pre-commit:
   commands:
-    format:
+    sort-imports:
+      glob: "*.dart"
+      run: flutter pub run import_sorter:main {staged_files} && git add {staged_files}
+    formatter:
       glob: "*.dart"
       run: dart format {staged_files} && git add {staged_files}
