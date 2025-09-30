@@ -10,7 +10,7 @@ void main() async {
       enabled: !kReleaseMode,
       builder: (context) => const ProviderScope(
         child: MyApp(),
-        // 変更を追加した
+        // GUIでも動作するか確認
       ),
     ),
   );
