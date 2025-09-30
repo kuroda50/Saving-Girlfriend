@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/route/go_router.dart';
 
@@ -10,7 +10,7 @@ void main() async {
       enabled: !kReleaseMode,
       builder: (context) => const ProviderScope(
         child: MyApp(),
-        // GUIでも動作するか確認
+        // GUIでも動作するか確認.
       ),
     ),
   );
