@@ -10,7 +10,7 @@ void main() async {
       enabled: !kReleaseMode,
       builder: (context) => const ProviderScope(
         child: MyApp(),
-        // GUIでも動作するか確認.
+        // huskyでも動作するか確認.
       ),
     ),
   );
