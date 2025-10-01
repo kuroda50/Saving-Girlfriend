@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:saving_girlfriend/route/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void main() async {
+void main(   ) async {
   runApp(
     DevicePreview(
       enabled: !kReleaseMode,
