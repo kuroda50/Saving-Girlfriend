@@ -1,9 +1,0 @@
-pre-commit:
-  parallel: true
-  commands:
-    format_and_fix:
-      glob: "**/*.dart"
-      run: |
-        dart format {staged_files}
-        dart fix --apply {staged_files}
-        git add {staged_files}
