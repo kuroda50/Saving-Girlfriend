@@ -61,7 +61,6 @@ class TributeHistoryNotifier
     } catch (e) {
       state = AsyncValue.data(currentState);
       print('Failed to save tribute: $e');
-      //
     }
   }
 }

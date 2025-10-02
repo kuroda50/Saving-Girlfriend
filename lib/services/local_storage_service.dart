@@ -119,9 +119,9 @@ class LocalStorageService {
 // characterA_likeability: 85(int)
 // transaction_history
 // [
-//   {"type": "income", "date": "2024-06-25", "amount": 50000, "category": category},
-//   {"type": "expense", "date": "2024-06-25", "amount": 1000, "category": category},
-//   {"type": "expense", "date": "2024-06-26", "amount": 500, "category": category},
+//   {"id": "transaction_1759380715075", "type": "income", "date": "2024-06-25", "amount": 50000, "category": category},
+//   {"id": "transaction_1759380715075", "type": "expense", "date": "2024-06-25", "amount": 1000, "category": category},
+//   {"id": "transaction_1759380715075", "type": "expense", "date": "2024-06-26", "amount": 500, "category": category},
 // ]List<String>
 // tribute_history
 // [
