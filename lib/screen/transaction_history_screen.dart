@@ -14,18 +14,16 @@ class TransactionHistoryScreen extends ConsumerWidget {
     final selectedTransactions = ref.watch(selectedTransactionsProvider);
 
     // --- 金額フォーマット関数 ---
-    String formatAmount(int amount) {
-      final absAmount = amount.abs();
+    String formatAmount(final int amount) {
       String formatted;
 
-      if (absAmount >= 1000000) {
-        formatted = '${(absAmount / 1000000).toStringAsFixed(1)}m';
-      } else if (absAmount >= 10000) {
-        formatted = '${(absAmount / 1000).toStringAsFixed(1)}k';
+      if (amount >= 1000000) {
+        formatted = '${(amount / 1000000).toStringAsFixed(1)}m';
+      } else if (amount >= 10000) {
+        formatted = '${(amount / 1000).toStringAsFixed(1)}k';
       } else {
-        formatted = '$absAmount円';
+        formatted = '$amount円';
       }
-
       return amount < 0 ? '-$formatted' : formatted;
     }
 
@@ -37,17 +35,17 @@ class TransactionHistoryScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('エラー: $err')),
         data: (state) {
-          // --- 日別の合計献金金額を計算 ---
           Map<String, int> calculateDailyTransactions() {
             final dailyTransaction = <String, int>{};
             for (var transaction in state.transactionHistory) {
               final date = DateTime.parse(transaction['date']);
+              final amount = transaction['amount'] as int;
               if (date.month == state.currentMonth &&
                   date.year == state.currentYear) {
                 final formattedDate = DateFormat('yyyy-MM-dd').format(date);
                 dailyTransaction[formattedDate] =
                     (dailyTransaction[formattedDate] ?? 0) +
-                        (transaction['amount'] as int);
+                        (transaction['type'] == "income" ? amount : -amount);
               }
             }
             return dailyTransaction;
@@ -217,6 +215,7 @@ class TransactionHistoryScreen extends ConsumerWidget {
                         itemCount: selectedTransactions.length,
                         itemBuilder: (context, index) {
                           final transaction = selectedTransactions[index];
+                          final type = transaction['type'] as String;
                           final amount = transaction['amount'] as int;
                           final category =
                               transaction['category'] as String? ?? 'カテゴリなし';
@@ -225,10 +224,12 @@ class TransactionHistoryScreen extends ConsumerWidget {
                             margin: const EdgeInsets.symmetric(vertical: 4),
                             child: ListTile(
                               leading: Icon(
-                                amount >= 0
+                                type == "income"
                                     ? Icons.arrow_upward
                                     : Icons.arrow_downward,
-                                color: amount >= 0 ? Colors.green : Colors.red,
+                                color: type == "income"
+                                    ? Colors.green
+                                    : Colors.red,
                               ),
                               title: Text(category),
                               trailing: Row(
@@ -237,7 +238,7 @@ class TransactionHistoryScreen extends ConsumerWidget {
                                   Text(
                                     formatAmount(amount), // k/m表記に変換
                                     style: TextStyle(
-                                      color: amount >= 0
+                                      color: type == "income"
                                           ? Colors.green
                                           : Colors.red,
                                       fontWeight: FontWeight.bold,
@@ -251,13 +252,13 @@ class TransactionHistoryScreen extends ConsumerWidget {
                                       showTransactionModal(
                                         context,
                                         onSave: (updatedData) {
-                                          final TransactionId =
+                                          final transactionId =
                                               updatedData['id'] as String;
                                           ref
                                               .read(transactionHistoryProvider
                                                   .notifier)
                                               .updateTransaction(
-                                                  TransactionId, updatedData);
+                                                  transactionId, updatedData);
                                         },
                                         initialTransaction: transaction,
                                       );

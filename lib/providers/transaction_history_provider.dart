@@ -41,8 +41,8 @@ class TransactionHistoryNotifier
     );
   }
 
-  void changeMonth(int direction) {
-    final currentState = state.value!;
+  void changeMonth(int direction) async {
+    final currentState = state.value ?? await future;
 
     int newMonth = currentState.currentMonth + direction;
     int newYear = currentState.currentYear;
@@ -61,9 +61,8 @@ class TransactionHistoryNotifier
     ));
   }
 
-  void selectDate(DateTime date) {
-    final currentState = state.value;
-    if (currentState == null) return;
+  void selectDate(DateTime date) async {
+    final currentState = state.value ?? await future;
 
     // 全履歴の中から、選択された日付と一致するものだけをフィルタリング
     final filteredTransactions =
@@ -82,8 +81,8 @@ class TransactionHistoryNotifier
   }
 
   Future<void> addTransaction(Map<String, dynamic> newTransaction) async {
-    final currentState = state.value;
-    if (currentState == null) return;
+    // state.valueがnullの場合、futureを使って状態を初期化する
+    final currentState = state.value ?? await future;
 
     final currentHistory =
         List<Map<String, dynamic>>.from(currentState.transactionHistory);
@@ -108,8 +107,7 @@ class TransactionHistoryNotifier
 
   Future<void> updateTransaction(
       String id, Map<String, dynamic> updatedTransaction) async {
-    final currentState = state.value;
-    if (currentState == null) return;
+    final currentState = state.value ?? await future;
     final currentHistory =
         List<Map<String, dynamic>>.from(currentState.transactionHistory);
     final index =
