@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/color.dart';
-import '../providers/home_screen_provider.dart';
+
 import '../providers/transaction_history_provider.dart';
-import 'package:flutter/services.dart';
 
 class TransactionInputScreen extends ConsumerStatefulWidget {
   const TransactionInputScreen({super.key});
@@ -77,9 +77,9 @@ class _TransactionInputScreenState
       await ref
           .read(transactionHistoryProvider.notifier)
           .addTransaction(newTransaction);
-      ref
-          .read(homeScreenProvider.notifier)
-          .aiChat(_selectedCategory!, _isExpense ? -amount : amount);
+      // ref
+      //     .read(homeScreenProvider.notifier)
+      //     .aiChat(_selectedCategory!, _isExpense ? -amount : amount);
 
       // フォームをリセット
       _amountController.clear();
