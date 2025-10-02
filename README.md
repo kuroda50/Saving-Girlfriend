@@ -35,6 +35,11 @@
     flutter pub get
     ```
 
+3. package.jsonの依存関係をダウンロードする。
+    ```sh
+    npm install
+    ```
+
 ### アプリケーションの実行
 
 ```sh
