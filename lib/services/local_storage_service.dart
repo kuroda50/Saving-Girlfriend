@@ -1,14 +1,29 @@
 import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:saving_girlfriend/models/settings_state.dart';
+import 'package:saving_girlfriend/models/tribute_history_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
+
+final sharedPreferencesProvider =
+    FutureProvider<SharedPreferences>((ref) async {
+  return SharedPreferences.getInstance();
+});
+final localStorageServiceProvider =
+    FutureProvider<LocalStorageService>((ref) async {
+  final sharedPreferences = await ref.watch(sharedPreferencesProvider.future);
+  return LocalStorageService(sharedPreferences);
+});
 
 class LocalStorageService {
-  // インスタンスは最初に取得する
-  static late SharedPreferences prefs;
-  static const String _userIdKey = 'user_id';
-  // 各データのキーを定数として定義しておくとタイプミスを防げます
+  final SharedPreferences _prefs;
+  LocalStorageService(this._prefs);
+
+  // static const String _userIdKey = 'user_id';
   static const String _currentCharacterKey = 'current_character';
   static const String _likeabilityKeyPrefix = '_likeability'; // キャラごとに好感度を保存
-  static const String _tributeHistoryKey = 'tribute_history';
+  static const String _transactionHistoryKey = 'transaction_history';
+  static const String _tributionHistoryKey = 'tribution_history';
   static const String _targetSavingAmountKey = 'target_saving_amount';
   static const String _defaultContributionAmountKey =
       'default_contribution_amount';
@@ -17,95 +32,107 @@ class LocalStorageService {
 
   // --- 保存 (Save) ---
 
-  static Future<void> init() async {
-    prefs = await SharedPreferences.getInstance();
-  }
-
-/// ユーザーIDを保存する
-  Future<void> saveUserId(String userId) async {
-    await prefs.setString(_userIdKey, userId);
-  }
-
-  /// ユーザーIDを読み込む
-  Future<String?> getUserId() async {
-    return prefs.getString(_userIdKey);
-  }
-
   Future<void> saveCurrentCharacter(String characterId) async {
-    await prefs.setString(_currentCharacterKey, characterId);
+    await _prefs.setString(_currentCharacterKey, characterId);
   }
 
-  Future<void> saveLikeability(String characterId, int value) async {
-    await prefs.setInt('$characterId$_likeabilityKeyPrefix', value);
-  }
-
-  Future<void> saveTributeHistory(List<Map<String, dynamic>> history) async {
+  Future<void> saveTransactionHistory(
+      List<Map<String, dynamic>> history) async {
     String jsonString = jsonEncode(history);
-    await prefs.setString(_tributeHistoryKey, jsonString);
+    await _prefs.setString(_transactionHistoryKey, jsonString);
   }
 
-  Future<void> saveSettings({
-    required int targetSavingAmount,
-    required int defaultContributionAmount,
-    required bool notificationsEnabled,
-    required double bgmVolume,
-  }) async {
-    await prefs.setInt(_targetSavingAmountKey, targetSavingAmount);
-    await prefs.setInt(
-        _defaultContributionAmountKey, defaultContributionAmount);
-    await prefs.setBool(_notificationsEnabledKey, notificationsEnabled);
-    await prefs.setDouble(_bgmVolumeKey, bgmVolume);
+  Future<void> saveTributionHistory(List<TributeHistoryState> history) async {
+    String jsonString = jsonEncode(history);
+    await _prefs.setString(_tributionHistoryKey, jsonString);
+  }
+
+  Future<void> saveSettings(SettingsState setting) async {
+    await _prefs.setInt(_targetSavingAmountKey, setting.targetSavingAmount);
+    await _prefs.setInt(
+        _defaultContributionAmountKey, setting.defaultContributionAmount);
+    await _prefs.setBool(
+        _notificationsEnabledKey, setting.notificationsEnabled);
+    await _prefs.setDouble(_bgmVolumeKey, setting.bgmVolume);
   }
 
   // --- 読み込み (Load) ---
 
   Future<String?> getCurrentCharacter() async {
-    return prefs.getString(_currentCharacterKey);
+    return _prefs.getString(_currentCharacterKey);
   }
 
   Future<int> getLikeability(String characterId) async {
-    // 保存されていない場合の初期値は 50 などに設定
-    return prefs.getInt('$characterId$_likeabilityKeyPrefix') ?? 50;
+    // ここを書き換える
+    return _prefs.getInt('$characterId$_likeabilityKeyPrefix') ?? 1;
   }
 
-  Future<List<Map<String, dynamic>>> getTributeHistory() async {
-    final jsonString = prefs.getString(_tributeHistoryKey);
+  Future<List<Map<String, dynamic>>> getTransactionHistory() async {
+    final jsonString = _prefs.getString(_transactionHistoryKey);
     if (jsonString != null && jsonString.isNotEmpty) {
       final List<dynamic> decodedList = jsonDecode(jsonString);
-      print(decodedList.map((item) => Map<String, dynamic>.from(item)).toList());
-      return decodedList
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
+      final result =
+          decodedList.map((item) => Map<String, dynamic>.from(item)).toList();
+      print(result);
+      return result;
     }
     // データがない場合は空のリストを返す
     return [];
   }
 
-  Future<int?> getTargetSavingAmount() async {
-    return prefs.getInt(_targetSavingAmountKey);
+  Future<List<TributeHistoryState>> getTributionHistory() async {
+    final jsonString = _prefs.getString(_tributionHistoryKey);
+    if (jsonString != null && jsonString.isNotEmpty) {
+      final List<dynamic> decodedList = jsonDecode(jsonString);
+      final List<TributeHistoryState> result = decodedList
+          .map((item) => TributeHistoryState(
+              id: item["id"] as Uuid,
+              character: item["character"] as String,
+              date: item["date"] as DateTime,
+              amount: item["amount"] as int))
+          .toList();
+      print(result);
+      return result;
+    }
+    // データがない場合は空のリストを返す
+    return [];
   }
 
-  Future<int?> getDefaultContributionAmount() async {
-    return prefs.getInt(_defaultContributionAmountKey);
-  }
-
-  Future<bool> getNotificationsEnabled() async {
-    return prefs.getBool(_notificationsEnabledKey) ?? true; // Default to true
-  }
-
-  Future<double> getBgmVolume() async {
-    return prefs.getDouble(_bgmVolumeKey) ?? 0.75; // Default to 0.75
+  Future<SettingsState> getSettings() async {
+    final int targetSavingAmount =
+        _prefs.getInt(_targetSavingAmountKey) ?? 100000;
+    final int defaultContributionAmount =
+        _prefs.getInt(_defaultContributionAmountKey) ?? 500;
+    final bool notificationsEnabled =
+        _prefs.getBool(_notificationsEnabledKey) ?? true;
+    final double bgmVolume = _prefs.getDouble(_bgmVolumeKey) ?? 0.75;
+    return SettingsState(
+        targetSavingAmount: targetSavingAmount,
+        defaultContributionAmount: defaultContributionAmount,
+        notificationsEnabled: notificationsEnabled,
+        bgmVolume: bgmVolume);
   }
 }
 
 // <データ設計>
 // current_character: "characterA" (String)
 // characterA_likeability: 85(int)
+// transaction_history
 // [
-//   {"character": "A", "date": "2024-06-25", "amount": 1000},
-//   {"character": "B", "date": "2024-06-26", "amount": 500}
+//   {"id": "transaction_1759380715075", "type": "income", "date": "2024-06-25", "amount": 50000, "category": category},
+//   {"id": "transaction_1759380715075", "type": "expense", "date": "2024-06-25", "amount": 1000, "category": category},
+//   {"id": "transaction_1759380715075", "type": "expense", "date": "2024-06-26", "amount": 500, "category": category},
 // ]List<String>
+// tribute_history
+// [
+//  {"id": 0101101001..., "character": "SuzunariOto", "date": "2024-06-25", "amount": 500},
+//  {"id": 0101101001..., "character": "SuzunariOto", "date": "2024-06-25", "amount": 500},
+//  {"id": 0101101001..., "character": "SuzunariOto", "date": "2024-06-25", "amount": 500},
+// ]
+
 // target_saving_amount: 100000 (int)
 // default_contribution_amount: 500 (int)
+// added_saging_amount: 20000 (int)
+
 // notifications_enabled: true (bool)
 // bgm_volume: 0.75 (double)

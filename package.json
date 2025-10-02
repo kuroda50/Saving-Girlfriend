@@ -1,0 +1,16 @@
+{
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.3"
+  },
+  "lint-staged": {
+    "*.dart": [
+      "echo Running dart format on:",
+      "dart format",
+      "dart fix --apply"
+    ]
+  }
+}

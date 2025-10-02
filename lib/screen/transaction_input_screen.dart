@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import '../providers/home_screen_provider.dart';
-import '../providers/tribute_history_provider.dart';
+import '../providers/transaction_history_provider.dart';
 import 'package:flutter/services.dart';
 
 class TransactionInputScreen extends ConsumerStatefulWidget {
@@ -65,19 +65,21 @@ class _TransactionInputScreenState
       return;
     }
 
-    final newTribute = {
-      "character": "A",
+    // ここを修正する
+    final newTransaction = {
+      "type": _isExpense ? "expense" : "income",
       "date": _selectedDate.toIso8601String(),
-      "amount": _isExpense ? -amount : amount,
+      "amount": amount,
       "category": _selectedCategory!,
     };
 
     try {
-      await ref.read(tributeHistoryProvider.notifier).addTribute(newTribute);
-
-      //ref
-          //.read(homeScreenProvider.notifier)
-          //.aiChat(_selectedCategory!, _isExpense ? -amount : amount);
+      await ref
+          .read(transactionHistoryProvider.notifier)
+          .addTransaction(newTransaction);
+      ref
+          .read(homeScreenProvider.notifier)
+          .aiChat(_selectedCategory!, _isExpense ? -amount : amount);
 
       // フォームをリセット
       _amountController.clear();
@@ -91,7 +93,12 @@ class _TransactionInputScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('データの保存に失敗しました。もう一度お試しください。'),
+          content: Text(
+            'データの保存に失敗しました。もう一度お試しください。',
+            style: TextStyle(
+              color: AppColors.error, // ここで色を指定します
+            ),
+          ),
           backgroundColor: AppColors.errorBackground,
         ),
       );
