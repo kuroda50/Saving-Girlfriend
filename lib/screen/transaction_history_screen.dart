@@ -24,7 +24,6 @@ class TransactionHistoryScreen extends ConsumerWidget {
       } else {
         formatted = '$amount円';
       }
-      // ここを修正する
       return amount < 0 ? '-$formatted' : formatted;
     }
 
