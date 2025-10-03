@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:saving_girlfriend/constants/settings_defaults.dart';
 import 'package:saving_girlfriend/models/settings_state.dart';
 import 'package:saving_girlfriend/models/tribute_history_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,11 +25,11 @@ class LocalStorageService {
   static const String _likeabilityKeyPrefix = '_likeability'; // キャラごとに好感度を保存
   static const String _transactionHistoryKey = 'transaction_history';
   static const String _tributionHistoryKey = 'tribution_history';
-  static const String _targetSavingAmountKey = 'target_saving_amount';
-  static const String _defaultContributionAmountKey =
-      'default_contribution_amount';
+  // 設定関連のキー
   static const String _notificationsEnabledKey = 'notifications_enabled';
   static const String _bgmVolumeKey = 'bgm_volume';
+  static const String _targetSavingAmountKey = 'target_saving_amount';
+  static const String _dailyBudgetAmountKey = 'daily_budget_amount';
 
   // --- 保存 (Save) ---
 
@@ -49,8 +50,7 @@ class LocalStorageService {
 
   Future<void> saveSettings(SettingsState setting) async {
     await _prefs.setInt(_targetSavingAmountKey, setting.targetSavingAmount);
-    await _prefs.setInt(
-        _defaultContributionAmountKey, setting.defaultContributionAmount);
+    await _prefs.setInt(_dailyBudgetAmountKey, setting.dailyBudget);
     await _prefs.setBool(
         _notificationsEnabledKey, setting.notificationsEnabled);
     await _prefs.setDouble(_bgmVolumeKey, setting.bgmVolume);
@@ -99,16 +99,19 @@ class LocalStorageService {
   }
 
   Future<SettingsState> getSettings() async {
-    final int targetSavingAmount =
-        _prefs.getInt(_targetSavingAmountKey) ?? 100000;
-    final int defaultContributionAmount =
-        _prefs.getInt(_defaultContributionAmountKey) ?? 500;
     final bool notificationsEnabled =
-        _prefs.getBool(_notificationsEnabledKey) ?? true;
-    final double bgmVolume = _prefs.getDouble(_bgmVolumeKey) ?? 0.75;
+        _prefs.getBool(_notificationsEnabledKey) ??
+            SettingsDefaults.notificationsEnabled;
+    final double bgmVolume =
+        _prefs.getDouble(_bgmVolumeKey) ?? SettingsDefaults.bgmVolume;
+    final int targetSavingAmount = _prefs.getInt(_targetSavingAmountKey) ??
+        SettingsDefaults.targetSavingAmount;
+    final int dailyBudget =
+        _prefs.getInt(_dailyBudgetAmountKey) ?? SettingsDefaults.dailyBudget;
+
     return SettingsState(
         targetSavingAmount: targetSavingAmount,
-        defaultContributionAmount: defaultContributionAmount,
+        dailyBudget: dailyBudget,
         notificationsEnabled: notificationsEnabled,
         bgmVolume: bgmVolume);
   }
@@ -130,9 +133,8 @@ class LocalStorageService {
 //  {"id": 0101101001..., "character": "SuzunariOto", "date": "2024-06-25", "amount": 500},
 // ]
 
-// target_saving_amount: 100000 (int)
-// default_contribution_amount: 500 (int)
-// added_saging_amount: 20000 (int)
-
+// 設定関連
 // notifications_enabled: true (bool)
-// bgm_volume: 0.75 (double)
+// bgm_volume: 75 (double)
+// target_saving_amount: 100000 (int)
+// daily_budget_amount: 1000 (int)

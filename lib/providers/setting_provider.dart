@@ -11,7 +11,20 @@ class SettingNotifier extends AsyncNotifier<SettingsState> {
     final settingsRepository = await _settingsRepositoryFuture;
     return settingsRepository.getSettings();
   }
+
+  Future<void> saveSettings(SettingsState newSettings) async {
+    final settingsRepository = await _settingsRepositoryFuture;
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await settingsRepository.saveSettings(newSettings);
+      return newSettings;
+    });
+  }
 }
+
+final settingsProvider = AsyncNotifierProvider<SettingNotifier, SettingsState>(
+  SettingNotifier.new,
+);
 
 final settingsRepositoryProvider =
     FutureProvider<SettingsRepository>((ref) async {
@@ -19,7 +32,3 @@ final settingsRepositoryProvider =
       await ref.watch(localStorageServiceProvider.future);
   return SettingsRepository(localStorageService);
 });
-
-final settingsProvider = AsyncNotifierProvider<SettingNotifier, SettingsState>(
-  SettingNotifier.new,
-);

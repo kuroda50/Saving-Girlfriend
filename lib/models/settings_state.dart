@@ -1,27 +1,27 @@
 class SettingsState {
-  final int targetSavingAmount;
-  final int defaultContributionAmount;
   final bool notificationsEnabled;
   final double bgmVolume;
+  final int targetSavingAmount;
+  final int dailyBudget;
 
-  SettingsState(
-      {required this.targetSavingAmount,
-      required this.defaultContributionAmount,
-      required this.notificationsEnabled,
-      required this.bgmVolume});
+  SettingsState({
+    required this.notificationsEnabled,
+    required this.bgmVolume,
+    required this.targetSavingAmount,
+    required this.dailyBudget,
+  });
 
   SettingsState copyWith({
-    int? targetSavingAmount,
-    int? defaultContributionAmount,
     bool? notificationsEnabled,
     double? bgmVolume,
+    int? targetSavingAmount,
+    int? dailyBudget,
   }) {
     return SettingsState(
-      targetSavingAmount: targetSavingAmount ?? this.targetSavingAmount,
-      defaultContributionAmount:
-          defaultContributionAmount ?? this.defaultContributionAmount,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       bgmVolume: bgmVolume ?? this.bgmVolume,
+      targetSavingAmount: targetSavingAmount ?? this.targetSavingAmount,
+      dailyBudget: dailyBudget ?? this.dailyBudget,
     );
   }
 }
