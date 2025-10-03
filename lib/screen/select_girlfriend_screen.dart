@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // 👈 1. 状態保存のためのパッケージをインポート
 
 class SelectGirlfriendScreen extends StatefulWidget {
   const SelectGirlfriendScreen({super.key});
@@ -16,7 +17,7 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
   final List<Map<String, dynamic>> characters = [
     {
       'name': '鈴鳴 音', // キャラクター名
-      'image': 'assets/images/character/suzunari.png', // 鈴鳴音の画像URL
+      'image': 'assets/images/character/suzunari.png', // 鈴鳴音の画像URL (ローカルアセット)
       'description_tags': [
         '#あざとい',
         '#高校の後輩',
@@ -52,6 +53,37 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
     // PageControllerを破棄
     _pageController.dispose();
     super.dispose();
+  }
+
+  // 👈 2. 彼女を選択し、状態を保存して次の画面へ遷移するメソッド
+  void _selectGirlfriendAndSaveState() async {
+    // 選択しようとしているキャラクターが「ComingSoon」ではないかチェック
+    if (characters[_currentIndex]['name'] == 'ComingSoon') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('この彼女はまだ選べません。')),
+      );
+      return;
+    }
+
+    // 1. SharedPreferencesのインスタンスを取得
+    final prefs = await SharedPreferences.getInstance();
+
+    // 2. 「彼女が選択された」という状態を永続的に保存 (TitleScreenでチェックするフラグ)
+    await prefs.setBool('has_selected_girlfriend', true);
+
+    // 3. 選択した彼女のインデックスや名前も保存しておくと、後で利用できる
+    final selectedGirlfriendName = characters[_currentIndex]['name'] as String;
+    await prefs.setString('selected_girlfriend_name', selectedGirlfriendName);
+
+    // 4. 次の画面へ遷移
+    // TODO: ここを、あなたのアプリのメイン画面へのルーティング処理に置き換えてください
+    // （例: go_routerなら context.go('/home_screen')）
+    // （例: 標準Navigatorなら Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainScreen()))）
+
+    // 実際のアプリの遷移処理に置き換えるまでの仮のSnackBar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$selectedGirlfriendName を選択しました！メイン画面へ遷移...')),
+    );
   }
 
   @override
@@ -108,7 +140,7 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 20, vertical: 10),
                               decoration: BoxDecoration(
-                                color: Color(0xE383AB), // ピンクの背景色
+                                color: const Color(0xE383AB), // ピンクの背景色
                                 borderRadius: BorderRadius.circular(20.0), // 角丸
                               ),
                               child: Text(
@@ -127,7 +159,8 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
                             // キャラクター画像
                             ClipRRect(
                               borderRadius: BorderRadius.circular(10.0),
-                              child: Image.network(
+                              // ⚠️ ローカルアセットのパスであるため Image.network を Image.asset に変更
+                              child: Image.asset(
                                 characters[index]
                                     ['image'], // PageView.builderの'index'を使用
                                 height: 300,
@@ -216,6 +249,28 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
               ),
             ),
           ],
+        ),
+      ),
+      // 👈 3. 画面下部に「彼女を選ぶ」ボタンを追加
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xE383AB), // ボタンの背景色
+            minimumSize: const Size(double.infinity, 50), // ボタンのサイズ
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          onPressed: _selectGirlfriendAndSaveState, // 選択処理を呼び出す
+          child: const Text(
+            'この彼女を選ぶ',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.mainText, // 文字色
+            ),
+          ),
         ),
       ),
     );

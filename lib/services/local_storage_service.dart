@@ -19,7 +19,7 @@ class LocalStorageService {
   final SharedPreferences _prefs;
   LocalStorageService(this._prefs);
 
-  // static const String _userIdKey = 'user_id';
+  static const String _userIdKey = 'user_id';
   static const String _currentCharacterKey = 'current_character';
   static const String _likeabilityKeyPrefix = '_likeability'; // キャラごとに好感度を保存
   static const String _transactionHistoryKey = 'transaction_history';
@@ -30,8 +30,16 @@ class LocalStorageService {
   static const String _notificationsEnabledKey = 'notifications_enabled';
   static const String _bgmVolumeKey = 'bgm_volume';
 
+  // --- 初期化 (Initialization) ---
+
   // --- 保存 (Save) ---
 
+  /// ユーザーIDを保存する
+  Future<void> saveUserId(String userId) async {
+    await _prefs.setString(_userIdKey, userId);
+  }
+
+  /// 現在選択中のキャラクターを保存する
   Future<void> saveCurrentCharacter(String characterId) async {
     await _prefs.setString(_currentCharacterKey, characterId);
   }
@@ -58,10 +66,17 @@ class LocalStorageService {
 
   // --- 読み込み (Load) ---
 
+  /// ユーザーIDを読み込む
+  Future<String?> getUserId() async {
+    return _prefs.getString(_userIdKey);
+  }
+
+  /// 現在選択中のキャラクターを読み込む
   Future<String?> getCurrentCharacter() async {
     return _prefs.getString(_currentCharacterKey);
   }
 
+  /// キャラクターの好感度を読み込む
   Future<int> getLikeability(String characterId) async {
     // ここを書き換える
     return _prefs.getInt('$characterId$_likeabilityKeyPrefix') ?? 1;
