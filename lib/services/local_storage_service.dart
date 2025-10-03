@@ -68,7 +68,7 @@ class LocalStorageService {
 
   /// ユーザーIDを読み込む
   Future<String?> getUserId() async {
-    return prefs.getString(_userIdKey);
+    return _prefs.getString(_userIdKey);
   }
 
   /// 現在選択中のキャラクターを読み込む
