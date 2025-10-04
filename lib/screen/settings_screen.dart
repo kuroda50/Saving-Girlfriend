@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/constants/settings_defaults.dart';
-import 'package:saving_girlfriend/models/settings_state.dart';
 import '../providers/setting_provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,6 +18,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late double bgmVolume;
   final TextEditingController targetSavingsController = TextEditingController();
   final TextEditingController dailyBudgetController = TextEditingController();
+
+  late String _initialTargetSavings;
+  late String _initialDailyBudget;
 
   @override
   void initState() {
@@ -37,6 +39,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           (SettingsDefaults.targetSavingAmount / 10000).toInt().toString();
       dailyBudgetController.text = SettingsDefaults.dailyBudget.toString();
     }
+    _initialTargetSavings = targetSavingsController.text;
+    _initialDailyBudget = dailyBudgetController.text;
   }
 
   @override
@@ -58,19 +62,75 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   // 設定を保存する処理
-  void saveSettings() async {
-    final newSettings = SettingsState(
-      notificationsEnabled: notificationsEnabled,
-      bgmVolume: bgmVolume,
-      targetSavingAmount: (int.tryParse(targetSavingsController.text) ??
-              (SettingsDefaults.targetSavingAmount / 10000).toInt()) *
-          10000,
-      dailyBudget: int.tryParse(dailyBudgetController.text) ??
-          SettingsDefaults.dailyBudget,
-    );
-    await ref.read(settingsProvider.notifier).saveSettings(newSettings);
+  void _onSaveButtonPressed() async {
+    final targetSavingAmount = (int.tryParse(targetSavingsController.text) ??
+            (SettingsDefaults.targetSavingAmount / 10000).toInt()) *
+        10000;
+    final dailyBudget = int.tryParse(dailyBudgetController.text) ??
+        SettingsDefaults.dailyBudget;
+    await ref.read(settingsProvider.notifier).updateSavingGoals(
+        targetSavingAmount: targetSavingAmount, dailyBudget: dailyBudget);
 
     if (mounted) {
+      context.pop();
+    }
+  }
+
+  bool _haveSavingGoalsChanged() {
+    return _initialTargetSavings != targetSavingsController.text ||
+        _initialDailyBudget != dailyBudgetController.text;
+  }
+
+  Future<void> _handlePop() async {
+    if (_haveSavingGoalsChanged()) {
+      final result = await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                backgroundColor: AppColors.mainBackground,
+                // ★ 角を丸くして全体のデザインと合わせる
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                title: const Text(
+                  "変更を破棄しますか？",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                content: const Text('保存されていない変更があります。このまま画面を閉じますか？'),
+                actions: [
+                  // ★ 「キャンセル」ボタンのデザインを調整
+                  SizedBox(
+                    width: 100, // ボタン幅を少し指定
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text("キャンセル"),
+                    ),
+                  ),
+                  // ★ 「破棄する」ボタンをElevatedButtonにしてOKボタンとデザインを合わせる
+                  SizedBox(
+                    width: 130,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary, // OKボタンと同じ色
+                        foregroundColor: AppColors.subText,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10), // OKボタンと同じ角丸
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text("破棄する"),
+                    ),
+                  ),
+                ],
+                // ★ ボタン間の余白を調整
+                actionsPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+              ));
+      if (!mounted) return;
+      if (result == true) {
+        context.pop();
+      }
+    } else {
+      // 変更がない場合はそのまま閉じる
       context.pop();
     }
   }
@@ -88,239 +148,259 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               body: Center(child: Text('エラーが発生しました: $error')),
             ),
         data: (settings) {
-          return Scaffold(
-            backgroundColor: AppColors.forthBackground,
-            appBar: AppBar(
-              title: const Text('設定'),
-              backgroundColor: AppColors.secondary,
-            ),
-            body: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // --- アプリセクション ---
-                    _buildSectionHeader('アプリ', Icons.tune),
-                    _buildSettingsContainer(
+          return PopScope(
+              canPop: false,
+              onPopInvokedWithResult: (bool didPop, dynamic _) {
+                //  万が一popが成功した時は何もしない
+                if (didPop) return;
+                _handlePop(); // 独自の戻る処理を呼び出す
+              },
+              child: Scaffold(
+                backgroundColor: AppColors.forthBackground,
+                appBar: AppBar(
+                  title: const Text('設定'),
+                  backgroundColor: AppColors.secondary,
+                ),
+                body: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // --- 通知 ---
-                        Row(
+                        // --- アプリセクション ---
+                        _buildSectionHeader('アプリ', Icons.tune),
+                        _buildSettingsContainer(
                           children: [
-                            const Expanded(
-                              child: Text(
-                                '通知',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 220,
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: ToggleButtons(
-                                  isSelected: [
-                                    !notificationsEnabled,
-                                    notificationsEnabled
-                                  ],
-                                  onPressed: (index) {
-                                    setState(() {
-                                      notificationsEnabled = (index == 1);
-                                    });
-                                  },
-                                  selectedColor: AppColors.mainBackground,
-                                  fillColor: AppColors.primary,
-                                  color: AppColors.secondary,
-                                  borderRadius: BorderRadius.circular(10),
-                                  children: const [
-                                    Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 20),
-                                      child: Text('OFF'),
-                                    ),
-                                    Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 20),
-                                      child: Text('ON'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Divider(),
-                        // --- BGM音量設定 ---
-                        Row(
-                          children: [
-                            const Expanded(
-                              child: Text(
-                                'BGM',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 220,
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    getVolumeIcon(),
-                                    size: 28,
-                                    color: AppColors.secondary,
+                            // --- 通知 ---
+                            Row(
+                              children: [
+                                const Expanded(
+                                  child: Text(
+                                    '通知',
+                                    style: TextStyle(fontSize: 18),
                                   ),
-                                  Expanded(
-                                    child: Slider(
-                                      value: bgmVolume,
-                                      min: 0,
-                                      max: 100,
-                                      divisions: 50,
-                                      activeColor: AppColors.secondary,
-                                      onChanged: (value) {
+                                ),
+                                SizedBox(
+                                  width: 220,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: ToggleButtons(
+                                      isSelected: [
+                                        !notificationsEnabled,
+                                        notificationsEnabled
+                                      ],
+                                      onPressed: (index) {
                                         setState(() {
-                                          bgmVolume = value;
+                                          notificationsEnabled = (index == 1);
+                                          ref
+                                              .read(settingsProvider.notifier)
+                                              .updateNotification(
+                                                  notificationsEnabled);
                                         });
                                       },
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 40,
-                                    child: Text(
-                                      '${bgmVolume.toInt()}%',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // --- 貯金セクション ---
-                    _buildSectionHeader('貯金', Icons.savings),
-                    _buildSettingsContainer(
-                      children: [
-                        // --- 目標 ---
-                        Row(
-                          children: [
-                            const Expanded(
-                              // ✅ レイアウトを統一
-                              child: Text(
-                                '目標',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ),
-                            SizedBox(
-                              // ✅ レイアウトを統一
-                              width: 220,
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: SizedBox(
-                                  width: 130, // TextField自体の幅はここで調整
-                                  child: TextField(
-                                    controller: targetSavingsController,
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.right, // 右寄せにする
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                        borderSide: const BorderSide(
-                                            color: AppColors.secondary),
-                                      ),
-                                      suffixText: '万円',
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 12),
+                                      selectedColor: AppColors.mainBackground,
+                                      fillColor: AppColors.primary,
+                                      color: AppColors.secondary,
+                                      borderRadius: BorderRadius.circular(10),
+                                      children: const [
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 20),
+                                          child: Text('OFF'),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 20),
+                                          child: Text('ON'),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
+                            ),
+                            const Divider(),
+                            // --- BGM音量設定 ---
+                            Row(
+                              children: [
+                                const Expanded(
+                                  child: Text(
+                                    'BGM',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 220,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        getVolumeIcon(),
+                                        size: 28,
+                                        color: AppColors.secondary,
+                                      ),
+                                      Expanded(
+                                        child: Slider(
+                                          value: bgmVolume,
+                                          min: 0,
+                                          max: 100,
+                                          divisions: 50,
+                                          activeColor: AppColors.secondary,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              bgmVolume = value;
+                                            });
+                                          },
+                                          onChangeEnd: (value) {
+                                            ref
+                                                .read(settingsProvider.notifier)
+                                                .updateBgmVolume(value);
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 40,
+                                        child: Text(
+                                          '${bgmVolume.toInt()}%',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const Divider(),
-                        // --- 一日に使える金額 ---
-                        Row(
+
+                        const SizedBox(height: 20),
+
+                        // --- 貯金セクション ---
+                        _buildSectionHeader('貯金', Icons.savings),
+                        _buildSettingsContainer(
                           children: [
-                            const Expanded(
-                              // ✅ レイアウトを統一
-                              child: Text(
-                                '一日に使える金額',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ),
-                            SizedBox(
-                              // ✅ レイアウトを統一
-                              width: 220,
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: SizedBox(
-                                  width: 130, // TextField自体の幅はここで調整
-                                  child: TextField(
-                                    controller: dailyBudgetController,
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.right,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(10),
+                            // --- 目標 ---
+                            Row(
+                              children: [
+                                const Expanded(
+                                  // ✅ レイアウトを統一
+                                  child: Text(
+                                    '目標',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                ),
+                                SizedBox(
+                                  // ✅ レイアウトを統一
+                                  width: 220,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: SizedBox(
+                                      width: 130, // TextField自体の幅はここで調整
+                                      child: TextField(
+                                        controller: targetSavingsController,
+                                        keyboardType: TextInputType.number,
+                                        textAlign: TextAlign.right, // 右寄せにする
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            borderSide: const BorderSide(
+                                                color: AppColors.secondary),
+                                          ),
+                                          suffixText: '万円',
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 16, vertical: 12),
+                                        ),
                                       ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                        borderSide: const BorderSide(
-                                            color: AppColors.secondary),
-                                      ),
-                                      suffixText: '円',
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 12),
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
+                            ),
+                            const Divider(),
+                            // --- 一日に使える金額 ---
+                            Row(
+                              children: [
+                                const Expanded(
+                                  // ✅ レイアウトを統一
+                                  child: Text(
+                                    '1日に使える金額',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                ),
+                                SizedBox(
+                                  // ✅ レイアウトを統一
+                                  width: 220,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: SizedBox(
+                                      width: 130, // TextField自体の幅はここで調整
+                                      child: TextField(
+                                        controller: dailyBudgetController,
+                                        keyboardType: TextInputType.number,
+                                        textAlign: TextAlign.right,
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            borderSide: const BorderSide(
+                                                color: AppColors.secondary),
+                                          ),
+                                          suffixText: '円',
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 16, vertical: 12),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
 
-                    // ( OKボタンなどはこの下に続く... )
-                    const SizedBox(height: 40),
-                    // OKボタン
-                    Center(
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: saveSettings,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: AppColors.subText,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                        // ( OKボタンなどはこの下に続く... )
+                        const SizedBox(height: 40),
+                        // OKボタン
+                        Center(
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: _onSaveButtonPressed,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: AppColors.subText,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'OK',
+                                style: TextStyle(fontSize: 18),
+                              ),
                             ),
                           ),
-                          child: const Text(
-                            'OK',
-                            style: TextStyle(fontSize: 18),
-                          ),
                         ),
-                      ),
+                        const SizedBox(height: 24),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
+              ));
         });
   }
 }
