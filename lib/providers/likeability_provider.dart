@@ -25,18 +25,16 @@ final likeabilityProvider = Provider<AsyncValue<double>>((ref) {
 
   final int totalTribute = history.fold(0, (sum, item) => sum + item.amount);
   final int targetAmount = settings.targetSavingAmount;
-  final int initialAmount = settings.defaultContributionAmount;
 
   // 計算式に基づいて好感度を算出する
-  final int goalToSave = targetAmount - initialAmount;
 
   // もう達成している場合は、達成率を100%として扱う
-  if (goalToSave <= 0) {
+  if (targetAmount <= 0) {
     return const AsyncValue.data(100.0);
   }
 
   // 達成率を計算
-  final double progressRatio = totalTribute / goalToSave;
+  final double progressRatio = totalTribute / targetAmount;
 
   // 達成率がマイナスにならないように0で下限を設定
   final double clampedRatio = max(0.0, progressRatio);
