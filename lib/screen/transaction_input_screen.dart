@@ -37,20 +37,6 @@ class _TransactionInputScreenState
     super.dispose();
   }
 
-  // Future<void> _selectDate(BuildContext context) async {
-  //   final DateTime? picked = await showDatePicker(
-  //     context: context,
-  //     initialDate: _selectedDate,
-  //     firstDate: DateTime(2020),
-  //     lastDate: DateTime.now(),
-  //   );
-  //   if (picked != null && picked != _selectedDate) {
-  //     setState(() {
-  //       _selectedDate = picked;
-  //     });
-  //   }
-  // }
-
   void _saveTransaction() async {
     final amount = int.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
@@ -75,7 +61,7 @@ class _TransactionInputScreenState
 
     try {
       await ref
-          .read(transactionHistoryProvider.notifier)
+          .read(transactionsProvider.notifier)
           .addTransaction(newTransaction);
 
       // フォームをリセット
