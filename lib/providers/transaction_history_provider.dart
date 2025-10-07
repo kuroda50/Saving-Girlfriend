@@ -1,9 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/models/settings_state.dart';
 import 'package:saving_girlfriend/models/transaction_history_state.dart';
 import 'package:saving_girlfriend/models/transaction_state.dart';
-import 'package:saving_girlfriend/providers/setting_provider.dart';
-import 'package:saving_girlfriend/repositories/settings_repository.dart';
 import 'package:saving_girlfriend/repositories/transaction_history_repository.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 
@@ -12,16 +9,11 @@ class TransactionHistoryNotifier
   Future<TransactionHistoryRepository>
       get _transactionHistoryRepositoryFuture =>
           ref.read(transactionHistoryRepositoryProvider.future);
-  Future<SettingsRepository> get _settingsRepositoryFuture =>
-      ref.read(settingsRepositoryProvider.future);
   @override
   Future<TransactionHistoryState> build() async {
     final transactionHistoryRepository =
         await _transactionHistoryRepositoryFuture;
     final history = await transactionHistoryRepository.getTransactionHistory();
-    final settingsRepository = await _settingsRepositoryFuture;
-    SettingsState settingsState = await settingsRepository.getSettings();
-    final int target = settingsState.targetSavingAmount;
 
     // 初期値を設定する
     final now = DateTime.now();
@@ -34,7 +26,6 @@ class TransactionHistoryNotifier
 
     return TransactionHistoryState(
       transactionHistory: history,
-      targetSavingAmount: target,
       currentYear: now.year,
       currentMonth: now.month,
       selectedDate: now, // ★今日のデータを初期値に

@@ -2,7 +2,6 @@ import 'package:saving_girlfriend/models/transaction_state.dart';
 
 class TransactionHistoryState {
   final List<TransactionState> transactionHistory;
-  final int targetSavingAmount;
   final int currentYear;
   final int currentMonth;
   final DateTime selectedDate; // ★追加: タップされた日付
@@ -10,7 +9,6 @@ class TransactionHistoryState {
 
   TransactionHistoryState({
     this.transactionHistory = const [],
-    this.targetSavingAmount = 0,
     required this.currentYear,
     required this.currentMonth,
     required this.selectedDate,
@@ -19,7 +17,6 @@ class TransactionHistoryState {
 
   TransactionHistoryState copyWith({
     List<TransactionState>? transactionHistory,
-    int? targetSavingAmount,
     int? currentYear,
     int? currentMonth,
     DateTime? selectedDate,
@@ -27,7 +24,6 @@ class TransactionHistoryState {
   }) {
     return TransactionHistoryState(
       transactionHistory: transactionHistory ?? this.transactionHistory,
-      targetSavingAmount: targetSavingAmount ?? this.targetSavingAmount,
       currentYear: currentYear ?? this.currentYear,
       currentMonth: currentMonth ?? this.currentMonth,
       selectedDate: selectedDate ?? this.selectedDate,
