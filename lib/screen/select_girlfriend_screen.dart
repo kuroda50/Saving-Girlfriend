@@ -3,7 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
+import 'package:saving_girlfriend/screen/home_screen.dart';
+import 'package:saving_girlfriend/screen/select_story_screen.dart';
+import 'package:saving_girlfriend/screen/story_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // 👈 1. 状態保存のためのパッケージをインポート
+import 'package:go_router/go_router.dart';
 
 class SelectGirlfriendScreen extends StatefulWidget {
   const SelectGirlfriendScreen({super.key});
@@ -68,22 +72,29 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
     // 1. SharedPreferencesのインスタンスを取得
     final prefs = await SharedPreferences.getInstance();
 
-    // 2. 「彼女が選択された」という状態を永続的に保存 (TitleScreenでチェックするフラグ)
-    await prefs.setBool('has_selected_girlfriend', true);
-
-    // 3. 選択した彼女のインデックスや名前も保存しておくと、後で利用できる
-    final selectedGirlfriendName = characters[_currentIndex]['name'] as String;
-    await prefs.setString('selected_girlfriend_name', selectedGirlfriendName);
-
     // 4. 次の画面へ遷移
     // TODO: ここを、あなたのアプリのメイン画面へのルーティング処理に置き換えてください
     // （例: go_routerなら context.go('/home_screen')）
     // （例: 標準Navigatorなら Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainScreen()))）
+    if (mounted) {
+      final hasSelected = prefs.getBool('has_played_story') ?? false;
 
-    // 実際のアプリの遷移処理に置き換えるまでの仮のSnackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$selectedGirlfriendName を選択しました！メイン画面へ遷移...')),
-    );
+      // 遷移先のパスを決定
+      final String nextPath = hasSelected
+          ? '/home' // 選択済みならホーム画面など（あなたのアプリに合わせてパスを変更してください）
+          : '/story'; // 未選択ならストーリー0話
+
+      // 2. 「彼女が選択された」という状態を永続的に保存 (TitleScreenでチェックするフラグ)
+      await prefs.setBool('has_selected_girlfriend', true);
+
+      // 3. 選択した彼女のインデックスや名前も保存しておくと、後で利用できる
+      final selectedGirlfriendName =
+          characters[_currentIndex]['name'] as String;
+      await prefs.setString('selected_girlfriend_name', selectedGirlfriendName);
+
+      // 画面遷移を実行
+      context.go(nextPath);
+    }
   }
 
   @override
@@ -256,7 +267,7 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xE383AB), // ボタンの背景色
+            backgroundColor: AppColors.primary, // ボタンの背景色
             minimumSize: const Size(double.infinity, 50), // ボタンのサイズ
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -268,7 +279,7 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.mainText, // 文字色
+              color: AppColors.subText, // 文字色
             ),
           ),
         ),
