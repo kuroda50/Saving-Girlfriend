@@ -24,7 +24,7 @@ class TributeHistory extends _$TributeHistory {
     final repository = await ref.read(tributeHistoryRepositoryProvider.future);
 
     final newTribute = TributeState(
-      id: ref.read(uuidProvider), // uuidのインスタンスから新しいIDを生成
+      id: ref.read(uuidProvider).v4(), // uuidのインスタンスから新しいIDを生成
       character: character,
       date: DateTime.now(),
       amount: amount,

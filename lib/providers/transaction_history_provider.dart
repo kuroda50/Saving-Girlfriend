@@ -49,6 +49,17 @@ class TransactionsNotifier extends AsyncNotifier<List<TransactionState>> {
       await transactionHistoryRepository.saveTransactionHistory(newHistory);
     }
   }
+
+  Future<void> removeTransaction(String id) async {
+    final currentHistory = await future;
+    final newHistory = currentHistory.where((tx) => tx.id != id).toList();
+
+    state = AsyncData(newHistory);
+
+    final transactionHistoryRepository =
+        await _transactionHistoryRepositoryFuture;
+    await transactionHistoryRepository.saveTransactionHistory(newHistory);
+  }
 }
 
 final transactionHistoryRepositoryProvider =

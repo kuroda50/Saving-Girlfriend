@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/models/transaction_state.dart';
 import 'package:saving_girlfriend/providers/uuid_provider.dart';
@@ -63,10 +62,9 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
     super.initState();
     if (widget.initialTransaction != null) {
       final transaction = widget.initialTransaction!;
-      final amount = transaction.amount;
 
-      _isExpense = amount < 0;
-      _amountController.text = amount.abs().toString();
+      _isExpense = transaction.type == "expense";
+      _amountController.text = transaction.amount.toString();
       _selectedDate = transaction.date;
       _selectedCategory = transaction.category;
     }
@@ -87,27 +85,13 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
       return;
     }
     TransactionState transactionData = TransactionState(
-        id: widget.initialTransaction?.id ?? ref.read(uuidProvider),
+        id: widget.initialTransaction?.id ?? ref.read(uuidProvider).v4(),
         type: _isExpense ? "expense" : "income",
         date: _selectedDate,
         amount: _isExpense ? -amount : amount,
         category: _selectedCategory!);
     widget.onSave(transactionData);
     Navigator.of(context).pop();
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
   }
 
   @override
@@ -185,27 +169,7 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
               });
             },
           ),
-          const SizedBox(height: 24),
-          InkWell(
-            onTap: () => _selectDate(context),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      color: AppColors.subIcon),
-                  const SizedBox(width: 12),
-                  Text(
-                    '日付: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const Spacer(),
-                  const Icon(Icons.edit_outlined,
-                      color: AppColors.subIcon, size: 20),
-                ],
-              ),
-            ),
-          ),
+          const SizedBox(height: 10),
           const Divider(),
           const SizedBox(height: 10),
           ElevatedButton(
