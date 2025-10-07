@@ -1,8 +1,8 @@
-import 'package:saving_girlfriend/widgets/transaction_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:saving_girlfriend/constants/color.dart';
+import 'package:saving_girlfriend/widgets/transaction_modal.dart';
 import '../providers/transaction_history_provider.dart';
 
 class TransactionHistoryScreen extends ConsumerWidget {
@@ -38,14 +38,14 @@ class TransactionHistoryScreen extends ConsumerWidget {
           Map<String, int> calculateDailyTransactions() {
             final dailyTransaction = <String, int>{};
             for (var transaction in state.transactionHistory) {
-              final date = DateTime.parse(transaction['date']);
-              final amount = transaction['amount'] as int;
+              final date = transaction.date;
+              final amount = transaction.amount;
               if (date.month == state.currentMonth &&
                   date.year == state.currentYear) {
                 final formattedDate = DateFormat('yyyy-MM-dd').format(date);
                 dailyTransaction[formattedDate] =
                     (dailyTransaction[formattedDate] ?? 0) +
-                        (transaction['type'] == "income" ? amount : -amount);
+                        (transaction.type == "income" ? amount : -amount);
               }
             }
             return dailyTransaction;
@@ -215,10 +215,10 @@ class TransactionHistoryScreen extends ConsumerWidget {
                         itemCount: selectedTransactions.length,
                         itemBuilder: (context, index) {
                           final transaction = selectedTransactions[index];
-                          final type = transaction['type'] as String;
-                          final amount = transaction['amount'] as int;
+                          final type = transaction.type;
+                          final amount = transaction.amount;
                           final category =
-                              transaction['category'] as String? ?? 'カテゴリなし';
+                              transaction.category as String? ?? 'カテゴリなし';
                           return Card(
                             elevation: 1,
                             margin: const EdgeInsets.symmetric(vertical: 4),
@@ -252,8 +252,7 @@ class TransactionHistoryScreen extends ConsumerWidget {
                                       showTransactionModal(
                                         context,
                                         onSave: (updatedData) {
-                                          final transactionId =
-                                              updatedData['id'] as String;
+                                          final transactionId = updatedData.id;
                                           ref
                                               .read(transactionHistoryProvider
                                                   .notifier)

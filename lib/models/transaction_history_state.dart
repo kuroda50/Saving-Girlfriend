@@ -1,10 +1,12 @@
+import 'package:saving_girlfriend/models/transaction_state.dart';
+
 class TransactionHistoryState {
-  final List<Map<String, dynamic>> transactionHistory;
+  final List<TransactionState> transactionHistory;
   final int targetSavingAmount;
   final int currentYear;
   final int currentMonth;
   final DateTime selectedDate; // ★追加: タップされた日付
-  final List<Map<String, dynamic>> selectedDateTransactions; // ★追加: タップされた日付の履歴
+  final List<TransactionState> selectedDateTransactions; // ★追加: タップされた日付の履歴
 
   TransactionHistoryState({
     this.transactionHistory = const [],
@@ -16,12 +18,12 @@ class TransactionHistoryState {
   });
 
   TransactionHistoryState copyWith({
-    List<Map<String, dynamic>>? transactionHistory,
+    List<TransactionState>? transactionHistory,
     int? targetSavingAmount,
     int? currentYear,
     int? currentMonth,
     DateTime? selectedDate,
-    List<Map<String, dynamic>>? selectedDateTransactions,
+    List<TransactionState>? selectedDateTransactions,
   }) {
     return TransactionHistoryState(
       transactionHistory: transactionHistory ?? this.transactionHistory,

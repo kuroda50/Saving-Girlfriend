@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:saving_girlfriend/constants/color.dart';
+import 'package:saving_girlfriend/models/transaction_state.dart';
+import 'package:saving_girlfriend/providers/uuid_provider.dart';
 
 // モーダルを呼び出すためのグローバル関数
 void showTransactionModal(
   BuildContext context, {
-  required Function(Map<String, dynamic>) onSave,
-  Map<String, dynamic>? initialTransaction,
+  required Function(TransactionState) onSave,
+  TransactionState? initialTransaction,
 }) {
   showModalBottomSheet(
     context: context,
@@ -28,18 +31,19 @@ void showTransactionModal(
 }
 
 // 収支入力モーダルのUIを定義するStatefulWidget
-class TransactionInputModal extends StatefulWidget {
-  final Function(Map<String, dynamic>) onSave;
-  final Map<String, dynamic>? initialTransaction;
+class TransactionInputModal extends ConsumerStatefulWidget {
+  final Function(TransactionState) onSave;
+  final TransactionState? initialTransaction;
 
   const TransactionInputModal(
       {required this.onSave, this.initialTransaction, super.key});
 
   @override
-  State<TransactionInputModal> createState() => _TransactionInputModalState();
+  ConsumerState<TransactionInputModal> createState() =>
+      _TransactionInputModalState();
 }
 
-class _TransactionInputModalState extends State<TransactionInputModal> {
+class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
   bool _isExpense = true;
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
@@ -59,12 +63,12 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     super.initState();
     if (widget.initialTransaction != null) {
       final transaction = widget.initialTransaction!;
-      final amount = transaction['amount'] as int;
+      final amount = transaction.amount;
 
       _isExpense = amount < 0;
       _amountController.text = amount.abs().toString();
-      _selectedDate = DateTime.parse(transaction['date']);
-      _selectedCategory = transaction['category'];
+      _selectedDate = transaction.date;
+      _selectedCategory = transaction.category;
     }
   }
 
@@ -82,13 +86,12 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
       );
       return;
     }
-    Map<String, dynamic> transactionData = {
-      'id': widget.initialTransaction?['id'] ??
-          'transaction_${DateTime.now().millisecondsSinceEpoch}',
-      'date': _selectedDate.toIso8601String(),
-      'amount': _isExpense ? -amount : amount,
-      'category': _selectedCategory!
-    };
+    TransactionState transactionData = TransactionState(
+        id: widget.initialTransaction?.id ?? ref.read(uuidProvider),
+        type: _isExpense ? "expense" : "income",
+        date: _selectedDate,
+        amount: _isExpense ? -amount : amount,
+        category: _selectedCategory!);
     widget.onSave(transactionData);
     Navigator.of(context).pop();
   }

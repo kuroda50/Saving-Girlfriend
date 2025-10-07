@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/color.dart';
+import 'package:saving_girlfriend/models/transaction_state.dart';
+import 'package:saving_girlfriend/providers/uuid_provider.dart';
 
 import '../providers/transaction_history_provider.dart';
 
@@ -41,7 +43,7 @@ class _TransactionInputScreenState
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime.now(),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -65,21 +67,17 @@ class _TransactionInputScreenState
       return;
     }
 
-    // ここを修正する
-    final newTransaction = {
-      "type": _isExpense ? "expense" : "income",
-      "date": _selectedDate.toIso8601String(),
-      "amount": amount,
-      "category": _selectedCategory!,
-    };
+    final newTransaction = TransactionState(
+        id: ref.read(uuidProvider),
+        type: _isExpense ? "expense" : "income",
+        date: _selectedDate,
+        amount: amount,
+        category: _selectedCategory!);
 
     try {
       await ref
           .read(transactionHistoryProvider.notifier)
           .addTransaction(newTransaction);
-      // ref
-      //     .read(homeScreenProvider.notifier)
-      //     .aiChat(_selectedCategory!, _isExpense ? -amount : amount);
 
       // フォームをリセット
       _amountController.clear();
@@ -160,8 +158,8 @@ class _TransactionInputScreenState
               ),
               onChanged: (value) {
                 final num = int.tryParse(value);
-                if (num != null && num > 99999) {
-                  _amountController.text = '99999';
+                if (num != null && num > 999999) {
+                  _amountController.text = '999999';
                   _amountController.selection = TextSelection.fromPosition(
                     TextPosition(offset: _amountController.text.length),
                   );
