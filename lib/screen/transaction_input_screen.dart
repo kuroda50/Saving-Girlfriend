@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/color.dart';
+import 'package:saving_girlfriend/models/transaction_state.dart';
+import 'package:saving_girlfriend/providers/uuid_provider.dart';
 
 import '../providers/transaction_history_provider.dart';
 
@@ -18,7 +20,6 @@ class _TransactionInputScreenState
     extends ConsumerState<TransactionInputScreen> {
   bool _isExpense = true;
   final _amountController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
   String? _selectedCategory;
   final List<String> _expenseCategories = [
     '食費',
@@ -36,19 +37,19 @@ class _TransactionInputScreenState
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
+  // Future<void> _selectDate(BuildContext context) async {
+  //   final DateTime? picked = await showDatePicker(
+  //     context: context,
+  //     initialDate: _selectedDate,
+  //     firstDate: DateTime(2020),
+  //     lastDate: DateTime.now(),
+  //   );
+  //   if (picked != null && picked != _selectedDate) {
+  //     setState(() {
+  //       _selectedDate = picked;
+  //     });
+  //   }
+  // }
 
   void _saveTransaction() async {
     final amount = int.tryParse(_amountController.text);
@@ -65,28 +66,23 @@ class _TransactionInputScreenState
       return;
     }
 
-    // ここを修正する
-    final newTransaction = {
-      "type": _isExpense ? "expense" : "income",
-      "date": _selectedDate.toIso8601String(),
-      "amount": amount,
-      "category": _selectedCategory!,
-    };
+    final newTransaction = TransactionState(
+        id: ref.read(uuidProvider),
+        type: _isExpense ? "expense" : "income",
+        date: DateTime.now(),
+        amount: amount,
+        category: _selectedCategory!);
 
     try {
       await ref
           .read(transactionHistoryProvider.notifier)
           .addTransaction(newTransaction);
-      // ref
-      //     .read(homeScreenProvider.notifier)
-      //     .aiChat(_selectedCategory!, _isExpense ? -amount : amount);
 
       // フォームをリセット
       _amountController.clear();
       setState(() {
         _isExpense = true;
         _selectedCategory = null;
-        _selectedDate = DateTime.now();
       });
     } catch (error) {
       print("エラー: $error");
@@ -160,8 +156,8 @@ class _TransactionInputScreenState
               ),
               onChanged: (value) {
                 final num = int.tryParse(value);
-                if (num != null && num > 99999) {
-                  _amountController.text = '99999';
+                if (num != null && num > 999999) {
+                  _amountController.text = '999999';
                   _amountController.selection = TextSelection.fromPosition(
                     TextPosition(offset: _amountController.text.length),
                   );
@@ -189,26 +185,7 @@ class _TransactionInputScreenState
                 });
               },
             ),
-            const SizedBox(height: 24),
-            InkWell(
-              onTap: () => _selectDate(context),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today_outlined,
-                        color: AppColors.subIcon),
-                    const SizedBox(width: 12),
-                    Text(
-                        '日付: ${MaterialLocalizations.of(context).formatShortDate(_selectedDate)}',
-                        style: const TextStyle(fontSize: 16)),
-                    const Spacer(),
-                    const Icon(Icons.edit_outlined,
-                        color: AppColors.subIcon, size: 20),
-                  ],
-                ),
-              ),
-            ),
+            const SizedBox(height: 10),
             const Divider(),
             const SizedBox(height: 10),
             ElevatedButton(
