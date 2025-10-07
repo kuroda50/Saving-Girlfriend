@@ -13,11 +13,11 @@ part 'spendable_amount_provider.g.dart';
 @riverpod
 Future<int> spendableAmount(Ref ref) async {
   final budgetHistory = await ref.watch(budgetHistoryProvider.future);
-  final transactions = await ref.watch(transactionHistoryProvider.future);
+  final transactionHistory = await ref.watch(transactionsProvider.future);
   final tributes = await ref.watch(tributeHistoryProvider.future);
 
   // 予算が一度も設定されていない、または取引が一度もなければ計算不可
-  if (budgetHistory.isEmpty || transactions.transactionHistory.isEmpty) {
+  if (budgetHistory.isEmpty || transactionHistory.isEmpty) {
     return 0;
   }
 
@@ -26,7 +26,7 @@ Future<int> spendableAmount(Ref ref) async {
     ..sort((a, b) => a.date.compareTo(b.date));
 
   // 2. 計算の開始日を最初の取引日に設定
-  final firstTransactionDate = transactions.transactionHistory
+  final firstTransactionDate = transactionHistory
       .map((t) => t.date)
       .reduce((a, b) => a.isBefore(b) ? a : b);
   final startDate = DateTime(firstTransactionDate.year,
@@ -37,7 +37,7 @@ Future<int> spendableAmount(Ref ref) async {
     startDate: startDate,
     endOfToday: DateTime.now(),
     sortedBudgetHistory: sortedBudgetHistory,
-    transactions: transactions.transactionHistory,
+    transactions: transactionHistory,
   );
 
   // 4. 貢ぎ物の合計金額を計算する

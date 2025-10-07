@@ -332,7 +332,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 const Expanded(
                                   // ✅ レイアウトを統一
                                   child: Text(
-                                    '1日に使える金額',
+                                    '1日の予算',
                                     style: TextStyle(fontSize: 18),
                                   ),
                                 ),
