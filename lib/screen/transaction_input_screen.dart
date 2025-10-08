@@ -53,7 +53,7 @@ class _TransactionInputScreenState
     }
 
     final newTransaction = TransactionState(
-        id: ref.read(uuidProvider),
+        id: ref.read(uuidProvider).v4(),
         type: _isExpense ? "expense" : "income",
         date: DateTime.now(),
         amount: amount,

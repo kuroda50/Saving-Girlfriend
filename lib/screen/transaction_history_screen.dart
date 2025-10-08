@@ -252,6 +252,8 @@ class _TransactionHistoryScreenState
                         itemCount: selectedTransactions.length,
                         itemBuilder: (context, index) {
                           final transaction = selectedTransactions[index];
+                          final isToday = DateUtils.isSameDay(
+                              transaction.date, DateTime.now());
                           final type = transaction.type;
                           final amount = transaction.amount;
                           final category =
@@ -281,25 +283,102 @@ class _TransactionHistoryScreenState
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit,
-                                        size: 20, color: Colors.grey),
-                                    onPressed: () {
-                                      showTransactionModal(
-                                        context,
-                                        onSave: (updatedData) {
-                                          final transactionId = updatedData.id;
-                                          ref
-                                              .read(
-                                                  transactionsProvider.notifier)
-                                              .updateTransaction(
-                                                  transactionId, updatedData);
-                                        },
-                                        initialTransaction: transaction,
-                                      );
-                                    },
-                                  ),
+                                  if (isToday) ...[
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      icon: const Icon(Icons.edit,
+                                          size: 20, color: Colors.grey),
+                                      onPressed: () {
+                                        showTransactionModal(
+                                          context,
+                                          onSave: (updatedData) {
+                                            final transactionId =
+                                                updatedData.id;
+                                            ref
+                                                .read(transactionsProvider
+                                                    .notifier)
+                                                .updateTransaction(
+                                                    transactionId, updatedData);
+                                          },
+                                          initialTransaction: transaction,
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete,
+                                          size: 20, color: Colors.grey),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder:
+                                              (BuildContext dialogContext) {
+                                            return AlertDialog(
+                                              backgroundColor:
+                                                  AppColors.mainBackground,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12.0),
+                                              ),
+                                              title: const Text(
+                                                "確認",
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              content:
+                                                  const Text('この履歴を削除するのね？'),
+                                              actions: [
+                                                SizedBox(
+                                                  width: 100,
+                                                  child: TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(
+                                                                dialogContext)
+                                                            .pop(),
+                                                    child: const Text("キャンセル"),
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  width: 130,
+                                                  child: ElevatedButton(
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                      backgroundColor:
+                                                          AppColors.primary,
+                                                      foregroundColor:
+                                                          AppColors.subText,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                      ),
+                                                    ),
+                                                    onPressed: () {
+                                                      Navigator.of(
+                                                              dialogContext)
+                                                          .pop();
+                                                      ref
+                                                          .read(
+                                                              transactionsProvider
+                                                                  .notifier)
+                                                          .removeTransaction(
+                                                              transaction.id);
+                                                    },
+                                                    child: const Text("削除"),
+                                                  ),
+                                                ),
+                                              ],
+                                              actionsPadding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 16.0,
+                                                      vertical: 12.0),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ]
                                 ],
                               ),
                             ),
