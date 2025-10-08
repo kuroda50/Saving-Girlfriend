@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:saving_girlfriend/models/budget_history.dart';
-import 'package:saving_girlfriend/models/transaction_history_state.dart';
 import 'package:saving_girlfriend/models/transaction_state.dart';
 import 'package:saving_girlfriend/models/tribute_history_state.dart';
 import 'package:saving_girlfriend/providers/budget_history_provider.dart';
@@ -16,17 +15,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           budgetHistoryProvider.overrideWith((ref) => Future.value([])),
-          transactionHistoryProvider.overrideWith(
-            () => TransactionHistoryNotifierFake(
-              TransactionHistoryState(
-                transactionHistory: [],
-                currentYear: 2025,
-                currentMonth: 10,
-                selectedDate: DateTime.now(),
-                selectedDateTransactions: [],
-              ),
-            ),
-          ),
+          transactionsProvider.overrideWith(() => TransactionsNotifierFake([])),
           tributeHistoryProvider.overrideWith(() => TributeHistoryFake([])),
         ],
       );
@@ -50,17 +39,7 @@ void main() {
         overrides: [
           budgetHistoryProvider
               .overrideWith((ref) => Future.value(budgetHistory)),
-          transactionHistoryProvider.overrideWith(
-            () => TransactionHistoryNotifierFake(
-              TransactionHistoryState(
-                transactionHistory: [],
-                currentYear: 2025,
-                currentMonth: 10,
-                selectedDate: DateTime.now(),
-                selectedDateTransactions: [],
-              ),
-            ),
-          ),
+          transactionsProvider.overrideWith(() => TransactionsNotifierFake([])),
           tributeHistoryProvider.overrideWith(() => TributeHistoryFake([])),
         ],
       );
@@ -80,21 +59,15 @@ void main() {
         BudgetHistory(
             date: now.subtract(const Duration(days: 2)), amount: 1000),
       ];
-      final transactionHistory = TransactionHistoryState(
-        transactionHistory: [
-          TransactionState(
-            id: '1',
-            date: now.subtract(const Duration(days: 1)),
-            amount: 500,
-            type: 'expense',
-            category: 'Lunch',
-          ),
-        ],
-        currentYear: now.year,
-        currentMonth: now.month,
-        selectedDate: now,
-        selectedDateTransactions: [],
-      );
+      final transactionList = [
+        TransactionState(
+          id: '1',
+          date: now.subtract(const Duration(days: 1)),
+          amount: 500,
+          type: 'expense',
+          category: 'Lunch',
+        ),
+      ];
       final tributeHistory = [
         TributeState(
           id: '1',
@@ -108,8 +81,8 @@ void main() {
         overrides: [
           budgetHistoryProvider
               .overrideWith((ref) => Future.value(budgetHistory)),
-          transactionHistoryProvider.overrideWith(
-              () => TransactionHistoryNotifierFake(transactionHistory)),
+          transactionsProvider
+              .overrideWith(() => TransactionsNotifierFake(transactionList)),
           tributeHistoryProvider
               .overrideWith(() => TributeHistoryFake(tributeHistory)),
         ],
@@ -135,33 +108,27 @@ void main() {
         BudgetHistory(
             date: now.subtract(const Duration(days: 2)), amount: 2000),
       ];
-      final transactionHistory = TransactionHistoryState(
-        transactionHistory: [
-          TransactionState(
-              id: '1',
-              date: now.subtract(const Duration(days: 4)),
-              amount: 500,
-              type: 'expense',
-              category: 'test'),
-          TransactionState(
-              id: '2',
-              date: now.subtract(const Duration(days: 1)),
-              amount: 800,
-              type: 'expense',
-              category: 'test'),
-        ],
-        currentYear: now.year,
-        currentMonth: now.month,
-        selectedDate: now,
-        selectedDateTransactions: [],
-      );
+      final transactionList = [
+        TransactionState(
+            id: '1',
+            date: now.subtract(const Duration(days: 4)),
+            amount: 500,
+            type: 'expense',
+            category: 'test'),
+        TransactionState(
+            id: '2',
+            date: now.subtract(const Duration(days: 1)),
+            amount: 800,
+            type: 'expense',
+            category: 'test'),
+      ];
 
       final container = ProviderContainer(
         overrides: [
           budgetHistoryProvider
               .overrideWith((ref) => Future.value(budgetHistory)),
-          transactionHistoryProvider.overrideWith(
-              () => TransactionHistoryNotifierFake(transactionHistory)),
+          transactionsProvider
+              .overrideWith(() => TransactionsNotifierFake(transactionList)),
           tributeHistoryProvider.overrideWith(() => TributeHistoryFake([])),
         ],
       );
@@ -181,27 +148,21 @@ void main() {
         BudgetHistory(
             date: now.subtract(const Duration(days: 2)), amount: 1000),
       ];
-      final transactionHistory = TransactionHistoryState(
-        transactionHistory: [
-          TransactionState(
-              id: '1',
-              date: now.subtract(const Duration(days: 1)),
-              amount: 1200,
-              type: 'expense',
-              category: 'test'),
-        ],
-        currentYear: now.year,
-        currentMonth: now.month,
-        selectedDate: now,
-        selectedDateTransactions: [],
-      );
+      final transactionList = [
+        TransactionState(
+            id: '1',
+            date: now.subtract(const Duration(days: 1)),
+            amount: 1200,
+            type: 'expense',
+            category: 'test'),
+      ];
 
       final container = ProviderContainer(
         overrides: [
           budgetHistoryProvider
               .overrideWith((ref) => Future.value(budgetHistory)),
-          transactionHistoryProvider.overrideWith(
-              () => TransactionHistoryNotifierFake(transactionHistory)),
+          transactionsProvider
+              .overrideWith(() => TransactionsNotifierFake(transactionList)),
           tributeHistoryProvider.overrideWith(() => TributeHistoryFake([])),
         ],
       );
@@ -218,39 +179,33 @@ void main() {
         BudgetHistory(
             date: now.subtract(const Duration(days: 2)), amount: 1000),
       ];
-      final transactionHistory = TransactionHistoryState(
-        transactionHistory: [
-          TransactionState(
-              id: '1',
-              date: now.subtract(const Duration(days: 1)),
-              amount: 500,
-              type: 'expense',
-              category: 'test'),
-          TransactionState(
-              id: '2',
-              date: now.subtract(const Duration(days: 1)),
-              amount: 300,
-              type: 'expense',
-              category: 'test'),
-          TransactionState(
-              id: '3',
-              date: now.subtract(const Duration(days: 1)),
-              amount: 200,
-              type: 'income',
-              category: 'test'),
-        ],
-        currentYear: now.year,
-        currentMonth: now.month,
-        selectedDate: now,
-        selectedDateTransactions: [],
-      );
+      final transactionList = [
+        TransactionState(
+            id: '1',
+            date: now.subtract(const Duration(days: 1)),
+            amount: 500,
+            type: 'expense',
+            category: 'test'),
+        TransactionState(
+            id: '2',
+            date: now.subtract(const Duration(days: 1)),
+            amount: 300,
+            type: 'expense',
+            category: 'test'),
+        TransactionState(
+            id: '3',
+            date: now.subtract(const Duration(days: 1)),
+            amount: 200,
+            type: 'income',
+            category: 'test'),
+      ];
 
       final container = ProviderContainer(
         overrides: [
           budgetHistoryProvider
               .overrideWith((ref) => Future.value(budgetHistory)),
-          transactionHistoryProvider.overrideWith(
-              () => TransactionHistoryNotifierFake(transactionHistory)),
+          transactionsProvider
+              .overrideWith(() => TransactionsNotifierFake(transactionList)),
           tributeHistoryProvider.overrideWith(() => TributeHistoryFake([])),
         ],
       );
@@ -267,33 +222,27 @@ void main() {
         BudgetHistory(
             date: now.subtract(const Duration(days: 4)), amount: 1000),
       ];
-      final transactionHistory = TransactionHistoryState(
-        transactionHistory: [
-          TransactionState(
-              id: '1',
-              date: now.subtract(const Duration(days: 3)),
-              amount: 200,
-              type: 'expense',
-              category: 'test'),
-          TransactionState(
-              id: '2',
-              date: now.subtract(const Duration(days: 1)),
-              amount: 400,
-              type: 'expense',
-              category: 'test'),
-        ],
-        currentYear: now.year,
-        currentMonth: now.month,
-        selectedDate: now,
-        selectedDateTransactions: [],
-      );
+      final transactionList = [
+        TransactionState(
+            id: '1',
+            date: now.subtract(const Duration(days: 3)),
+            amount: 200,
+            type: 'expense',
+            category: 'test'),
+        TransactionState(
+            id: '2',
+            date: now.subtract(const Duration(days: 1)),
+            amount: 400,
+            type: 'expense',
+            category: 'test'),
+      ];
 
       final container = ProviderContainer(
         overrides: [
           budgetHistoryProvider
               .overrideWith((ref) => Future.value(budgetHistory)),
-          transactionHistoryProvider.overrideWith(
-              () => TransactionHistoryNotifierFake(transactionHistory)),
+          transactionsProvider
+              .overrideWith(() => TransactionsNotifierFake(transactionList)),
           tributeHistoryProvider.overrideWith(() => TributeHistoryFake([])),
         ],
       );
@@ -312,27 +261,21 @@ void main() {
         BudgetHistory(
             date: now.subtract(const Duration(days: 2)), amount: 1000),
       ];
-      final transactionHistory = TransactionHistoryState(
-        transactionHistory: [
-          TransactionState(
-              id: '1',
-              date: now.subtract(const Duration(days: 1)),
-              amount: 5000,
-              type: 'income',
-              category: 'test'),
-        ],
-        currentYear: now.year,
-        currentMonth: now.month,
-        selectedDate: now,
-        selectedDateTransactions: [],
-      );
+      final transactionList = [
+        TransactionState(
+            id: '1',
+            date: now.subtract(const Duration(days: 1)),
+            amount: 5000,
+            type: 'income',
+            category: 'test'),
+      ];
 
       final container = ProviderContainer(
         overrides: [
           budgetHistoryProvider
               .overrideWith((ref) => Future.value(budgetHistory)),
-          transactionHistoryProvider.overrideWith(
-              () => TransactionHistoryNotifierFake(transactionHistory)),
+          transactionsProvider
+              .overrideWith(() => TransactionsNotifierFake(transactionList)),
           tributeHistoryProvider.overrideWith(() => TributeHistoryFake([])),
         ],
       );
@@ -349,27 +292,21 @@ void main() {
         BudgetHistory(
             date: now.subtract(const Duration(days: 1)), amount: 1000),
       ];
-      final transactionHistory = TransactionHistoryState(
-        transactionHistory: [
-          TransactionState(
-              id: '1',
-              date: now.subtract(const Duration(days: 1)),
-              amount: 400,
-              type: 'expense',
-              category: 'test'),
-        ],
-        currentYear: now.year,
-        currentMonth: now.month,
-        selectedDate: now,
-        selectedDateTransactions: [],
-      );
+      final transactionList = [
+        TransactionState(
+            id: '1',
+            date: now.subtract(const Duration(days: 1)),
+            amount: 400,
+            type: 'expense',
+            category: 'test'),
+      ];
 
       final container = ProviderContainer(
         overrides: [
           budgetHistoryProvider
               .overrideWith((ref) => Future.value(budgetHistory)),
-          transactionHistoryProvider.overrideWith(
-              () => TransactionHistoryNotifierFake(transactionHistory)),
+          transactionsProvider
+              .overrideWith(() => TransactionsNotifierFake(transactionList)),
           tributeHistoryProvider.overrideWith(() => TributeHistoryFake([])),
         ],
       );
@@ -382,13 +319,13 @@ void main() {
   });
 }
 
-class TransactionHistoryNotifierFake extends TransactionHistoryNotifier {
-  final TransactionHistoryState _state;
+class TransactionsNotifierFake extends TransactionsNotifier {
+  final List<TransactionState> _state;
 
-  TransactionHistoryNotifierFake(this._state);
+  TransactionsNotifierFake(this._state);
 
   @override
-  Future<TransactionHistoryState> build() => Future.value(_state);
+  Future<List<TransactionState>> build() => Future.value(_state);
 }
 
 class TributeHistoryFake extends TributeHistory {

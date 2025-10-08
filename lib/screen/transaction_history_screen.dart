@@ -3,15 +3,50 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/widgets/transaction_modal.dart';
+
 import '../providers/transaction_history_provider.dart';
 
-class TransactionHistoryScreen extends ConsumerWidget {
+// allTransactionをttansactionHistoryとして再命名してもいいかも
+class TransactionHistoryScreen extends ConsumerStatefulWidget {
   const TransactionHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final transactionHistoryAsync = ref.watch(transactionHistoryProvider);
-    final selectedTransactions = ref.watch(selectedTransactionsProvider);
+  ConsumerState<TransactionHistoryScreen> createState() =>
+      _TransactionHistoryScreenState();
+}
+
+class _TransactionHistoryScreenState
+    extends ConsumerState<TransactionHistoryScreen> {
+  late DateTime _selectedDate;
+  late DateTime _currentMonthDate;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _selectedDate = now;
+    _currentMonthDate = DateTime(now.year, now.month, 1);
+  }
+
+  void _changeMonth(int direction) {
+    setState(() {
+      _currentMonthDate = DateTime(
+        _currentMonthDate.year,
+        _currentMonthDate.month + direction,
+        1,
+      );
+    });
+  }
+
+  void _selectDate(DateTime date) {
+    setState(() {
+      _selectedDate = date;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final transactionsAsync = ref.watch(transactionsProvider);
 
     // --- 金額フォーマット関数 ---
     String formatAmount(final int amount) {
@@ -31,17 +66,21 @@ class TransactionHistoryScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
       ),
-      body: transactionHistoryAsync.when(
+      body: transactionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('エラー: $err')),
-        data: (state) {
+        data: (allTransactions) {
+          final selectedTransactions = allTransactions.where((t) {
+            return DateUtils.isSameDay(t.date, _selectedDate);
+          }).toList();
+
           Map<String, int> calculateDailyTransactions() {
             final dailyTransaction = <String, int>{};
-            for (var transaction in state.transactionHistory) {
+            for (var transaction in allTransactions) {
               final date = transaction.date;
               final amount = transaction.amount;
-              if (date.month == state.currentMonth &&
-                  date.year == state.currentYear) {
+              if (date.month == _currentMonthDate.month &&
+                  date.year == _currentMonthDate.year) {
                 final formattedDate = DateFormat('yyyy-MM-dd').format(date);
                 dailyTransaction[formattedDate] =
                     (dailyTransaction[formattedDate] ?? 0) +
@@ -52,11 +91,13 @@ class TransactionHistoryScreen extends ConsumerWidget {
           }
 
           int getDaysInMonth() =>
-              DateTime(state.currentYear, state.currentMonth + 1, 0).day;
+              DateTime(_currentMonthDate.year, _currentMonthDate.month + 1, 0)
+                  .day;
 
           int getStartDayOfMonth() {
             final weekday =
-                DateTime(state.currentYear, state.currentMonth, 1).weekday;
+                DateTime(_currentMonthDate.year, _currentMonthDate.month, 1)
+                    .weekday;
             return weekday == 7 ? 0 : weekday;
           }
 
@@ -88,21 +129,17 @@ class TransactionHistoryScreen extends ConsumerWidget {
                         IconButton(
                           icon: const Icon(Icons.chevron_left,
                               color: AppColors.primary),
-                          onPressed: () => ref
-                              .read(transactionHistoryProvider.notifier)
-                              .changeMonth(-1),
+                          onPressed: () => _changeMonth(-1),
                         ),
                         Text(
-                          '${state.currentYear}年 ${state.currentMonth}月',
+                          '${_currentMonthDate.year}年 ${_currentMonthDate.month}月',
                           style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         IconButton(
                           icon: const Icon(Icons.chevron_right,
                               color: AppColors.primary),
-                          onPressed: () => ref
-                              .read(transactionHistoryProvider.notifier)
-                              .changeMonth(1),
+                          onPressed: () => _changeMonth(1),
                         ),
                       ],
                     ),
@@ -140,11 +177,9 @@ class TransactionHistoryScreen extends ConsumerWidget {
                         return GestureDetector(
                           onTap: () {
                             if (isCurrentMonthDay) {
-                              final date = DateTime(
-                                  state.currentYear, state.currentMonth, day);
-                              ref
-                                  .read(transactionHistoryProvider.notifier)
-                                  .selectDate(date);
+                              final date = DateTime(_currentMonthDate.year,
+                                  _currentMonthDate.month, day);
+                              _selectDate(date);
                             }
                           },
                           child: Container(
@@ -153,9 +188,9 @@ class TransactionHistoryScreen extends ConsumerWidget {
                               border: Border.all(
                                 color: isCurrentMonthDay &&
                                         DateUtils.isSameDay(
-                                            state.selectedDate,
-                                            DateTime(state.currentYear,
-                                                state.currentMonth, day))
+                                            _selectedDate,
+                                            DateTime(_currentMonthDate.year,
+                                                _currentMonthDate.month, day))
                                     ? AppColors.primary
                                     : Colors.transparent,
                                 width: 2,
@@ -170,14 +205,16 @@ class TransactionHistoryScreen extends ConsumerWidget {
                                           style: const TextStyle(fontSize: 12)),
                                       if (dailyTransaction.containsKey(
                                           DateFormat('yyyy-MM-dd').format(
-                                              DateTime(state.currentYear,
-                                                  state.currentMonth, day))))
+                                              DateTime(
+                                                  _currentMonthDate.year,
+                                                  _currentMonthDate.month,
+                                                  day))))
                                         Text(
                                           formatAmount(dailyTransaction[
                                               DateFormat('yyyy-MM-dd').format(
                                                   DateTime(
-                                                      state.currentYear,
-                                                      state.currentMonth,
+                                                      _currentMonthDate.year,
+                                                      _currentMonthDate.month,
                                                       day))]!),
                                           style: const TextStyle(
                                               fontSize: 10,
@@ -201,7 +238,7 @@ class TransactionHistoryScreen extends ConsumerWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '${DateFormat('yyyy年MM月dd日').format(state.selectedDate)}の履歴',
+                    '${DateFormat('yyyy年MM月dd日').format(_selectedDate)}の履歴',
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),
@@ -254,8 +291,8 @@ class TransactionHistoryScreen extends ConsumerWidget {
                                         onSave: (updatedData) {
                                           final transactionId = updatedData.id;
                                           ref
-                                              .read(transactionHistoryProvider
-                                                  .notifier)
+                                              .read(
+                                                  transactionsProvider.notifier)
                                               .updateTransaction(
                                                   transactionId, updatedData);
                                         },
