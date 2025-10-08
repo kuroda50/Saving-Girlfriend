@@ -5,11 +5,11 @@ class TributeHistoryRepository {
   final LocalStorageService _localStorageService;
   TributeHistoryRepository(this._localStorageService);
 
-  Future<void> saveTributionHistory(List<TributeHistoryState> history) async {
+  Future<void> saveTributionHistory(List<TributeState> history) async {
     await _localStorageService.saveTributionHistory(history);
   }
 
-  Future<List<TributeHistoryState>> getTributionHistory() async {
+  Future<List<TributeState>> getTributionHistory() async {
     return _localStorageService.getTributionHistory();
   }
 }

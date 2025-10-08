@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/models/settings_state.dart';
 import 'package:saving_girlfriend/models/transaction_history_state.dart';
+import 'package:saving_girlfriend/models/transaction_state.dart';
 import 'package:saving_girlfriend/providers/setting_provider.dart';
 import 'package:saving_girlfriend/repositories/settings_repository.dart';
 import 'package:saving_girlfriend/repositories/transaction_history_repository.dart';
@@ -25,7 +26,7 @@ class TransactionHistoryNotifier
     // 初期値を設定する
     final now = DateTime.now();
     final todaysTransactions = history.where((transaction) {
-      final transactionDate = DateTime.parse(transaction['date']);
+      final transactionDate = transaction.date;
       return transactionDate.year == now.year &&
           transactionDate.month == now.month &&
           transactionDate.day == now.day;
@@ -67,7 +68,7 @@ class TransactionHistoryNotifier
     // 全履歴の中から、選択された日付と一致するものだけをフィルタリング
     final filteredTransactions =
         currentState.transactionHistory.where((transaction) {
-      final transactionDate = DateTime.parse(transaction['date']);
+      final transactionDate = transaction.date;
       return transactionDate.year == date.year &&
           transactionDate.month == date.month &&
           transactionDate.day == date.day;
@@ -80,20 +81,14 @@ class TransactionHistoryNotifier
     ));
   }
 
-  Future<void> addTransaction(Map<String, dynamic> newTransaction) async {
+  Future<void> addTransaction(final TransactionState newTransaction) async {
     // state.valueがnullの場合、futureを使って状態を初期化する
     final currentState = state.value ?? await future;
 
     final currentHistory =
-        List<Map<String, dynamic>>.from(currentState.transactionHistory);
-    // ★ idがなければ付与する
-    final transactionWithId = {
-      ...newTransaction,
-      'id': newTransaction['id'] ??
-          'transaction_${DateTime.now().millisecondsSinceEpoch}',
-    };
+        List<TransactionState>.from(currentState.transactionHistory);
 
-    currentHistory.add(transactionWithId);
+    currentHistory.add(newTransaction);
     final transactionHistoryRepository =
         await _transactionHistoryRepositoryFuture;
     await transactionHistoryRepository.saveTransactionHistory(currentHistory);
@@ -106,12 +101,12 @@ class TransactionHistoryNotifier
   }
 
   Future<void> updateTransaction(
-      String id, Map<String, dynamic> updatedTransaction) async {
+      String id, TransactionState updatedTransaction) async {
     final currentState = state.value ?? await future;
     final currentHistory =
-        List<Map<String, dynamic>>.from(currentState.transactionHistory);
+        List<TransactionState>.from(currentState.transactionHistory);
     final index =
-        currentHistory.indexWhere((transaction) => transaction['id'] == id);
+        currentHistory.indexWhere((transaction) => transaction.id == id);
 
     if (index != -1) {
       currentHistory[index] = updatedTransaction;
@@ -134,8 +129,7 @@ final transactionHistoryProvider =
   return TransactionHistoryNotifier();
 });
 
-final selectedTransactionsProvider =
-    Provider<List<Map<String, dynamic>>>((ref) {
+final selectedTransactionsProvider = Provider<List<TransactionState>>((ref) {
   final transactions = ref.watch(transactionHistoryProvider.select(
     (asyncState) => asyncState.value?.selectedDateTransactions ?? [],
   ));

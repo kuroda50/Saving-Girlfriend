@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/settings_defaults.dart';
+import 'package:saving_girlfriend/models/budget_history.dart';
 import 'package:saving_girlfriend/models/settings_state.dart';
+import 'package:saving_girlfriend/models/transaction_state.dart';
 import 'package:saving_girlfriend/models/tribute_history_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
 
 final sharedPreferencesProvider =
     FutureProvider<SharedPreferences>((ref) async {
@@ -29,9 +30,7 @@ class LocalStorageService {
   static const String _notificationsEnabledKey = 'notifications_enabled';
   static const String _bgmVolumeKey = 'bgm_volume';
   static const String _targetSavingAmountKey = 'target_saving_amount';
-  static const String _dailyBudgetAmountKey = 'daily_budget_amount';
-
-  // --- 初期化 (Initialization) ---
+  static const String _budgetHistoryKey = 'budget_history';
 
   // --- 保存 (Save) ---
 
@@ -45,23 +44,45 @@ class LocalStorageService {
     await _prefs.setString(_currentCharacterKey, characterId);
   }
 
-  Future<void> saveTransactionHistory(
-      List<Map<String, dynamic>> history) async {
+  Future<void> saveTransactionHistory(List<TransactionState> history) async {
     String jsonString = jsonEncode(history);
     await _prefs.setString(_transactionHistoryKey, jsonString);
   }
 
-  Future<void> saveTributionHistory(List<TributeHistoryState> history) async {
+  Future<void> saveTributionHistory(List<TributeState> history) async {
     String jsonString = jsonEncode(history);
     await _prefs.setString(_tributionHistoryKey, jsonString);
   }
 
   Future<void> saveSettings(SettingsState setting) async {
     await _prefs.setInt(_targetSavingAmountKey, setting.targetSavingAmount);
-    await _prefs.setInt(_dailyBudgetAmountKey, setting.dailyBudget);
     await _prefs.setBool(
         _notificationsEnabledKey, setting.notificationsEnabled);
     await _prefs.setDouble(_bgmVolumeKey, setting.bgmVolume);
+    await updateDailyBudget(setting.dailyBudget);
+  }
+
+  Future<void> updateDailyBudget(int newBudget) async {
+    final history = await getBudgetHistory();
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+
+    // 今日の履歴が既に存在するかチェック
+    final index = history.indexWhere((h) =>
+        h.date.year == todayDate.year &&
+        h.date.month == todayDate.month &&
+        h.date.day == todayDate.day);
+
+    if (index != -1) {
+      // 存在する場合：金額を上書き
+      history[index] = BudgetHistory(date: todayDate, amount: newBudget);
+    } else {
+      // 存在しない場合：新しい履歴を追加
+      history.add(BudgetHistory(date: todayDate, amount: newBudget));
+    }
+    final List<Map<String, dynamic>> budgetHistoryJson =
+        history.map((h) => h.toJson()).toList();
+    await _prefs.setString(_budgetHistoryKey, jsonEncode(budgetHistoryJson));
   }
 
   // --- 読み込み (Load) ---
@@ -82,31 +103,31 @@ class LocalStorageService {
     return _prefs.getInt('$characterId$_likeabilityKeyPrefix') ?? 1;
   }
 
-  Future<List<Map<String, dynamic>>> getTransactionHistory() async {
+  Future<List<TransactionState>> getTransactionHistory() async {
     final jsonString = _prefs.getString(_transactionHistoryKey);
     if (jsonString != null && jsonString.isNotEmpty) {
       final List<dynamic> decodedList = jsonDecode(jsonString);
-      final result =
-          decodedList.map((item) => Map<String, dynamic>.from(item)).toList();
-      print(result);
+      final result = decodedList
+          .map((item) =>
+              TransactionState.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
       return result;
     }
     // データがない場合は空のリストを返す
     return [];
   }
 
-  Future<List<TributeHistoryState>> getTributionHistory() async {
+  Future<List<TributeState>> getTributionHistory() async {
     final jsonString = _prefs.getString(_tributionHistoryKey);
     if (jsonString != null && jsonString.isNotEmpty) {
       final List<dynamic> decodedList = jsonDecode(jsonString);
-      final List<TributeHistoryState> result = decodedList
-          .map((item) => TributeHistoryState(
-              id: item["id"] as Uuid,
+      final List<TributeState> result = decodedList
+          .map((item) => TributeState(
+              id: item["id"] as String,
               character: item["character"] as String,
               date: item["date"] as DateTime,
               amount: item["amount"] as int))
           .toList();
-      print(result);
       return result;
     }
     // データがない場合は空のリストを返す
@@ -121,14 +142,35 @@ class LocalStorageService {
         _prefs.getDouble(_bgmVolumeKey) ?? SettingsDefaults.bgmVolume;
     final int targetSavingAmount = _prefs.getInt(_targetSavingAmountKey) ??
         SettingsDefaults.targetSavingAmount;
-    final int dailyBudget =
-        _prefs.getInt(_dailyBudgetAmountKey) ?? SettingsDefaults.dailyBudget;
+
+    final budgetHistory = await getBudgetHistory();
+    budgetHistory.sort((a, b) => b.date.compareTo(a.date));
+    final int currentDailyBudget = budgetHistory.isNotEmpty
+        ? budgetHistory.first.amount // 最新の予算を取得
+        : SettingsDefaults.dailyBudget;
+    // final int dailyBudget =
+    //     _prefs.getInt(_budgetHistoryKey) ?? SettingsDefaults.dailyBudget;
 
     return SettingsState(
         targetSavingAmount: targetSavingAmount,
-        dailyBudget: dailyBudget,
+        dailyBudget: currentDailyBudget,
         notificationsEnabled: notificationsEnabled,
         bgmVolume: bgmVolume);
+  }
+
+  Future<List<BudgetHistory>> getBudgetHistory() async {
+    final String? jsonString = _prefs.getString(_budgetHistoryKey);
+    if (jsonString != null) {
+      final List<dynamic> decodedList = jsonDecode(jsonString);
+      return decodedList.map((item) => BudgetHistory.fromJson(item)).toList();
+    }
+    // データがない場合は、デフォルト値を含むリストを返す
+    return [
+      BudgetHistory(
+        date: DateTime.now(), // 過去の適当な日付
+        amount: SettingsDefaults.dailyBudget,
+      )
+    ];
   }
 }
 
