@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod/riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/constants/settings_defaults.dart';
 import '../providers/setting_provider.dart';
-import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -332,7 +331,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 const Expanded(
                                   // ✅ レイアウトを統一
                                   child: Text(
-                                    '1日に使える金額',
+                                    '1日の予算',
                                     style: TextStyle(fontSize: 18),
                                   ),
                                 ),

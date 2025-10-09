@@ -44,6 +44,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   import_sorter: ^4.6.0
+  build_runner: ^2.5.4
+  riverpod_generator: ^2.6.5
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

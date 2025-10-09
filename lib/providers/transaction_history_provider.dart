@@ -1,146 +1,66 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/models/settings_state.dart';
-import 'package:saving_girlfriend/models/transaction_history_state.dart';
-import 'package:saving_girlfriend/providers/setting_provider.dart';
-import 'package:saving_girlfriend/repositories/settings_repository.dart';
+import 'package:saving_girlfriend/models/transaction_state.dart';
 import 'package:saving_girlfriend/repositories/transaction_history_repository.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 
-class TransactionHistoryNotifier
-    extends AsyncNotifier<TransactionHistoryState> {
+final transactionsProvider =
+    AsyncNotifierProvider<TransactionsNotifier, List<TransactionState>>(() {
+  return TransactionsNotifier();
+});
+
+class TransactionsNotifier extends AsyncNotifier<List<TransactionState>> {
   Future<TransactionHistoryRepository>
       get _transactionHistoryRepositoryFuture =>
           ref.read(transactionHistoryRepositoryProvider.future);
-  Future<SettingsRepository> get _settingsRepositoryFuture =>
-      ref.read(settingsRepositoryProvider.future);
+
   @override
-  Future<TransactionHistoryState> build() async {
+  Future<List<TransactionState>> build() async {
     final transactionHistoryRepository =
         await _transactionHistoryRepositoryFuture;
     final history = await transactionHistoryRepository.getTransactionHistory();
-    final settingsRepository = await _settingsRepositoryFuture;
-    SettingsState settingsState = await settingsRepository.getSettings();
-    final int target = settingsState.targetSavingAmount;
-
-    // 初期値を設定する
-    final now = DateTime.now();
-    final todaysTransactions = history.where((transaction) {
-      final transactionDate = DateTime.parse(transaction['date']);
-      return transactionDate.year == now.year &&
-          transactionDate.month == now.month &&
-          transactionDate.day == now.day;
-    }).toList();
-
-    return TransactionHistoryState(
-      transactionHistory: history,
-      targetSavingAmount: target,
-      currentYear: now.year,
-      currentMonth: now.month,
-      selectedDate: now, // ★今日のデータを初期値に
-      selectedDateTransactions: todaysTransactions, // ★今日の履歴を初期値に
-    );
+    return history;
   }
 
-  void changeMonth(int direction) async {
-    final currentState = state.value ?? await future;
+  Future<void> addTransaction(final TransactionState newTransaction) async {
+    final currentHistory = await future;
+    final newHistory = [...currentHistory, newTransaction];
 
-    int newMonth = currentState.currentMonth + direction;
-    int newYear = currentState.currentYear;
+    state = AsyncData(newHistory);
 
-    if (newMonth > 12) {
-      newMonth = 1;
-      newYear++;
-    } else if (newMonth < 1) {
-      newMonth = 12;
-      newYear--;
-    }
-
-    state = AsyncData(currentState.copyWith(
-      currentYear: newYear,
-      currentMonth: newMonth,
-    ));
-  }
-
-  void selectDate(DateTime date) async {
-    final currentState = state.value ?? await future;
-
-    // 全履歴の中から、選択された日付と一致するものだけをフィルタリング
-    final filteredTransactions =
-        currentState.transactionHistory.where((transaction) {
-      final transactionDate = DateTime.parse(transaction['date']);
-      return transactionDate.year == date.year &&
-          transactionDate.month == date.month &&
-          transactionDate.day == date.day;
-    }).toList();
-
-    // 状態を更新してUIに通知
-    state = AsyncData(currentState.copyWith(
-      selectedDate: date,
-      selectedDateTransactions: filteredTransactions,
-    ));
-  }
-
-  Future<void> addTransaction(Map<String, dynamic> newTransaction) async {
-    // state.valueがnullの場合、futureを使って状態を初期化する
-    final currentState = state.value ?? await future;
-
-    final currentHistory =
-        List<Map<String, dynamic>>.from(currentState.transactionHistory);
-    // ★ idがなければ付与する
-    final transactionWithId = {
-      ...newTransaction,
-      'id': newTransaction['id'] ??
-          'transaction_${DateTime.now().millisecondsSinceEpoch}',
-    };
-
-    currentHistory.add(transactionWithId);
     final transactionHistoryRepository =
         await _transactionHistoryRepositoryFuture;
-    await transactionHistoryRepository.saveTransactionHistory(currentHistory);
-
-    final newState = currentState.copyWith(
-      transactionHistory: currentHistory,
-    );
-    state = AsyncData(newState);
-    selectDate(newState.selectedDate);
+    await transactionHistoryRepository.saveTransactionHistory(newHistory);
   }
 
   Future<void> updateTransaction(
-      String id, Map<String, dynamic> updatedTransaction) async {
-    final currentState = state.value ?? await future;
-    final currentHistory =
-        List<Map<String, dynamic>>.from(currentState.transactionHistory);
+      String id, TransactionState updatedTransaction) async {
+    final currentHistory = await future;
     final index =
-        currentHistory.indexWhere((transaction) => transaction['id'] == id);
+        currentHistory.indexWhere((transaction) => transaction.id == id);
 
     if (index != -1) {
-      currentHistory[index] = updatedTransaction;
+      final newHistory = List<TransactionState>.from(currentHistory);
+      newHistory[index] = updatedTransaction;
+
+      state = AsyncData(newHistory);
+
       final transactionHistoryRepository =
           await _transactionHistoryRepositoryFuture;
-      await transactionHistoryRepository.saveTransactionHistory(currentHistory);
-
-      final newState = currentState.copyWith(
-        transactionHistory: currentHistory,
-      );
-      state = AsyncData(newState);
-      selectDate(newState.selectedDate);
+      await transactionHistoryRepository.saveTransactionHistory(newHistory);
     }
   }
+
+  Future<void> removeTransaction(String id) async {
+    final currentHistory = await future;
+    final newHistory = currentHistory.where((tx) => tx.id != id).toList();
+
+    state = AsyncData(newHistory);
+
+    final transactionHistoryRepository =
+        await _transactionHistoryRepositoryFuture;
+    await transactionHistoryRepository.saveTransactionHistory(newHistory);
+  }
 }
-
-final transactionHistoryProvider =
-    AsyncNotifierProvider<TransactionHistoryNotifier, TransactionHistoryState>(
-        () {
-  return TransactionHistoryNotifier();
-});
-
-final selectedTransactionsProvider =
-    Provider<List<Map<String, dynamic>>>((ref) {
-  final transactions = ref.watch(transactionHistoryProvider.select(
-    (asyncState) => asyncState.value?.selectedDateTransactions ?? [],
-  ));
-  return transactions;
-});
 
 final transactionHistoryRepositoryProvider =
     FutureProvider<TransactionHistoryRepository>((ref) async {
