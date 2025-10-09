@@ -6,7 +6,7 @@ import 'package:saving_girlfriend/widgets/transaction_modal.dart';
 
 import '../providers/transaction_history_provider.dart';
 
-// allTransactionをttansactionHistoryとして再命名してもいいかも
+// allTransactionをtansactionHistoryとして再命名してもいいかも
 class TransactionHistoryScreen extends ConsumerStatefulWidget {
   const TransactionHistoryScreen({super.key});
 
@@ -50,14 +50,19 @@ class _TransactionHistoryScreenState
 
     // --- 金額フォーマット関数 ---
     String formatAmount(final int amount) {
+      if (amount == 0) {
+        return '0円';
+      }
+
+      final absAmount = amount.abs();
       String formatted;
 
-      if (amount >= 1000000) {
-        formatted = '${(amount / 1000000).toStringAsFixed(1)}m';
-      } else if (amount >= 10000) {
-        formatted = '${(amount / 1000).toStringAsFixed(1)}k';
+      if (absAmount >= 100000000) {
+        formatted = '${(absAmount / 100000000).toStringAsFixed(1)}億円';
+      } else if (absAmount >= 10000) {
+        formatted = '${(absAmount / 10000).floor()}万円';
       } else {
-        formatted = '$amount円';
+        formatted = '$absAmount円';
       }
       return amount < 0 ? '-$formatted' : formatted;
     }

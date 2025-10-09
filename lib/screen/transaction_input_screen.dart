@@ -20,7 +20,6 @@ class _TransactionInputScreenState
     extends ConsumerState<TransactionInputScreen> {
   bool _isExpense = true;
   final _amountController = TextEditingController();
-  String? _selectedCategory;
   final List<String> _expenseCategories = [
     '食費',
     '交通費',
@@ -30,6 +29,7 @@ class _TransactionInputScreenState
     'その他'
   ];
   final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
+  late String _selectedCategory = _expenseCategories[0];
 
   @override
   void dispose() {
@@ -45,19 +45,13 @@ class _TransactionInputScreenState
           .showSnackBar(const SnackBar(content: Text('金額を正しく入力してください。')));
       return;
     }
-    if (_selectedCategory == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('カテゴリを選択してください。')));
-      return;
-    }
 
     final newTransaction = TransactionState(
         id: ref.read(uuidProvider).v4(),
         type: _isExpense ? "expense" : "income",
         date: DateTime.now(),
         amount: amount,
-        category: _selectedCategory!);
+        category: _selectedCategory);
 
     try {
       await ref
@@ -68,7 +62,7 @@ class _TransactionInputScreenState
       _amountController.clear();
       setState(() {
         _isExpense = true;
-        _selectedCategory = null;
+        _selectedCategory = _expenseCategories[0];
       });
     } catch (error) {
       print("エラー: $error");
@@ -114,7 +108,11 @@ class _TransactionInputScreenState
                 onPressed: (index) {
                   setState(() {
                     _isExpense = index == 0;
-                    _selectedCategory = null;
+                    if (_isExpense) {
+                      _selectedCategory = _expenseCategories[0];
+                    } else {
+                      _selectedCategory = _incomeCategories[0];
+                    }
                   });
                 },
                 borderRadius: BorderRadius.circular(8),
@@ -167,7 +165,9 @@ class _TransactionInputScreenState
               }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
-                  _selectedCategory = newValue;
+                  if (newValue != null) {
+                    _selectedCategory = newValue;
+                  }
                 });
               },
             ),

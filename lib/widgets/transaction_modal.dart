@@ -46,7 +46,6 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
   bool _isExpense = true;
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  String? _selectedCategory;
   final List<String> _expenseCategories = [
     '食費',
     '交通費',
@@ -56,6 +55,7 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
     'その他'
   ];
   final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
+  late String _selectedCategory;
 
   @override
   void initState() {
@@ -78,9 +78,9 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
 
   void _saveTransaction() {
     final amount = int.tryParse(_amountController.text);
-    if (amount == null || amount <= 0 || _selectedCategory == null) {
+    if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('金額とカテゴリを正しく入力してください。')),
+        const SnackBar(content: Text('金額を正しく入力してください。')),
       );
       return;
     }
@@ -89,7 +89,7 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
         type: _isExpense ? "expense" : "income",
         date: _selectedDate,
         amount: _isExpense ? -amount : amount,
-        category: _selectedCategory!);
+        category: _selectedCategory);
     widget.onSave(transactionData);
     Navigator.of(context).pop();
   }
@@ -120,12 +120,16 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
               onPressed: (index) {
                 setState(() {
                   _isExpense = index == 0;
-                  _selectedCategory = null;
+                  if (_isExpense) {
+                    _selectedCategory = _expenseCategories[0];
+                  } else {
+                    _selectedCategory = _incomeCategories[0];
+                  }
                 });
               },
               borderRadius: BorderRadius.circular(8),
               selectedColor: AppColors.subText,
-              fillColor: _isExpense ? AppColors.primary : AppColors.secondary,
+              fillColor: AppColors.primary,
               children: const [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24),
@@ -165,7 +169,9 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
             }).toList(),
             onChanged: (String? newValue) {
               setState(() {
-                _selectedCategory = newValue;
+                if (newValue != null) {
+                  _selectedCategory = newValue;
+                }
               });
             },
           ),
