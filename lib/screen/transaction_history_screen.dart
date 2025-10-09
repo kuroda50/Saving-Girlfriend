@@ -216,21 +216,27 @@ class _TransactionHistoryScreenState
                                                   _currentMonthDate.year,
                                                   _currentMonthDate.month,
                                                   day))))
-                                        FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          child: Text(
-                                            formatAmountForCalendar(
-                                                dailyTransaction[DateFormat(
-                                                        'yyyy-MM-dd')
-                                                    .format(DateTime(
+                                        Builder(
+                                          builder: (context) {
+                                            final amount = dailyTransaction[
+                                                DateFormat('yyyy-MM-dd').format(
+                                                    DateTime(
                                                         _currentMonthDate.year,
                                                         _currentMonthDate.month,
-                                                        day))]!),
-                                            style: const TextStyle(
-                                                fontSize: 10,
-                                                color: AppColors.primary),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
+                                                        day))]!;
+                                            final color = amount > 0
+                                                ? Colors.green
+                                                : Colors.red;
+                                            return FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Text(
+                                                formatAmountForCalendar(amount),
+                                                style: TextStyle(
+                                                    fontSize: 10, color: color),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            );
+                                          },
                                         ),
                                     ],
                                   )
