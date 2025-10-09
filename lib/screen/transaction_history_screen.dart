@@ -62,7 +62,7 @@ class _TransactionHistoryScreenState
       if (absAmount >= 100000000) {
         formatted = '${(absAmount / 100000000).toStringAsFixed(1)}億';
       } else if (absAmount >= 10000) {
-        formatted = '${(absAmount / 10000).floor()}万';
+        formatted = '${(absAmount / 10000).toStringAsFixed(1)}万';
       } else {
         formatted = '$absAmount円';
       }
@@ -216,18 +216,21 @@ class _TransactionHistoryScreenState
                                                   _currentMonthDate.year,
                                                   _currentMonthDate.month,
                                                   day))))
-                                        Text(
-                                          formatAmountForCalendar(
-                                              dailyTransaction[DateFormat(
-                                                      'yyyy-MM-dd')
-                                                  .format(DateTime(
-                                                      _currentMonthDate.year,
-                                                      _currentMonthDate.month,
-                                                      day))]!),
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              color: AppColors.primary),
-                                          overflow: TextOverflow.ellipsis,
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            formatAmountForCalendar(
+                                                dailyTransaction[DateFormat(
+                                                        'yyyy-MM-dd')
+                                                    .format(DateTime(
+                                                        _currentMonthDate.year,
+                                                        _currentMonthDate.month,
+                                                        day))]!),
+                                            style: const TextStyle(
+                                                fontSize: 10,
+                                                color: AppColors.primary),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                     ],
                                   )

@@ -132,21 +132,15 @@ class _TransactionInputScreenState
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(7),
+              ],
               decoration: const InputDecoration(
                 labelText: '金額',
                 prefixIcon: Icon(Icons.currency_yen),
                 border: OutlineInputBorder(),
               ),
-              onChanged: (value) {
-                final num = int.tryParse(value);
-                if (num != null && num > 999999) {
-                  _amountController.text = '999999';
-                  _amountController.selection = TextSelection.fromPosition(
-                    TextPosition(offset: _amountController.text.length),
-                  );
-                }
-              },
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(

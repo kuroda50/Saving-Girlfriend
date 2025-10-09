@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/models/transaction_state.dart';
@@ -88,7 +89,7 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
         id: widget.initialTransaction?.id ?? ref.read(uuidProvider).v4(),
         type: _isExpense ? "expense" : "income",
         date: _selectedDate,
-        amount: _isExpense ? -amount : amount,
+        amount: amount,
         category: _selectedCategory);
     widget.onSave(transactionData);
     Navigator.of(context).pop();
@@ -146,6 +147,10 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
           TextField(
             controller: _amountController,
             keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(7),
+            ],
             decoration: const InputDecoration(
               labelText: '金額',
               prefixIcon: Icon(Icons.currency_yen),
