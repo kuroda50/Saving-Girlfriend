@@ -25,7 +25,6 @@ class _TitleScreenState extends State<TitleScreen> {
     final String nextPath = hasSelected
         ? '/home' // 選択済みならホーム画面など（あなたのアプリに合わせてパスを変更してください）
         : '/select_girlfriend'; // 未選択なら彼女選択画面
-    print("ここまで実行できたよ");
 
     // 画面遷移を実行
     context.go(nextPath);
@@ -47,27 +46,35 @@ class _TitleScreenState extends State<TitleScreen> {
             ),
           ),
           // アプリスタートボタンを画面中央下部に配置
-          Center(
-            child: SizedBox(
-              // ボタンの配置を画面の高さの約40%下げる
-              height: screenHeight * 0.4,
-              child: ElevatedButton(
-                // 修正: 遷移ロジックを外部メソッドに切り出し
-                onPressed: _navigateToNextScreen,
-                style: ElevatedButton.styleFrom(
-                  // ボタンのパディングを画面幅に合わせて調整
-                  padding: EdgeInsets.symmetric(
-                    horizontal: MediaQuery.of(context).size.width * 0.1,
-                    vertical: 20,
+          // 変更点: Padding の中に Center を追加して水平方向の中央寄せを復活
+
+          Padding(
+            // 垂直位置の調整: screenHeight * 0.4 の値を変更して上下に動かす
+            padding: EdgeInsets.only(top: screenHeight * 0.3),
+
+            // 🔽🔽🔽 追加: Center でボタンを水平方向の中央に配置 🔽🔽🔽
+            child: Center(
+              child: SizedBox(
+                // ボタン自体の高さを画面の約10%に設定 (元のコードを維持)
+                height: screenHeight * 0.1,
+                child: ElevatedButton(
+                  // 遷移ロジック
+                  onPressed: _navigateToNextScreen,
+                  style: ElevatedButton.styleFrom(
+                    // ボタンのパディングは元のコードと同じ
+                    padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * 0.1,
+                      vertical: 20,
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Live Start!',
-                  style: TextStyle(fontSize: 25, color: AppColors.mainLogo),
+                  child: const Text(
+                    'Live Start!',
+                    style: TextStyle(fontSize: 25, color: AppColors.mainLogo),
+                  ),
                 ),
               ),
             ),
-          ),
+          )
         ],
       ),
     );

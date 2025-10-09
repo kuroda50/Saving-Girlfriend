@@ -1,5 +1,8 @@
 /*ストーリー画面*/
 import 'package:go_router/go_router.dart';
+import 'package:saving_girlfriend/screen/home_screen.dart';
+import 'package:saving_girlfriend/screen/select_story_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // 追加
 
 import '../stories/suzunari_oto.dart';
 import 'package:flutter/material.dart';
@@ -29,16 +32,36 @@ class _StoryScreenState extends State<StoryScreen> {
     }
   }
 
-  void nextLine() {
+// _StoryScreenState クラス内の nextLine() メソッド
+  void nextLine() async {
+    // async を追加
     if (!_isValidIndex) return;
+
+    // 1. ストーリーの途中の場合 (略)
     if (_lineIndex <
         EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1)
       setState(() {
         _lineIndex++;
       });
+    // 2. ストーリーの最後のセリフの場合 (終了処理)
     else if (_lineIndex >=
-        EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1)
-      context.pop();
+        EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1) {
+      // 🔽🔽🔽 修正箇所 1: ストーリー再生フラグを保存 🔽🔽🔽
+      final prefs = await SharedPreferences.getInstance();
+      // ストーリーが完了したことを記録
+      await prefs.setBool('has_played_story', true);
+      // 修正箇所 2: TitleScreen と同じ判定ロジックを適用
+      // ここでは、フラグを立てた直後なので、nextPath は '/home' になることが期待されます。
+      final hasPlayed = prefs.getBool('has_played_story') ?? false;
+      final String nextPath = hasPlayed
+          ? '/home' // 再生済みならホーム画面
+          : '/select_story'; // (到達しないはず)
+      // 🔼🔼🔼 修正箇所終わり 🔼🔼🔼
+
+      if (mounted) {
+        context.go(nextPath);
+      }
+    }
   }
 
   @override
