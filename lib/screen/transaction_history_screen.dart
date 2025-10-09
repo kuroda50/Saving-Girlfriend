@@ -6,7 +6,7 @@ import 'package:saving_girlfriend/widgets/transaction_modal.dart';
 
 import '../providers/transaction_history_provider.dart';
 
-// allTransactionをttansactionHistoryとして再命名してもいいかも
+// allTransactionをtansactionHistoryとして再命名してもいいかも
 class TransactionHistoryScreen extends ConsumerStatefulWidget {
   const TransactionHistoryScreen({super.key});
 
@@ -47,17 +47,24 @@ class _TransactionHistoryScreenState
   @override
   Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(transactionsProvider);
+    final currencyFormatter =
+        NumberFormat.currency(locale: 'ja_JP', symbol: '¥');
 
-    // --- 金額フォーマット関数 ---
-    String formatAmount(final int amount) {
+    // --- カレンダー用の金額フォーマット関数 ---
+    String formatAmountForCalendar(final int amount) {
+      if (amount == 0) {
+        return '0円';
+      }
+
+      final absAmount = amount.abs();
       String formatted;
 
-      if (amount >= 1000000) {
-        formatted = '${(amount / 1000000).toStringAsFixed(1)}m';
-      } else if (amount >= 10000) {
-        formatted = '${(amount / 1000).toStringAsFixed(1)}k';
+      if (absAmount >= 100000000) {
+        formatted = '${(absAmount / 100000000).toStringAsFixed(1)}億';
+      } else if (absAmount >= 10000) {
+        formatted = '${(absAmount / 10000).toStringAsFixed(1)}万';
       } else {
-        formatted = '$amount円';
+        formatted = '$absAmount円';
       }
       return amount < 0 ? '-$formatted' : formatted;
     }
@@ -209,17 +216,27 @@ class _TransactionHistoryScreenState
                                                   _currentMonthDate.year,
                                                   _currentMonthDate.month,
                                                   day))))
-                                        Text(
-                                          formatAmount(dailyTransaction[
-                                              DateFormat('yyyy-MM-dd').format(
-                                                  DateTime(
-                                                      _currentMonthDate.year,
-                                                      _currentMonthDate.month,
-                                                      day))]!),
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              color: AppColors.primary),
-                                          overflow: TextOverflow.ellipsis,
+                                        Builder(
+                                          builder: (context) {
+                                            final amount = dailyTransaction[
+                                                DateFormat('yyyy-MM-dd').format(
+                                                    DateTime(
+                                                        _currentMonthDate.year,
+                                                        _currentMonthDate.month,
+                                                        day))]!;
+                                            final color = amount > 0
+                                                ? Colors.green
+                                                : Colors.red;
+                                            return FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Text(
+                                                formatAmountForCalendar(amount),
+                                                style: TextStyle(
+                                                    fontSize: 10, color: color),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            );
+                                          },
                                         ),
                                     ],
                                   )
@@ -275,7 +292,7 @@ class _TransactionHistoryScreenState
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    formatAmount(amount), // k/m表記に変換
+                                    currencyFormatter.format(amount),
                                     style: TextStyle(
                                       color: type == "income"
                                           ? Colors.green
