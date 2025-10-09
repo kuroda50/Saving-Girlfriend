@@ -47,9 +47,11 @@ class _TransactionHistoryScreenState
   @override
   Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(transactionsProvider);
+    final currencyFormatter =
+        NumberFormat.currency(locale: 'ja_JP', symbol: '¥');
 
-    // --- 金額フォーマット関数 ---
-    String formatAmount(final int amount) {
+    // --- カレンダー用の金額フォーマット関数 ---
+    String formatAmountForCalendar(final int amount) {
       if (amount == 0) {
         return '0円';
       }
@@ -58,9 +60,9 @@ class _TransactionHistoryScreenState
       String formatted;
 
       if (absAmount >= 100000000) {
-        formatted = '${(absAmount / 100000000).toStringAsFixed(1)}億円';
+        formatted = '${(absAmount / 100000000).toStringAsFixed(1)}億';
       } else if (absAmount >= 10000) {
-        formatted = '${(absAmount / 10000).floor()}万円';
+        formatted = '${(absAmount / 10000).floor()}万';
       } else {
         formatted = '$absAmount円';
       }
@@ -215,9 +217,10 @@ class _TransactionHistoryScreenState
                                                   _currentMonthDate.month,
                                                   day))))
                                         Text(
-                                          formatAmount(dailyTransaction[
-                                              DateFormat('yyyy-MM-dd').format(
-                                                  DateTime(
+                                          formatAmountForCalendar(
+                                              dailyTransaction[DateFormat(
+                                                      'yyyy-MM-dd')
+                                                  .format(DateTime(
                                                       _currentMonthDate.year,
                                                       _currentMonthDate.month,
                                                       day))]!),
@@ -280,7 +283,7 @@ class _TransactionHistoryScreenState
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    formatAmount(amount), // k/m表記に変換
+                                    currencyFormatter.format(amount),
                                     style: TextStyle(
                                       color: type == "income"
                                           ? Colors.green
