@@ -1,46 +1,31 @@
 import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/providers/setting_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:saving_girlfriend/providers/tribute_history_provider.dart';
 
-final likeabilityProvider = Provider<AsyncValue<double>>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  final tributeHistoryAsync = ref.watch(tributeHistoryProvider);
+part 'likeability_provider.g.dart';
 
-  // 依存先のどちらかがロード中またはエラーの場合、それをそのまま伝える
-  if (settingsAsync.isLoading || tributeHistoryAsync.isLoading) {
-    return const AsyncValue.loading();
-  }
-  if (settingsAsync.hasError) {
-    return AsyncValue.error(settingsAsync.error!, settingsAsync.stackTrace!);
-  }
-  if (tributeHistoryAsync.hasError) {
-    return AsyncValue.error(
-        tributeHistoryAsync.error!, tributeHistoryAsync.stackTrace!);
-  }
+@riverpod
+Future<int> likeability(Ref ref) async {
+  final tributeHistory = await ref.watch(tributeHistoryProvider.future);
+  final int totalTribute =
+      tributeHistory.fold(0, (sum, item) => sum + item.amount);
+  return _calculateLikeability(totalTribute);
+}
 
-  // 依存先のデータが両方とも利用可能な場合、計算を実行する
-  final settings = settingsAsync.value!;
-  final history = tributeHistoryAsync.value!;
+int _calculateLikeability(final int totalTribute) {
+  double likeability;
 
-  final int totalTribute = history.fold(0, (sum, item) => sum + item.amount);
-  final int targetAmount = settings.targetSavingAmount;
-
-  // 計算式に基づいて好感度を算出する
-
-  // もう達成している場合は、達成率を100%として扱う
-  if (targetAmount <= 0) {
-    return const AsyncValue.data(100.0);
+  if (totalTribute < 10000) {
+    likeability = (totalTribute / 10000.0) * 10.0;
+  } else if (totalTribute < 30000) {
+    likeability = 10.0 + ((totalTribute - 10000) / 20000.0) * 10.0;
+  } else if (totalTribute < 60000) {
+    likeability = 20.0 + ((totalTribute - 30000) / 30000.0) * 10.0;
+  } else {
+    likeability = 30.0 + ((totalTribute - 60000) / 10000.0);
   }
 
-  // 達成率を計算
-  final double progressRatio = totalTribute / targetAmount;
-
-  // 達成率がマイナスにならないように0で下限を設定
-  final double clampedRatio = max(0.0, progressRatio);
-
-  // --- 好感度の計算 ---
-  final double likeability = 100 * sqrt(clampedRatio);
-
-  return AsyncValue.data(likeability);
-});
+  return max(0.0, likeability).floor();
+}
