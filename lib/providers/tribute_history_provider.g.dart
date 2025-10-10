@@ -6,7 +6,7 @@ part of 'tribute_history_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$tributeHistoryHash() => r'0a70e2bfd41e2bf89ae812462cecca45301ecb21';
+String _$tributeHistoryHash() => r'f3724d835ccb8251ed73f5ebe0e404c7fbbff0cb';
 
 /// See also [TributeHistory].
 @ProviderFor(TributeHistory)
