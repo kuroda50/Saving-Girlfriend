@@ -5,6 +5,8 @@ import 'package:saving_girlfriend/models/comment_model.dart';
 import 'package:saving_girlfriend/widgets/super_chat_modal.dart';
 import '../providers/home_screen_provider.dart';
 import '../providers/likeability_provider.dart'; // ★★★ この行を追加 ★★★
+import '../providers/spendable_amount_provider.dart'; // ★ 新しいProviderをインポート
+import '../constants/assets.dart'; // ★★★ この行を追加 ★★★
 
 // HomeScreen 本体
 class HomeScreen extends ConsumerWidget {
@@ -38,6 +40,7 @@ class HomeScreen extends ConsumerWidget {
           const _DialogueBubble(),
           const _CommentsList(),
           const _BottomUiBar(),
+          const _BudgetDisplay(), // ★★★ この一行を追加 ★★★
         ],
       ),
     );
@@ -406,6 +409,51 @@ class _SuperChatItem extends StatelessWidget {
                 child: Text(superChat.text, style: TextStyle(color: colorConfig.textColor, fontSize: 14)),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ★★★↓ 右上に予算を表示するための、新しいウィジェット ↓★★★
+class _BudgetDisplay extends ConsumerWidget {
+  const _BudgetDisplay();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // spendableAmountProviderを監視
+    final spendableAmountAsync = ref.watch(spendableAmountProvider);
+
+    return Positioned(
+      top: 40,
+      right: 16,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        // Providerの状態に応じて表示を切り替え
+        child: spendableAmountAsync.when(
+          data: (amount) => Row(
+            children: [
+              const Icon(Icons.wallet_outlined, color: Colors.yellow, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                '¥$amount',
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          loading: () => const SizedBox(
+            height: 20, // Containerの高さに合わせる
+            width: 20,
+            child:
+                CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          ),
+          error: (err, stack) =>
+              const Icon(Icons.error_outline, color: Colors.red, size: 20),
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/models/comment_model.dart';
+import 'package:saving_girlfriend/constants/assets.dart'; // ★★★ この行を追加 ★★★
 
 // ダミーの視聴者情報を管理するためのシンプルなクラス
 class _FakeViewer {
@@ -50,15 +51,24 @@ class HomeScreenState {
 
 // 状態とロジックを管理するNotifierクラス
 class HomeScreenNotifier extends Notifier<HomeScreenState> {
+  // ★★★↓ キーワードと定型文の対応リストを新しく作成 ↓★★★
+  final Map<String, String> _predefinedSuperChatResponses = {
+    '髪カット代': '普通の女性は美容院代は1000円じゃ足りないんだよ？',
+    'thanks2': 'え、いいの！？ありがとう！大切に使うね！',
+    'happy': '応援ありがとう！もっと頑張れるよ！',
+    'love': 'スパチャだ！本当にありがとう！大好き！',
+    // ここにテストしたいキーワードとセリフを自由に追加できます
+  };
+
   // ★★★↓ ダミーの視聴者リストを修正 ↓★★★
   final List<_FakeViewer> _fakeViewers = [
     // --- 画像アイコンの人 ---
-    _FakeViewer(name: 'ドラえもん', iconAsset: 'assets/icons/user2.png'),
-    _FakeViewer(name: '出木杉', iconAsset: 'assets/icons/user3.png'),
-    _FakeViewer(name: 'たけし', iconAsset: 'assets/icons/user4.png'),
-    _FakeViewer(name: 'のびた', iconAsset: 'assets/icons/user5.png'),
-    _FakeViewer(name: 'スネ夫', iconAsset: 'assets/icons/user6.png'),
-    _FakeViewer(name: 'しずか', iconAsset: 'assets/icons/user7.png'),
+    _FakeViewer(name: 'ドラえもん', iconAsset: AppAssets.iconUser2),
+    _FakeViewer(name: '出木杉', iconAsset:  AppAssets.iconUser3),
+    _FakeViewer(name: 'たけし', iconAsset:  AppAssets.iconUser4),
+    _FakeViewer(name: 'のびた', iconAsset:  AppAssets.iconUser5),
+    _FakeViewer(name: 'スネ夫', iconAsset:  AppAssets.iconUser6),
+    _FakeViewer(name: 'しずか', iconAsset:  AppAssets.iconUser7),
     // --- 頭文字アイコンの人 ---
     _FakeViewer(name: 'たらちゃん', iconAsset: ''), // ← 画像パスを空にする
     _FakeViewer(name: 'カツオ', iconAsset: ''), // ← 画像パスを空にする
@@ -103,15 +113,42 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
   Timer? _commentTimer;
   Timer? _topicTimer;
   Timer? _dialogueTimer;
+  Timer? _superChatDialogueTimer;
 
+  // ★★★ addSuperChatメソッドを修正 ★★★
   void addSuperChat(int amount, String comment) {
     final newSuperChat = SuperChat(
       userName: 'あなた',
-      iconAsset: 'assets/icons/player.png',
+      iconAsset: AppAssets.iconPlayer,
       text: comment,
       amount: amount,
     );
     _addComment(newSuperChat);
+
+    // ★ 入力されたキーワードで、定型文を返すメソッドを呼び出す
+    _showPredefinedResponse(comment);
+  }
+
+  // ★★★↓ 定型文を返すためのメソッドを新しく追加 ↓★★★
+  void _showPredefinedResponse(String keyword) {
+    // 1. 入力されたキーワードが、定型文リストのキーに存在するかチェック
+    if (_predefinedSuperChatResponses.containsKey(keyword)) {
+      // 2. もし存在すれば、対応するセリフを取得
+      final response = _predefinedSuperChatResponses[keyword]!;
+
+      // 3. 通常のセリフ更新を一時停止
+      _dialogueTimer?.cancel();
+      _superChatDialogueTimer?.cancel();
+
+      // 4. 対応するセリフを表示
+      state = state.copyWith(characterDialogue: response);
+
+      // 5. 30秒後に通常のセリフ更新を再開する
+      _superChatDialogueTimer = Timer(const Duration(seconds: 30), () {
+        _startDialogueTimer();
+      });
+    }
+    // ★ キーワードが存在しない場合は、何もしない
   }
 
   @override
@@ -123,6 +160,7 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
         _commentTimer?.cancel();
         _topicTimer?.cancel();
         _dialogueTimer?.cancel();
+        _superChatDialogueTimer?.cancel();
       });
     });
     return initialState;
@@ -164,12 +202,17 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
     _dialogueTimer = Timer.periodic(const Duration(seconds: 8), (timer) => _changeDialogue());
   }
 
+  // ★★★ _changeTopicメソッドを修正 ★★★
   void _changeTopic() {
+    // 話題が変わったら、感謝セリフのタイマーも止める
+    _superChatDialogueTimer?.cancel();
+
     final currentTopic = state.currentTopic;
     final availableTopics = TalkTopic.values.where((topic) => topic != currentTopic).toList();
     final newTopic = availableTopics[Random().nextInt(availableTopics.length)];
     final initialDialogue = _dialogues[newTopic]![0];
     state = state.copyWith(currentTopic: newTopic, characterDialogue: initialDialogue);
+
     _startDialogueTimer();
   }
 
