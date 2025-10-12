@@ -19,13 +19,18 @@ class AppNavigationBar extends StatelessWidget {
         destinations: [
           const NavigationDestination(icon: Icon(Icons.home), label: 'ホーム'),
           const NavigationDestination(icon: Icon(Icons.person), label: '彼女'),
-          const NavigationDestination(
-              icon: Icon(Icons.currency_yen), label: '支出'),
+          NavigationDestination(
+            icon: Image.asset(AppAssets.iconEn,
+                width: 24, height: 24), // 画像のパスとサイズを指定
+            label: '支出入',
+          ),
           const NavigationDestination(
               icon: Icon(Icons.menu_book), label: '思い出'),
           NavigationDestination(
-              icon: Image.asset(AppAssets.iconKiroku, width: 24, height: 24),
-              label: '記録'),
+            icon: Image.asset(AppAssets.iconKiroku,
+                width: 24, height: 24), // 画像のパスとサイズを指定
+            label: '記録',
+          ),
         ],
         onDestinationSelected: (index) {
           navigationShell.goBranch(

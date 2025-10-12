@@ -1,48 +1,61 @@
 import 'dart:math';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/providers/setting_provider.dart';
+
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:saving_girlfriend/providers/tribute_history_provider.dart';
 
-final likeabilityProvider = Provider<AsyncValue<double>>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  final tributeHistoryAsync = ref.watch(tributeHistoryProvider);
+part 'likeability_provider.g.dart';
 
-  // 依存先のどちらかがロード中またはエラーの場合、それをそのまま伝える
-  if (settingsAsync.isLoading || tributeHistoryAsync.isLoading) {
-    return const AsyncValue.loading();
+@riverpod
+Future<int> likeability(LikeabilityRef ref) async {
+  final tributeHistory = await ref.watch(tributeHistoryProvider.future);
+  final int totalTribute =
+      tributeHistory.fold(0, (sum, item) => sum + item.amount);
+  return _calculateLikeability(totalTribute);
+}
+
+/// 貢いだ総額に基づいて好感度を計算します。
+int _calculateLikeability(final int totalTribute) {
+  // 好感度計算用の定数
+  const level1Threshold = 10000;
+  const level2Threshold = 30000;
+  const level3Threshold = 60000;
+
+  const level1Likeability = 10.0;
+  const level2Likeability = 20.0;
+  const level3Likeability = 30.0;
+
+  const endlessRate = 10000.0;
+
+  double likeability;
+
+  // レベル1：10,000円までのフェーズ
+  // 1,000円貢ぐごとに好感度が1増加します。
+  if (totalTribute < level1Threshold) {
+    likeability = (totalTribute / level1Threshold) * level1Likeability;
   }
-  if (settingsAsync.hasError) {
-    return AsyncValue.error(settingsAsync.error!, settingsAsync.stackTrace!);
+  // レベル2：30,000円までのフェーズ
+  // 10,000円を超えてから2,000円貢ぐごとに好感度が1増加します。
+  else if (totalTribute < level2Threshold) {
+    likeability = level1Likeability +
+        ((totalTribute - level1Threshold) /
+                (level2Threshold - level1Threshold)) *
+            (level2Likeability - level1Likeability);
   }
-  if (tributeHistoryAsync.hasError) {
-    return AsyncValue.error(
-        tributeHistoryAsync.error!, tributeHistoryAsync.stackTrace!);
+  // レベル3：60,000円までのフェーズ
+  // 30,000円を超えてから3,000円貢ぐごとに好感度が1増加します。
+  else if (totalTribute < level3Threshold) {
+    likeability = level2Likeability +
+        ((totalTribute - level2Threshold) /
+                (level3Threshold - level2Threshold)) *
+            (level3Likeability - level2Likeability);
+  }
+  // エンドレスレベル：60,000円以降
+  // 10,000円貢ぐごとに好感度が1増加します。
+  else {
+    likeability =
+        level3Likeability + ((totalTribute - level3Threshold) / endlessRate);
   }
 
-  // 依存先のデータが両方とも利用可能な場合、計算を実行する
-  final settings = settingsAsync.value!;
-  final history = tributeHistoryAsync.value!;
-
-  final int totalTribute = history.fold(0, (sum, item) => sum + item.amount);
-  final int targetAmount = settings.targetSavingAmount;
-  final int initialAmount = settings.defaultContributionAmount;
-
-  // 計算式に基づいて好感度を算出する
-  final int goalToSave = targetAmount - initialAmount;
-
-  // もう達成している場合は、達成率を100%として扱う
-  if (goalToSave <= 0) {
-    return const AsyncValue.data(100.0);
-  }
-
-  // 達成率を計算
-  final double progressRatio = totalTribute / goalToSave;
-
-  // 達成率がマイナスにならないように0で下限を設定
-  final double clampedRatio = max(0.0, progressRatio);
-
-  // --- 好感度の計算 ---
-  final double likeability = 100 * sqrt(clampedRatio);
-
-  return AsyncValue.data(likeability);
-});
+  // 好感度がマイナスにならないようにします。
+  return max(0.0, likeability).floor();
+}

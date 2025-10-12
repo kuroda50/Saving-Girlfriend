@@ -1,15 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:saving_girlfriend/route/app_navigation_bar.dart';
 import 'package:saving_girlfriend/screen/home_screen.dart';
 import 'package:saving_girlfriend/screen/select_girlfriend_screen.dart';
 import 'package:saving_girlfriend/screen/select_story_screen.dart';
-import 'package:saving_girlfriend/screen/story_screen.dart';
 import 'package:saving_girlfriend/screen/settings_screen.dart';
+import 'package:saving_girlfriend/screen/story_screen.dart';
+import 'package:saving_girlfriend/screen/title_screen.dart';
 import 'package:saving_girlfriend/screen/transaction_history_screen.dart';
 import 'package:saving_girlfriend/screen/transaction_input_screen.dart';
-import 'app_navigation_bar.dart';
-import 'package:flutter/material.dart';
-// 新しい画面をインポート
-// import 'package:saving_girlfriend/screen/monetise';
 
 // 各ブランチのナビゲーションスタックを管理するためのGlobalKey
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -26,12 +25,18 @@ final transactionInputNavigatorKey =
 
 final router = GoRouter(
   navigatorKey: rootNavigatorKey,
-  initialLocation: '/home',
+  initialLocation: '/',
+  redirect: (context, state) {
+    // 1R0Uへ　ここに初回起動か確認するロジックを書く！！
+    if (state.matchedLocation == '/') {
+      return '/title';
+    }
+    return null;
+  },
   routes: [
     StatefulShellRoute.indexedStack(
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state, navigationShell) {
-        // ここでAppNavigationBarを返して、ボトムナビゲーションを構築
         return AppNavigationBar(navigationShell: navigationShell);
       },
       branches: [
@@ -66,7 +71,7 @@ final router = GoRouter(
                 ),
               ),
             ]),
-        // 5. 新しい収支入力ブランチ
+        // 5. 収支入力ブランチ
         StatefulShellBranch(
           navigatorKey: transactionInputNavigatorKey,
           routes: [
@@ -107,10 +112,16 @@ final router = GoRouter(
       path: '/story',
       parentNavigatorKey: rootNavigatorKey,
       pageBuilder: (context, state) {
-        final story_index = state.extra is int ? state.extra as int : 0;
-        ;
-        return MaterialPage(child: StoryScreen(story_index: story_index));
+        final storyIndex = state.extra is int ? state.extra as int : 0;
+        return MaterialPage(child: StoryScreen(story_index: storyIndex));
       },
-    )
+    ),
+    GoRoute(
+      path: '/title',
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) {
+        return const MaterialPage(child: TitleScreen());
+      },
+    ),
   ],
 );

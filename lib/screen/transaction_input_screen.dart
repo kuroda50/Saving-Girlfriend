@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/color.dart';
+import 'package:saving_girlfriend/models/transaction_state.dart';
+import 'package:saving_girlfriend/providers/uuid_provider.dart';
 
 import '../providers/transaction_history_provider.dart';
 
@@ -18,8 +20,6 @@ class _TransactionInputScreenState
     extends ConsumerState<TransactionInputScreen> {
   bool _isExpense = true;
   final _amountController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
-  String? _selectedCategory;
   final List<String> _expenseCategories = [
     '食費',
     '交通費',
@@ -29,25 +29,12 @@ class _TransactionInputScreenState
     'その他'
   ];
   final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
+  late String _selectedCategory = _expenseCategories[0];
 
   @override
   void dispose() {
     _amountController.dispose();
     super.dispose();
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
   }
 
   void _saveTransaction() async {
@@ -58,35 +45,24 @@ class _TransactionInputScreenState
           .showSnackBar(const SnackBar(content: Text('金額を正しく入力してください。')));
       return;
     }
-    if (_selectedCategory == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('カテゴリを選択してください。')));
-      return;
-    }
 
-    // ここを修正する
-    final newTransaction = {
-      "type": _isExpense ? "expense" : "income",
-      "date": _selectedDate.toIso8601String(),
-      "amount": amount,
-      "category": _selectedCategory!,
-    };
+    final newTransaction = TransactionState(
+        id: ref.read(uuidProvider).v4(),
+        type: _isExpense ? "expense" : "income",
+        date: DateTime.now(),
+        amount: amount,
+        category: _selectedCategory);
 
     try {
       await ref
-          .read(transactionHistoryProvider.notifier)
+          .read(transactionsProvider.notifier)
           .addTransaction(newTransaction);
-      // ref
-      //     .read(homeScreenProvider.notifier)
-      //     .aiChat(_selectedCategory!, _isExpense ? -amount : amount);
 
       // フォームをリセット
       _amountController.clear();
       setState(() {
         _isExpense = true;
-        _selectedCategory = null;
-        _selectedDate = DateTime.now();
+        _selectedCategory = _expenseCategories[0];
       });
     } catch (error) {
       print("エラー: $error");
@@ -132,7 +108,11 @@ class _TransactionInputScreenState
                 onPressed: (index) {
                   setState(() {
                     _isExpense = index == 0;
-                    _selectedCategory = null;
+                    if (_isExpense) {
+                      _selectedCategory = _expenseCategories[0];
+                    } else {
+                      _selectedCategory = _incomeCategories[0];
+                    }
                   });
                 },
                 borderRadius: BorderRadius.circular(8),
@@ -152,21 +132,15 @@ class _TransactionInputScreenState
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(7),
+              ],
               decoration: const InputDecoration(
                 labelText: '金額',
                 prefixIcon: Icon(Icons.currency_yen),
                 border: OutlineInputBorder(),
               ),
-              onChanged: (value) {
-                final num = int.tryParse(value);
-                if (num != null && num > 99999) {
-                  _amountController.text = '99999';
-                  _amountController.selection = TextSelection.fromPosition(
-                    TextPosition(offset: _amountController.text.length),
-                  );
-                }
-              },
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -185,30 +159,13 @@ class _TransactionInputScreenState
               }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
-                  _selectedCategory = newValue;
+                  if (newValue != null) {
+                    _selectedCategory = newValue;
+                  }
                 });
               },
             ),
-            const SizedBox(height: 24),
-            InkWell(
-              onTap: () => _selectDate(context),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today_outlined,
-                        color: AppColors.subIcon),
-                    const SizedBox(width: 12),
-                    Text(
-                        '日付: ${MaterialLocalizations.of(context).formatShortDate(_selectedDate)}',
-                        style: const TextStyle(fontSize: 16)),
-                    const Spacer(),
-                    const Icon(Icons.edit_outlined,
-                        color: AppColors.subIcon, size: 20),
-                  ],
-                ),
-              ),
-            ),
+            const SizedBox(height: 10),
             const Divider(),
             const SizedBox(height: 10),
             ElevatedButton(

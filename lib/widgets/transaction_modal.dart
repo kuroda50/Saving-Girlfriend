@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/color.dart';
+import 'package:saving_girlfriend/models/transaction_state.dart';
+import 'package:saving_girlfriend/providers/uuid_provider.dart';
 
 // モーダルを呼び出すためのグローバル関数
 void showTransactionModal(
   BuildContext context, {
-  required Function(Map<String, dynamic>) onSave,
-  Map<String, dynamic>? initialTransaction,
+  required Function(TransactionState) onSave,
+  TransactionState? initialTransaction,
 }) {
   showModalBottomSheet(
     context: context,
@@ -28,22 +31,22 @@ void showTransactionModal(
 }
 
 // 収支入力モーダルのUIを定義するStatefulWidget
-class TransactionInputModal extends StatefulWidget {
-  final Function(Map<String, dynamic>) onSave;
-  final Map<String, dynamic>? initialTransaction;
+class TransactionInputModal extends ConsumerStatefulWidget {
+  final Function(TransactionState) onSave;
+  final TransactionState? initialTransaction;
 
   const TransactionInputModal(
       {required this.onSave, this.initialTransaction, super.key});
 
   @override
-  State<TransactionInputModal> createState() => _TransactionInputModalState();
+  ConsumerState<TransactionInputModal> createState() =>
+      _TransactionInputModalState();
 }
 
-class _TransactionInputModalState extends State<TransactionInputModal> {
+class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
   bool _isExpense = true;
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  String? _selectedCategory;
   final List<String> _expenseCategories = [
     '食費',
     '交通費',
@@ -53,18 +56,18 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
     'その他'
   ];
   final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
+  late String _selectedCategory;
 
   @override
   void initState() {
     super.initState();
     if (widget.initialTransaction != null) {
       final transaction = widget.initialTransaction!;
-      final amount = transaction['amount'] as int;
 
-      _isExpense = amount < 0;
-      _amountController.text = amount.abs().toString();
-      _selectedDate = DateTime.parse(transaction['date']);
-      _selectedCategory = transaction['category'];
+      _isExpense = transaction.type == "expense";
+      _amountController.text = transaction.amount.toString();
+      _selectedDate = transaction.date;
+      _selectedCategory = transaction.category;
     }
   }
 
@@ -76,35 +79,20 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
 
   void _saveTransaction() {
     final amount = int.tryParse(_amountController.text);
-    if (amount == null || amount <= 0 || _selectedCategory == null) {
+    if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('金額とカテゴリを正しく入力してください。')),
+        const SnackBar(content: Text('金額を正しく入力してください。')),
       );
       return;
     }
-    Map<String, dynamic> transactionData = {
-      'id': widget.initialTransaction?['id'] ??
-          'transaction_${DateTime.now().millisecondsSinceEpoch}',
-      'date': _selectedDate.toIso8601String(),
-      'amount': _isExpense ? -amount : amount,
-      'category': _selectedCategory!
-    };
+    TransactionState transactionData = TransactionState(
+        id: widget.initialTransaction?.id ?? ref.read(uuidProvider).v4(),
+        type: _isExpense ? "expense" : "income",
+        date: _selectedDate,
+        amount: amount,
+        category: _selectedCategory);
     widget.onSave(transactionData);
     Navigator.of(context).pop();
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
   }
 
   @override
@@ -133,12 +121,16 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
               onPressed: (index) {
                 setState(() {
                   _isExpense = index == 0;
-                  _selectedCategory = null;
+                  if (_isExpense) {
+                    _selectedCategory = _expenseCategories[0];
+                  } else {
+                    _selectedCategory = _incomeCategories[0];
+                  }
                 });
               },
               borderRadius: BorderRadius.circular(8),
               selectedColor: AppColors.subText,
-              fillColor: _isExpense ? AppColors.primary : AppColors.secondary,
+              fillColor: AppColors.primary,
               children: const [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24),
@@ -155,6 +147,10 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
           TextField(
             controller: _amountController,
             keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(7),
+            ],
             decoration: const InputDecoration(
               labelText: '金額',
               prefixIcon: Icon(Icons.currency_yen),
@@ -178,31 +174,13 @@ class _TransactionInputModalState extends State<TransactionInputModal> {
             }).toList(),
             onChanged: (String? newValue) {
               setState(() {
-                _selectedCategory = newValue;
+                if (newValue != null) {
+                  _selectedCategory = newValue;
+                }
               });
             },
           ),
-          const SizedBox(height: 24),
-          InkWell(
-            onTap: () => _selectDate(context),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      color: AppColors.subIcon),
-                  const SizedBox(width: 12),
-                  Text(
-                    '日付: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const Spacer(),
-                  const Icon(Icons.edit_outlined,
-                      color: AppColors.subIcon, size: 20),
-                ],
-              ),
-            ),
-          ),
+          const SizedBox(height: 10),
           const Divider(),
           const SizedBox(height: 10),
           ElevatedButton(
