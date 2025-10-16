@@ -15,8 +15,7 @@ final rootNavigatorKey = GlobalKey<NavigatorState>();
 final homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
 final selectStoryNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'select_story');
-final selectGirlfriendNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'select_girlfriend');
+final settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 final transactionHistoryNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'transaction_history');
 // 新しい画面用のGlobalKeyを追加
@@ -25,14 +24,7 @@ final transactionInputNavigatorKey =
 
 final router = GoRouter(
   navigatorKey: rootNavigatorKey,
-  initialLocation: '/',
-  redirect: (context, state) {
-    // 1R0Uへ　ここに初回起動か確認するロジックを書く！！
-    if (state.matchedLocation == '/') {
-      return '/title';
-    }
-    return null;
-  },
+  initialLocation: '/title',
   routes: [
     StatefulShellRoute.indexedStack(
       parentNavigatorKey: rootNavigatorKey,
@@ -48,29 +40,21 @@ final router = GoRouter(
               key: state.pageKey,
               child: const HomeScreen(),
             ),
-            routes: [
-              GoRoute(
-                path: 'settings',
-                parentNavigatorKey: rootNavigatorKey,
-                pageBuilder: (context, state) {
-                  return const MaterialPage(child: SettingsScreen());
-                },
-              )
-            ],
           ),
         ]),
-        // 2. 彼女選択ブランチ
+        // 4. 貢ぎ履歴ブランチ
         StatefulShellBranch(
-            navigatorKey: selectGirlfriendNavigatorKey,
+            navigatorKey: transactionHistoryNavigatorKey,
             routes: [
               GoRoute(
-                path: '/select_girlfriend',
+                path: '/transaction_history',
                 pageBuilder: (context, state) => NoTransitionPage(
                   key: state.pageKey,
-                  child: const SelectGirlfriendScreen(),
+                  child: const TransactionHistoryScreen(),
                 ),
               ),
             ]),
+
         // 5. 収支入力ブランチ
         StatefulShellBranch(
           navigatorKey: transactionInputNavigatorKey,
@@ -94,18 +78,16 @@ final router = GoRouter(
             ),
           ),
         ]),
-        // 4. 貢ぎ履歴ブランチ
-        StatefulShellBranch(
-            navigatorKey: transactionHistoryNavigatorKey,
-            routes: [
-              GoRoute(
-                path: '/transaction_history',
-                pageBuilder: (context, state) => NoTransitionPage(
-                  key: state.pageKey,
-                  child: const TransactionHistoryScreen(),
-                ),
-              ),
-            ]),
+        // 2. 設定ブランチ
+        StatefulShellBranch(navigatorKey: settingsNavigatorKey, routes: [
+          GoRoute(
+            path: '/setting',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const SettingsScreen(),
+            ),
+          ),
+        ]),
       ],
     ),
     GoRoute(
@@ -121,6 +103,13 @@ final router = GoRouter(
       parentNavigatorKey: rootNavigatorKey,
       pageBuilder: (context, state) {
         return const MaterialPage(child: TitleScreen());
+      },
+    ),
+    GoRoute(
+      path: '/select_girlfriend',
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) {
+        return const MaterialPage(child: SelectGirlfriendScreen());
       },
     ),
   ],
