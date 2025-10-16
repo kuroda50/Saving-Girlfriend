@@ -45,7 +45,6 @@ Future<int> spendableAmount(Ref ref) async {
 
   // 5. 最終的な利用可能額を計算して返す
   final finalSpendableAmount = cumulativeAmount - totalTributes;
-
   return max(finalSpendableAmount, 0);
 }
 
