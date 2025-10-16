@@ -85,7 +85,17 @@ class LocalStorageService {
     await _prefs.setString(_budgetHistoryKey, jsonEncode(budgetHistoryJson));
   }
 
+  /// ストーリー再生済みフラグを保存
+  Future<void> setPlayedStory() async {
+    await _prefs.setBool('has_played_story', true);
+  }
+
   // --- 読み込み (Load) ---
+
+  //story再生
+  Future<bool> hasPlayedStory() async {
+    return _prefs.getBool('has_played_story') ?? false;
+  }
 
   /// ユーザーIDを読み込む
   Future<String?> getUserId() async {

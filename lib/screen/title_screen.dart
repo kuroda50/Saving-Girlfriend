@@ -1,34 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // 追加
 import '../constants/color.dart';
+import 'package:saving_girlfriend/services/local_storage_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/select_girlfriend_provider.dart';
+// -----------------------------------------------------------
 
-// StatelessWidget から StatefulWidget に変更
-class TitleScreen extends StatefulWidget {
+// StatelessWidget から ConsumerStatefulWidget に変更
+class TitleScreen extends ConsumerStatefulWidget {
+  // 👈 修正: ConsumerStatefulWidget
   const TitleScreen({super.key});
 
   @override
-  State<TitleScreen> createState() => _TitleScreenState();
+  // State を ConsumerState に変更
+  ConsumerState<TitleScreen> createState() =>
+      _TitleScreenState(); // 👈 修正: ConsumerState
 }
 
-class _TitleScreenState extends State<TitleScreen> {
+// State を ConsumerState に変更
+class _TitleScreenState extends ConsumerState<TitleScreen> {
+  // 👈 修正: ConsumerState
+
   // 画面遷移ロジック
   void _navigateToNextScreen() async {
-    // SharedPreferencesのインスタンスを取得
-    final prefs = await SharedPreferences.getInstance();
+    // 1. Riverpod の FutureProvider から選択状態を非同期で読み取る
+    final selectionStatusAsync =
+        ref.read(selectionStatusProvider.future); // 👈 エラー2解消: refを使用
 
-    // 'has_selected_girlfriend' のキーで保存された値を取得。
-    // 値がなければ（初めて起動したときなど）falseとする。
-    final hasSelected = prefs.getBool('has_selected_girlfriend') ?? false;
+    // ロードが完了している場合のみ処理を継続
+    // 2. 彼女選択済みフラグを取得（データがなければ false）
+    final hasplayedstory = await ref.read(localStorageServiceProvider.future);
+    final hasPlayed = await hasplayedstory.hasPlayedStory();
 
-    // 遷移先のパスを決定
-    final String nextPath = hasSelected
-        ? '/home' // 選択済みならホーム画面など（あなたのアプリに合わせてパスを変更してください）
-        : '/select_girlfriend'; // 未選択なら彼女選択画面
-    print("ここまで実行できたよ");
+    final String nextPath = hasPlayed
+        ? '/home' // 再生済みならホーム画
+        : '/select_girlfriend'; // (到達しないはず)
 
     // 画面遷移を実行
-    context.go(nextPath);
+    if (mounted) {
+      context.go(nextPath);
+    }
   }
 
   @override
@@ -47,27 +58,29 @@ class _TitleScreenState extends State<TitleScreen> {
             ),
           ),
           // アプリスタートボタンを画面中央下部に配置
-          Center(
-            child: SizedBox(
-              // ボタンの配置を画面の高さの約40%下げる
-              height: screenHeight * 0.4,
-              child: ElevatedButton(
-                // 修正: 遷移ロジックを外部メソッドに切り出し
-                onPressed: _navigateToNextScreen,
-                style: ElevatedButton.styleFrom(
-                  // ボタンのパディングを画面幅に合わせて調整
-                  padding: EdgeInsets.symmetric(
-                    horizontal: MediaQuery.of(context).size.width * 0.1,
-                    vertical: 20,
+          // 変更点: Padding の中に Center を追加して水平方向の中央寄せを復活
+
+          Padding(
+            padding: EdgeInsets.only(top: screenHeight * 0.3),
+            child: Center(
+              child: SizedBox(
+                height: screenHeight * 0.1,
+                child: ElevatedButton(
+                  onPressed: _navigateToNextScreen,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * 0.1,
+                      vertical: 20,
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Live Start!',
-                  style: TextStyle(fontSize: 25, color: AppColors.mainLogo),
+                  child: const Text(
+                    'Live Start!',
+                    style: TextStyle(fontSize: 25, color: AppColors.mainLogo),
+                  ),
                 ),
               ),
             ),
-          ),
+          )
         ],
       ),
     );

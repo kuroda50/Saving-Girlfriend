@@ -1,20 +1,24 @@
 /*ストーリー画面*/
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../stories/suzunari_oto.dart';
 import 'package:flutter/material.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import '../constants/color.dart';
+import 'package:saving_girlfriend/services/local_storage_service.dart';
 
-class StoryScreen extends StatefulWidget {
+// ↓ StatefulWidget → ConsumerStatefulWidget に変更
+class StoryScreen extends ConsumerStatefulWidget {
   final int story_index;
   const StoryScreen({super.key, required this.story_index});
 
   @override
-  State<StoryScreen> createState() => _StoryScreenState();
+  ConsumerState<StoryScreen> createState() => _StoryScreenState();
 }
 
-class _StoryScreenState extends State<StoryScreen> {
+// ↓ State<StoryScreen> → ConsumerState<StoryScreen> に変更
+class _StoryScreenState extends ConsumerState<StoryScreen> {
   late int _story_index;
   int _lineIndex = 0;
   bool _isValidIndex = true;
@@ -29,16 +33,28 @@ class _StoryScreenState extends State<StoryScreen> {
     }
   }
 
-  void nextLine() {
+// _StoryScreenState クラス内の nextLine() メソッド
+  void nextLine() async {
     if (!_isValidIndex) return;
+
     if (_lineIndex <
-        EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1)
+        EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1) {
       setState(() {
         _lineIndex++;
       });
-    else if (_lineIndex >=
-        EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1)
-      context.pop();
+    } else if (_lineIndex >=
+        EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1) {
+      // ストーリー再生フラグを保存
+      final localStorage = await ref.read(localStorageServiceProvider.future);
+      final hasPlayed = await localStorage.hasPlayedStory();
+
+      final String nextPath = hasPlayed ? '/select_story' : '/home';
+      await localStorage.setPlayedStory(); // ストーリー再生済みにする（setメソッド名は実装に合わせて修正）
+
+      if (mounted) {
+        context.go(nextPath);
+      }
+    }
   }
 
   @override
