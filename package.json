@@ -11,5 +11,8 @@
       "echo Running dart format on:",
       "dart format"
     ]
+  },
+  "volta": {
+    "node": "22.20.0"
   }
 }
