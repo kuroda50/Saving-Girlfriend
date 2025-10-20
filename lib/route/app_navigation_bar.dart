@@ -1,5 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:go_router/go_router.dart';
+
+// Project imports:
 import 'package:saving_girlfriend/constants/assets.dart';
 
 class AppNavigationBar extends StatelessWidget {
@@ -23,7 +28,7 @@ class AppNavigationBar extends StatelessWidget {
                 width: 24, height: 24), // 画像のパスとサイズを指定
             label: '記録',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(
               Icons.currency_yen,
             ),

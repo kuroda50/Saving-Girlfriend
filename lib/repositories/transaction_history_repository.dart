@@ -1,5 +1,5 @@
+// Project imports:
 import 'package:saving_girlfriend/models/transaction_state.dart';
-
 import '../services/local_storage_service.dart';
 
 class TransactionHistoryRepository {

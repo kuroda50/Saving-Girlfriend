@@ -1,12 +1,15 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+// Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// Project imports:
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/models/comment_model.dart';
 import 'package:saving_girlfriend/widgets/super_chat_modal.dart';
+
 import '../providers/home_screen_provider.dart';
 import '../providers/likeability_provider.dart'; // ★★★ この行を追加 ★★★
 import '../providers/spendable_amount_provider.dart'; // ★ 新しいProviderをインポート
-import '../constants/assets.dart'; // ★★★ この行を追加 ★★★
 
 // HomeScreen 本体
 class HomeScreen extends ConsumerWidget {
@@ -19,7 +22,8 @@ class HomeScreen extends ConsumerWidget {
         children: [
           // 1. 背景画像
           Positioned.fill(
-            child: Image.asset(AppAssets.backgroundClassroom, fit: BoxFit.cover),
+            child:
+                Image.asset(AppAssets.backgroundClassroom, fit: BoxFit.cover),
           ),
           // 2. キャラクター画像
           Positioned(
@@ -48,7 +52,7 @@ class HomeScreen extends ConsumerWidget {
 }
 
 // 左上のヘッダー (視聴者数やタイトル)
- class _LiveHeader extends ConsumerWidget {
+class _LiveHeader extends ConsumerWidget {
   const _LiveHeader();
 
   @override
@@ -81,13 +85,20 @@ class HomeScreen extends ConsumerWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('鈴鳴 おと', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                    const Text('鈴鳴 おと',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14)),
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        const Icon(Icons.group, color: Colors.white70, size: 12),
+                        const Icon(Icons.group,
+                            color: Colors.white70, size: 12),
                         const SizedBox(width: 4),
-                        Text('${homeState.viewers}人が視聴中', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                        Text('${homeState.viewers}人が視聴中',
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 10)),
                       ],
                     ),
                   ],
@@ -108,7 +119,8 @@ class HomeScreen extends ConsumerWidget {
                         child: LinearProgressIndicator(
                           value: (likeability / 100.0).clamp(0.0, 1.0),
                           backgroundColor: Colors.white.withOpacity(0.3),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.pinkAccent),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              Colors.pinkAccent),
                           minHeight: 6,
                         ),
                       ),
@@ -116,13 +128,17 @@ class HomeScreen extends ConsumerWidget {
                     const SizedBox(width: 8),
 
                     // ★ ここをハートアイコンに変更
-                    const Icon(Icons.favorite, color: Colors.pinkAccent, size: 16),
+                    const Icon(Icons.favorite,
+                        color: Colors.pinkAccent, size: 16),
                     const SizedBox(width: 4), // アイコンとテキストの間の余白
 
                     // 好感度テキスト
                     Text(
                       '${likeability.round()}%', // 小数点以下を丸める
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
                     ),
                   ],
                 );
@@ -136,17 +152,22 @@ class HomeScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(10),
                         child: LinearProgressIndicator(
                           backgroundColor: Colors.white.withOpacity(0.3),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.pinkAccent),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              Colors.pinkAccent),
                           minHeight: 6,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.favorite_border, color: Colors.white38, size: 16), // ロード中は空のハート
+                    const Icon(Icons.favorite_border,
+                        color: Colors.white38, size: 16), // ロード中は空のハート
                     const SizedBox(width: 4),
                     const Text(
                       '---%',
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
                     ),
                   ],
                 );
@@ -156,7 +177,8 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     Icon(Icons.error_outline, color: Colors.red, size: 16),
                     SizedBox(width: 4),
-                    Text('エラー', style: TextStyle(color: Colors.red, fontSize: 12)),
+                    Text('エラー',
+                        style: TextStyle(color: Colors.red, fontSize: 12)),
                   ],
                 );
               },
@@ -188,7 +210,8 @@ class _BottomUiBar extends ConsumerWidget {
                 color: Colors.black.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: Text('コメントする...', style: TextStyle(color: Colors.white.withOpacity(0.7))),
+              child: Text('コメントする...',
+                  style: TextStyle(color: Colors.white.withOpacity(0.7))),
             ),
           ),
           const SizedBox(width: 12),
@@ -197,7 +220,9 @@ class _BottomUiBar extends ConsumerWidget {
               showSuperChatModal(
                 context,
                 onSend: (amount, comment) {
-                  ref.read(homeScreenProvider.notifier).addSuperChat(amount, comment);
+                  ref
+                      .read(homeScreenProvider.notifier)
+                      .addSuperChat(amount, comment);
                 },
               );
             },
@@ -207,7 +232,11 @@ class _BottomUiBar extends ConsumerWidget {
                 color: Colors.blue.shade600,
                 shape: BoxShape.circle,
               ),
-              child: const Text('¥', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              child: const Text('¥',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -222,7 +251,8 @@ class _DialogueBubble extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Providerから現在のセリフを取得
-    final dialogue = ref.watch(homeScreenProvider.select((s) => s.characterDialogue));
+    final dialogue =
+        ref.watch(homeScreenProvider.select((s) => s.characterDialogue));
     final screenWidth = MediaQuery.of(context).size.width;
 
     // 吹き出しの位置を調整
@@ -259,6 +289,7 @@ class _DialogueBubble extends ConsumerWidget {
     );
   }
 }
+
 // コメントリスト
 class _CommentsList extends ConsumerWidget {
   const _CommentsList();
@@ -291,7 +322,7 @@ class _CommentsList extends ConsumerWidget {
 // 通常コメントの表示Widget
 class _NormalCommentItem extends StatelessWidget {
   final Comment comment;
-  const _NormalCommentItem({super.key, required this.comment});
+  const _NormalCommentItem({required this.comment});
 
   @override
   Widget build(BuildContext context) {
@@ -303,7 +334,8 @@ class _NormalCommentItem extends StatelessWidget {
     // もしiconAssetの文字列が空でなければ（=パスが設定されていれば）
     if (comment.iconAsset.isNotEmpty) {
       // 画像を使ったCircleAvatarを表示する
-      iconWidget = CircleAvatar(radius: 12, backgroundImage: AssetImage(comment.iconAsset));
+      iconWidget = CircleAvatar(
+          radius: 12, backgroundImage: AssetImage(comment.iconAsset));
     } else {
       // 文字列が空なら、InitialIconを表示する
       iconWidget = InitialIcon(userName: comment.userName);
@@ -321,11 +353,16 @@ class _NormalCommentItem extends StatelessWidget {
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(color: Colors.white, fontSize: 14, shadows: [Shadow(blurRadius: 2, color: Colors.black54)]),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    shadows: [Shadow(blurRadius: 2, color: Colors.black54)]),
                 children: [
                   TextSpan(
                     text: '${comment.userName}  ',
-                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: comment.text),
                 ],
@@ -345,11 +382,13 @@ class InitialIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // ユーザー名の最初の文字を取得（空の場合は'?'にする）
-    final String initial = userName.isNotEmpty ? userName[0].toUpperCase() : '?';
+    final String initial =
+        userName.isNotEmpty ? userName[0].toUpperCase() : '?';
 
     // ユーザー名のハッシュコードを使って、Material Designの基本色から色を決定する
     // これにより、同じ名前のユーザーは常に同じ色になる
-    final Color color = Colors.primaries[userName.hashCode % Colors.primaries.length];
+    final Color color =
+        Colors.primaries[userName.hashCode % Colors.primaries.length];
 
     return CircleAvatar(
       radius: 12, // アイコンのサイズ
@@ -365,6 +404,7 @@ class InitialIcon extends StatelessWidget {
     );
   }
 }
+
 // スパチャの表示Widget
 class _SuperChatItem extends StatelessWidget {
   final SuperChat superChat;
@@ -391,13 +431,23 @@ class _SuperChatItem extends StatelessWidget {
               color: colorConfig.backgroundColor.withOpacity(0.8),
               child: Row(
                 children: [
-                  CircleAvatar(radius: 14, backgroundImage: AssetImage(superChat.iconAsset)),
+                  CircleAvatar(
+                      radius: 14,
+                      backgroundImage: AssetImage(superChat.iconAsset)),
                   const SizedBox(width: 8),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(superChat.userName, style: TextStyle(color: colorConfig.textColor, fontWeight: FontWeight.bold, fontSize: 12)),
-                      Text('¥${superChat.amount}', style: TextStyle(color: colorConfig.textColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                      Text(superChat.userName,
+                          style: TextStyle(
+                              color: colorConfig.textColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12)),
+                      Text('¥${superChat.amount}',
+                          style: TextStyle(
+                              color: colorConfig.textColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12)),
                     ],
                   ),
                 ],
@@ -406,7 +456,9 @@ class _SuperChatItem extends StatelessWidget {
             if (superChat.text.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(superChat.text, style: TextStyle(color: colorConfig.textColor, fontSize: 14)),
+                child: Text(superChat.text,
+                    style:
+                        TextStyle(color: colorConfig.textColor, fontSize: 14)),
               ),
           ],
         ),

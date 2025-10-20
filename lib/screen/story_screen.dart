@@ -1,12 +1,20 @@
 /*ストーリー画面*/
+
+// Dart imports:
+import 'dart:async';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/material.dart';
-import '../stories/suzunari_oto.dart';
+
+// Project imports:
 import 'package:saving_girlfriend/constants/assets.dart';
-import '../constants/color.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
-import 'dart:async';
+import '../constants/color.dart';
+import '../stories/suzunari_oto.dart';
 
 // ↓ StatefulWidget → ConsumerStatefulWidget に変更
 class StoryScreen extends ConsumerStatefulWidget {
@@ -121,7 +129,7 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isValidIndex)
+    if (!_isValidIndex) {
       // 範囲外の場合のエラー画面
       return Scaffold(
         appBar: AppBar(
@@ -156,6 +164,7 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
           ),
         ),
       );
+    }
     return Scaffold(
         appBar: AppBar(
           backgroundColor: AppColors.secondary,

@@ -1,8 +1,12 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:math';
+
+// Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/models/comment_model.dart';
 import 'package:saving_girlfriend/constants/assets.dart'; // ★★★ この行を追加 ★★★
+// Project imports:
+import 'package:saving_girlfriend/models/comment_model.dart';
 
 // ダミーの視聴者情報を管理するためのシンプルなクラス
 class _FakeViewer {
@@ -14,10 +18,10 @@ class _FakeViewer {
 // 話題の種類を定義
 enum TalkTopic {
   Greeting, // 挨拶
-  Study,    // 勉強
-  DailyLife,      // 今日の出来事
-  SchoolLife,     // 学校の話
-  Questions,      // みんなへの質問
+  Study, // 勉強
+  DailyLife, // 今日の出来事
+  SchoolLife, // 学校の話
+  Questions, // みんなへの質問
 }
 
 // 画面の状態を定義するクラス
@@ -64,11 +68,11 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
   final List<_FakeViewer> _fakeViewers = [
     // --- 画像アイコンの人 ---
     _FakeViewer(name: 'ドラえもん', iconAsset: AppAssets.iconUser2),
-    _FakeViewer(name: '出木杉', iconAsset:  AppAssets.iconUser3),
-    _FakeViewer(name: 'たけし', iconAsset:  AppAssets.iconUser4),
-    _FakeViewer(name: 'のびた', iconAsset:  AppAssets.iconUser5),
-    _FakeViewer(name: 'スネ夫', iconAsset:  AppAssets.iconUser6),
-    _FakeViewer(name: 'しずか', iconAsset:  AppAssets.iconUser7),
+    _FakeViewer(name: '出木杉', iconAsset: AppAssets.iconUser3),
+    _FakeViewer(name: 'たけし', iconAsset: AppAssets.iconUser4),
+    _FakeViewer(name: 'のびた', iconAsset: AppAssets.iconUser5),
+    _FakeViewer(name: 'スネ夫', iconAsset: AppAssets.iconUser6),
+    _FakeViewer(name: 'しずか', iconAsset: AppAssets.iconUser7),
     // --- 頭文字アイコンの人 ---
     _FakeViewer(name: 'たらちゃん', iconAsset: ''), // ← 画像パスを空にする
     _FakeViewer(name: 'カツオ', iconAsset: ''), // ← 画像パスを空にする
@@ -78,11 +82,19 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
   ];
 
   final Map<TalkTopic, List<String>> _dialogues = {
-    TalkTopic.Greeting: ['みんな、来てくれてありがとう！', 'こんにちは！', '今日も一日がんばろうね！', 'わ！たくさん来てくれてる！ありがとう！', 'みんなのコメント、ちゃんと見てるからねー！'],
+    TalkTopic.Greeting: [
+      'みんな、来てくれてありがとう！',
+      'こんにちは！',
+      '今日も一日がんばろうね！',
+      'わ！たくさん来てくれてる！ありがとう！',
+      'みんなのコメント、ちゃんと見てるからねー！'
+    ],
     TalkTopic.Study: [
       'よし、勉強の時間だ！',
       'むずかしいな…',
-      'この問題、わかる人いる？', '集中、集中…！', 'やった、1ページ終わった!えらい？'
+      'この問題、わかる人いる？',
+      '集中、集中…！',
+      'やった、1ページ終わった!えらい？'
     ],
     TalkTopic.DailyLife: [
       'そういえば今日ね、面白いことがあって！',
@@ -104,11 +116,36 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
     ],
   };
   final Map<TalkTopic, List<String>> _topicComments = {
-    TalkTopic.Greeting: ['こんにちはー', '元気だよ！', 'わこつです！', '初見です！', 'おお！', 'かわいい', 'えいえいおー！', '見てるよー'],
-    TalkTopic.Study: ['がんばれ！', 'えらい！', '俺も勉強しなきゃ…', 'どこが分からない？', '集中えらい', '終わったら休憩しなよ', 'えらい！！！', 'よしよし', '一緒にがんばろう！'],
+    TalkTopic.Greeting: [
+      'こんにちはー',
+      '元気だよ！',
+      'わこつです！',
+      '初見です！',
+      'おお！',
+      'かわいい',
+      'えいえいおー！',
+      '見てるよー'
+    ],
+    TalkTopic.Study: [
+      'がんばれ！',
+      'えらい！',
+      '俺も勉強しなきゃ…',
+      'どこが分からない？',
+      '集中えらい',
+      '終わったら休憩しなよ',
+      'えらい！！！',
+      'よしよし',
+      '一緒にがんばろう！'
+    ],
     TalkTopic.DailyLife: ['なになに？', 'クレープいいなー！', '詳しく！', 'どんな曲？', '夢の話wkwk'],
     TalkTopic.SchoolLife: ['テスト勉強ファイト！', 'おつかれー！', '青春だねぇ', 'わかる', '徹夜だ！'],
-    TalkTopic.Questions: ['今週末はゲームかな', '今期は〇〇が面白いよ！', '断然しょっぱい派！', '空を飛びたい！', '宿題を終わらせるw'],
+    TalkTopic.Questions: [
+      '今週末はゲームかな',
+      '今期は〇〇が面白いよ！',
+      '断然しょっぱい派！',
+      '空を飛びたい！',
+      '宿題を終わらせるw'
+    ],
   };
   Timer? _commentTimer;
   Timer? _topicTimer;
@@ -168,7 +205,8 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
 
   void _updateCommentsAndViewers() {
     final currentCommentsList = _topicComments[state.currentTopic]!;
-    final randomCommentText = currentCommentsList[Random().nextInt(currentCommentsList.length)];
+    final randomCommentText =
+        currentCommentsList[Random().nextInt(currentCommentsList.length)];
     final randomViewer = _fakeViewers[Random().nextInt(_fakeViewers.length)];
     final newComment = NormalComment(
       userName: randomViewer.name,
@@ -192,14 +230,16 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
   }
 
   void _startTimers() {
-    _topicTimer = Timer.periodic(const Duration(seconds: 20), (timer) => _changeTopic());
+    _topicTimer =
+        Timer.periodic(const Duration(seconds: 20), (timer) => _changeTopic());
     _startDialogueTimer();
     _scheduleNextComment();
   }
 
   void _startDialogueTimer() {
     _dialogueTimer?.cancel();
-    _dialogueTimer = Timer.periodic(const Duration(seconds: 8), (timer) => _changeDialogue());
+    _dialogueTimer = Timer.periodic(
+        const Duration(seconds: 8), (timer) => _changeDialogue());
   }
 
   // ★★★ _changeTopicメソッドを修正 ★★★
@@ -208,10 +248,12 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
     _superChatDialogueTimer?.cancel();
 
     final currentTopic = state.currentTopic;
-    final availableTopics = TalkTopic.values.where((topic) => topic != currentTopic).toList();
+    final availableTopics =
+        TalkTopic.values.where((topic) => topic != currentTopic).toList();
     final newTopic = availableTopics[Random().nextInt(availableTopics.length)];
     final initialDialogue = _dialogues[newTopic]![0];
-    state = state.copyWith(currentTopic: newTopic, characterDialogue: initialDialogue);
+    state = state.copyWith(
+        currentTopic: newTopic, characterDialogue: initialDialogue);
 
     _startDialogueTimer();
   }
@@ -219,7 +261,8 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
   void _changeDialogue() {
     final dialogueOptions = _dialogues[state.currentTopic]!;
     if (dialogueOptions.length > 1) {
-      final newDialogue = dialogueOptions[Random().nextInt(dialogueOptions.length - 1) + 1];
+      final newDialogue =
+          dialogueOptions[Random().nextInt(dialogueOptions.length - 1) + 1];
       state = state.copyWith(characterDialogue: newDialogue);
     }
   }
@@ -235,4 +278,6 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
   }
 }
 
-final homeScreenProvider = NotifierProvider<HomeScreenNotifier, HomeScreenState>(HomeScreenNotifier.new);
+final homeScreenProvider =
+    NotifierProvider<HomeScreenNotifier, HomeScreenState>(
+        HomeScreenNotifier.new);

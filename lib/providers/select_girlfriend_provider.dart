@@ -1,3 +1,4 @@
+// Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +21,7 @@ final selectionStatusProvider = FutureProvider<bool>((ref) async {
 // SharedPreferences への書き込みも担当します。
 class SelectionStatusNotifier extends StateNotifier<bool> {
   // 初期状態は FutureProvider から読み込んだ値を使います。
-  SelectionStatusNotifier(bool initialStatus) : super(initialStatus);
+  SelectionStatusNotifier(super.initialStatus);
 
   // 彼女選択状態を true に更新し、SharedPreferences に保存する
   Future<void> markAsSelected() async {

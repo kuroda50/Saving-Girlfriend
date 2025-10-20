@@ -1,3 +1,4 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
 class Test extends StatelessWidget {
@@ -25,7 +26,7 @@ class Test extends StatelessWidget {
         children: [
           // ピンクのヘッダーセクション
           Container(
-            width: double.infinity, 
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 20.0),
             decoration: const BoxDecoration(
               color: Color(0xFFFFC0CB), // 画像に似た薄いピンク色
@@ -37,7 +38,8 @@ class Test extends StatelessWidget {
                   // ここにアバター画像のパスを指定してください
                   // 例: backgroundImage: AssetImage('assets/girl_avatar.png'),
                   backgroundColor: Colors.white, // フォールバックの背景色
-                  child: Icon(Icons.person, size: 60, color: Colors.grey), // 仮のアイコン
+                  child: Icon(Icons.person,
+                      size: 60, color: Colors.grey), // 仮のアイコン
                 ),
                 SizedBox(height: 10),
                 Text(
@@ -178,7 +180,8 @@ class Test extends StatelessWidget {
                 },
               ),
             IconButton(
-              icon: Icon(Icons.info_outline, color: isLocked ? Colors.grey : Colors.blue),
+              icon: Icon(Icons.info_outline,
+                  color: isLocked ? Colors.grey : Colors.blue),
               onPressed: () {
                 // 情報ボタンが押された時の処理
               },
@@ -189,4 +192,3 @@ class Test extends StatelessWidget {
     );
   }
 }
-

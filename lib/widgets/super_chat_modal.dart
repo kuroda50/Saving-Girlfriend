@@ -1,8 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
 import 'package:saving_girlfriend/models/comment_model.dart'; // ★ 色情報を取得するためにインポート
 
 // ★ この関数はそのまま残しますが、中身は新しいモーダルを呼び出すようにします
-void showSuperChatModal(BuildContext context, {required Function(int, String) onSend}) {
+void showSuperChatModal(BuildContext context,
+    {required Function(int, String) onSend}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true, // キーボード表示時にモーダルが隠れないようにする
@@ -70,7 +73,9 @@ class _SuperChatInputViewState extends State<SuperChatInputView> {
     setState(() {
       _selectedAmount = amount;
       // comment_model.dart にあるSuperChatクラスのロジックを再利用して色を取得
-      final config = SuperChat(amount: amount, userName: '', iconAsset: '', text: '').colorConfig;
+      final config =
+          SuperChat(amount: amount, userName: '', iconAsset: '', text: '')
+              .colorConfig;
       _currentColor = config.backgroundColor;
       _currentTextColor = config.textColor;
     });
@@ -80,7 +85,8 @@ class _SuperChatInputViewState extends State<SuperChatInputView> {
   Widget build(BuildContext context) {
     return Padding(
       // キーボードの分だけUIを上に持ち上げる
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         decoration: const BoxDecoration(
           color: Color(0xFF282828), // YouTubeのダークモード風の背景色
@@ -105,8 +111,15 @@ class _SuperChatInputViewState extends State<SuperChatInputView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('スーパーチャットを送信', style: TextStyle(color: _currentTextColor, fontWeight: FontWeight.bold)),
-                  Text('¥$_selectedAmount', style: TextStyle(color: _currentTextColor, fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text('スーパーチャットを送信',
+                      style: TextStyle(
+                          color: _currentTextColor,
+                          fontWeight: FontWeight.bold)),
+                  Text('¥$_selectedAmount',
+                      style: TextStyle(
+                          color: _currentTextColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18)),
                 ],
               ),
             ),
@@ -130,10 +143,15 @@ class _SuperChatInputViewState extends State<SuperChatInputView> {
                       decoration: BoxDecoration(
                         color: tier.color,
                         borderRadius: BorderRadius.circular(20),
-                        border: isSelected ? Border.all(color: Colors.white, width: 2.5) : null,
+                        border: isSelected
+                            ? Border.all(color: Colors.white, width: 2.5)
+                            : null,
                       ),
                       alignment: Alignment.center,
-                      child: Text('¥${tier.amount}', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: Text('¥${tier.amount}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
                     ),
                   );
                 },
@@ -158,7 +176,9 @@ class _SuperChatInputViewState extends State<SuperChatInputView> {
                   hintStyle: TextStyle(color: Colors.grey.shade400),
                   filled: true,
                   fillColor: Colors.black.withOpacity(0.2),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
                   counterStyle: const TextStyle(color: Colors.white70),
                 ),
               ),
@@ -174,14 +194,17 @@ class _SuperChatInputViewState extends State<SuperChatInputView> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade600,
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24)),
                   ),
                   onPressed: () {
                     // 完了したらコールバックを呼び出してモーダルを閉じる
                     widget.onSend(_selectedAmount, _commentController.text);
                     Navigator.pop(context);
                   },
-                  child: const Text('送信', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: const Text('送信',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ),
             ),

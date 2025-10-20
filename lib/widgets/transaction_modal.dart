@@ -1,6 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// Project imports:
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/models/transaction_state.dart';
 import 'package:saving_girlfriend/providers/uuid_provider.dart';
@@ -159,7 +164,7 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _selectedCategory,
+            initialValue: _selectedCategory,
             hint: const Text('カテゴリを選択'),
             decoration: const InputDecoration(
               labelText: 'カテゴリ',

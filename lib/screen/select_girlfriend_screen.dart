@@ -1,9 +1,15 @@
 /* 彼女選択画面 */
 
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:go_router/go_router.dart';
+
+// Project imports:
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
+
 import 'package:shared_preferences/shared_preferences.dart'; // 👈 1. 状態保存のためのパッケージをインポート
 
 class SelectGirlfriendScreen extends StatefulWidget {
