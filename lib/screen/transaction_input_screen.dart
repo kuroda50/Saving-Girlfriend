@@ -28,6 +28,7 @@ class _TransactionInputScreenState
     '日用品',
     'その他'
   ];
+  // test
   final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
   late String _selectedCategory = _expenseCategories[0];
 

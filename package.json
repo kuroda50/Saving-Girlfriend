@@ -7,10 +7,7 @@
     "lint-staged": "^16.2.3"
   },
   "lint-staged": {
-    "*.dart": [
-      "echo Running dart format on:",
-      "dart format"
-    ]
+    "*.dart": "fvm dart format --fix"
   },
   "volta": {
     "node": "22.20.0"
