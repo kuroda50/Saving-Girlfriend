@@ -70,29 +70,22 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
 
     // 1. SharedPreferencesのインスタンスを取得
     final prefs = await SharedPreferences.getInstance();
-    
 
     // 4. 次の画面へ遷移
-    // TODO: ここを、あなたのアプリのメイン画面へのルーティング処理に置き換えてください
-    // （例: go_routerなら context.go('/home_screen')）
-    // （例: 標準Navigatorなら Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainScreen()))）
+    final hasPlayed = prefs.getBool('has_played_story') ?? false;
+    final String nextPath = hasPlayed
+        ? '/home' // 再生済みならホーム画面
+        : '/story'; // (到達しないはず)
+
     if (mounted) {
-      final hasPlayed = prefs.getBool('has_played_story') ?? false;
-      final String nextPath = hasPlayed
-          ? '/home' // 再生済みならホーム画面
-          : '/story'; // (到達しないはず)
-
-      if (mounted) {
-        context.go(nextPath);
-      }
-      // 2. 「彼女が選択された」という状態を永続的に保存 (TitleScreenでチェックするフラグ)
-      await prefs.setBool('has_selected_girlfriend', true);
-
-      // 3. 選択した彼女のインデックスや名前も保存しておくと、後で利用できる
-      final selectedGirlfriendName =
-          characters[_currentIndex]['name'] as String;
-      await prefs.setString('selected_girlfriend_name', selectedGirlfriendName);
+      context.go(nextPath);
     }
+    // 2. 「彼女が選択された」という状態を永続的に保存 (TitleScreenでチェックするフラグ)
+    await prefs.setBool('has_selected_girlfriend', true);
+
+    // 3. 選択した彼女のインデックスや名前も保存しておくと、後で利用できる
+    final selectedGirlfriendName = characters[_currentIndex]['name'] as String;
+    await prefs.setString('selected_girlfriend_name', selectedGirlfriendName);
   }
 
   @override
