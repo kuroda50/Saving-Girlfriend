@@ -10,7 +10,6 @@ import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/widgets/transaction_modal.dart';
 import '../providers/transaction_history_provider.dart';
 
-// test
 // allTransactionをtansactionHistoryとして再命名してもいいかも
 class TransactionHistoryScreen extends ConsumerStatefulWidget {
   const TransactionHistoryScreen({super.key});

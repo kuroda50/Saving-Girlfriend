@@ -28,7 +28,6 @@ class _TransactionInputScreenState
     '日用品',
     'その他'
   ];
-  // test
   final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
   late String _selectedCategory = _expenseCategories[0];
 
@@ -145,7 +144,7 @@ class _TransactionInputScreenState
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               hint: const Text('カテゴリを選択'),
               decoration: const InputDecoration(
                 labelText: 'カテゴリ',

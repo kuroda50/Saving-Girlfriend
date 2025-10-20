@@ -11,7 +11,6 @@ import '../constants/color.dart';
 import '../providers/select_girlfriend_provider.dart';
 
 // -----------------------------------------------------------
-// test
 // StatelessWidget から ConsumerStatefulWidget に変更
 class TitleScreen extends ConsumerStatefulWidget {
   // 👈 修正: ConsumerStatefulWidget

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/constants/settings_defaults.dart';
 import '../providers/setting_provider.dart';
-// test
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 

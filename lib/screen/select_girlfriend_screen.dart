@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // 👈 1. 状態保存のためのパッケージをインポート
-// test
 
 class SelectGirlfriendScreen extends StatefulWidget {
   const SelectGirlfriendScreen({super.key});
