@@ -19,9 +19,11 @@ class StoryScreen extends ConsumerStatefulWidget {
 
 // ↓ State<StoryScreen> → ConsumerState<StoryScreen> に変更
 class _StoryScreenState extends ConsumerState<StoryScreen> {
-  late int _story_index;
+  late int _storyIndex;
   int _lineIndex = 0;
   bool _isValidIndex = true;
+  bool _isProcessing = false;
+  bool _isStreaming = false;
 
   late StreamController<String> _textStreamController;
   String _fullText = "";
@@ -29,9 +31,9 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
   @override
   void initState() {
     super.initState();
-    _story_index = widget.story_index;
-    if (_story_index < 0 ||
-        _story_index >= EpisodeSuzunariOto.suzunariOtoStory.length) {
+    _storyIndex = widget.story_index;
+    if (_storyIndex < 0 ||
+        _storyIndex >= EpisodeSuzunariOto.suzunariOtoStory.length) {
       _isValidIndex = false;
     }
     _textStreamController = StreamController<String>();
@@ -46,26 +48,64 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
 
   void _startStreamingText() async {
     if (!_isValidIndex) return;
-    _fullText = EpisodeSuzunariOto.suzunariOtoStory[_story_index][_lineIndex];
+
+    setState(() {
+      _isStreaming = true;
+    });
+
+    _fullText = EpisodeSuzunariOto.suzunariOtoStory[_storyIndex][_lineIndex];
     String currentText = "";
     _textStreamController.add(""); // 最初は空
+
     for (int i = 0; i < _fullText.length; i++) {
+      if (!_isStreaming) {
+        _textStreamController.add(_fullText);
+        return;
+      }
       await Future.delayed(const Duration(milliseconds: 40));
+      if (!_isStreaming) {
+        _textStreamController.add(_fullText);
+        return;
+      }
       currentText += _fullText[i];
       _textStreamController.add(currentText);
     }
+
+    setState(() {
+      _isStreaming = false;
+    });
   }
-  void nextLine(BuildContext context) {
+
+  void _onTap() async {
+    if (_isProcessing) return;
+
+    setState(() {
+      _isProcessing = true;
+    });
+
+    if (_isStreaming) {
+      setState(() {
+        _isStreaming = false;
+      });
+    } else {
+      _goToNextLine();
+    }
+
+    setState(() {
+      _isProcessing = false;
+    });
+  }
+
+  void _goToNextLine() async {
     if (!_isValidIndex) return;
 
     if (_lineIndex <
-        EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1) {
+        EpisodeSuzunariOto.suzunariOtoStory[_storyIndex].length - 1) {
       setState(() {
         _lineIndex++;
       });
-
-    } else if (_lineIndex >=
-        EpisodeSuzunariOto.suzunariOtoStory[_story_index].length - 1) {
+      _startStreamingText();
+    } else {
       // ストーリー再生フラグを保存
       final localStorage = await ref.read(localStorageServiceProvider.future);
       final hasPlayed = await localStorage.hasPlayedStory();
@@ -75,9 +115,10 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
 
       if (mounted) {
         context.go(nextPath);
-      }    
+      }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     if (!_isValidIndex)
@@ -120,74 +161,68 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
           backgroundColor: AppColors.secondary,
         ),
         body: GestureDetector(
-          onTap: () => nextLine(context),
+          onTap: _onTap,
           child: Container(
               decoration: const BoxDecoration(
                   image: DecorationImage(
                 image: AssetImage(AppAssets.backgroundClassroom),
                 fit: BoxFit.cover,
               )),
-              child: Center(
-                child: Stack(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Image.asset(
+                        AppAssets.characterSuzunari,
+                        fit: BoxFit.contain,
+                        height: MediaQuery.of(context).size.height * 0.5,
+                      ),
+                      StreamBuilder<String>(
+                        stream: _textStreamController.stream,
+                        initialData: "",
+                        builder: (context, snapshot) {
+                          return ChatWidget(text: snapshot.data ?? "");
+                        },
+                      ),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(
-                            AppAssets.characterSuzunari,
-                            fit: BoxFit.contain,
-                            height: MediaQuery.of(context).size.height * 0.5,
-                          ),
-                          StreamBuilder<String>(
-                            stream: _textStreamController.stream,
-                            initialData: "",
-                            builder: (context, snapshot) {
-                              return ChatWidget(text: snapshot.data ?? "");
-                            },
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _circleButton(Icons.play_arrow, onPressed: () {
-                                nextLine(context);
-                                _startStreamingText();
-                              }),
-                              const SizedBox(width: 16),
-                              _circleButton(Icons.skip_next, onPressed: () {
-                                context.pop();
-                              }),
-                              const SizedBox(width: 16),
-                              _circleButton(Icons.list_alt, onPressed: () {
-                                _showLogDialog(context);
-                              }),
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 30,
-                          ),
+                          _circleButton(Icons.play_arrow, onPressed: _onTap),
+                          const SizedBox(width: 16),
+                          _circleButton(Icons.skip_next, onPressed: () {
+                            context.pop();
+                          }),
+                          const SizedBox(width: 16),
+                          _circleButton(Icons.list_alt, onPressed: () {
+                            _showLogDialog(context);
+                          }),
                         ],
                       ),
-                    ),
-                    Positioned(
-                      top: 40,
-                      left: 20,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        color: Colors.pink[300],
-                        child: Text(
-                          '第${_story_index + 1}話',
-                          style: const TextStyle(
-                              color: AppColors.subText, fontSize: 18),
-                        ),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                    ],
+                  ),
+                  Positioned(
+                    top: 40,
+                    left: 20,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      color: Colors.pink[300],
+                      child: Text(
+                        '第${_storyIndex + 1}話',
+                        style: const TextStyle(
+                            color: AppColors.subText, fontSize: 18),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               )),
         ));
   }
@@ -213,7 +248,7 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        final log = EpisodeSuzunariOto.suzunariOtoStory[_story_index]
+        final log = EpisodeSuzunariOto.suzunariOtoStory[_storyIndex]
             .sublist(0, _lineIndex + 1)
             .join('\n\n');
         return AlertDialog(
