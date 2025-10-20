@@ -1,16 +1,12 @@
 /* 彼女選択画面 */
 
-// Flutter imports:
 import 'package:flutter/material.dart';
-
-// Package imports:
-import 'package:go_router/go_router.dart';
-
-// Project imports:
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
-
+import 'package:saving_girlfriend/screen/select_story_screen.dart';
+import 'package:saving_girlfriend/screen/story_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // 👈 1. 状態保存のためのパッケージをインポート
+import 'package:go_router/go_router.dart';
 
 class SelectGirlfriendScreen extends StatefulWidget {
   const SelectGirlfriendScreen({super.key});
@@ -128,12 +124,12 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
                         decoration: BoxDecoration(
                           color: AppColors.mainBackground,
                           borderRadius: BorderRadius.circular(15.0),
-                          boxShadow: const [
+                          boxShadow: [
                             BoxShadow(
                               color: AppColors.shadow,
                               spreadRadius: 2,
                               blurRadius: 7,
-                              offset: Offset(0, 3), // 影の位置
+                              offset: const Offset(0, 3), // 影の位置
                             ),
                           ],
                         ),
@@ -146,7 +142,7 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 20, vertical: 10),
                               decoration: BoxDecoration(
-                                color: const Color(0x00e383ab), // ピンクの背景色
+                                color: const Color(0xE383AB), // ピンクの背景色
                                 borderRadius: BorderRadius.circular(20.0), // 角丸
                               ),
                               child: Text(
@@ -177,9 +173,9 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
                                     height: 300,
                                     width: 250,
                                     color: AppColors.border,
-                                    alignment: Alignment.center,
                                     child: const Icon(Icons.broken_image,
                                         size: 50, color: AppColors.subIcon),
+                                    alignment: Alignment.center,
                                   );
                                 },
                               ),
@@ -223,7 +219,7 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
             Positioned(
               left: 10, // カードの外側、端に近い位置に調整
               child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios,
+                icon: Icon(Icons.arrow_back_ios,
                     size: 40, color: AppColors.primary),
                 onPressed: () {
                   // コントローラーがアタッチされており、最初のページではない場合のみ実行
@@ -240,7 +236,7 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
             Positioned(
               right: 10, // 位置を調整
               child: IconButton(
-                icon: const Icon(Icons.arrow_forward_ios,
+                icon: Icon(Icons.arrow_forward_ios,
                     size: 40, color: AppColors.primary),
                 onPressed: () {
                   // コントローラーがアタッチされており、最後のページではない場合のみ実行
