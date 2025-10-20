@@ -1,6 +1,10 @@
+// Dart imports:
 import 'dart:math';
 
+// Package imports:
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+// Project imports:
 import 'package:saving_girlfriend/providers/tribute_history_provider.dart';
 
 part 'likeability_provider.g.dart';

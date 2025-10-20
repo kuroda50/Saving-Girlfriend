@@ -26,7 +26,7 @@ jobs:
         # Flutterをセットアップするアクションを使用
         uses: subosito/flutter-action@v2 
         with:
-          flutter-version: '3.32.8'
+          flutter-version: '3.35.6'
 
       - name: Install dependencies
         run: flutter pub get

@@ -1,10 +1,15 @@
-import 'package:go_router/go_router.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+// Project imports:
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/models/episode.dart';
 import 'package:saving_girlfriend/providers/likeability_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class EpisodeScreen extends ConsumerStatefulWidget {
   const EpisodeScreen({super.key});
