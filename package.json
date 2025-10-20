@@ -8,9 +8,9 @@
   },
   "lint-staged": {
     "*.dart": [
-      "fvm flutter pub run import_sorter:main",
       "fvm dart fix --apply",
-      "fvm dart format --fix"
+      "fvm dart format --fix",
+      "fvm flutter pub run import_sorter:main"
     ]
   },
   "volta": {
