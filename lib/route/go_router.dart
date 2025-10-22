@@ -95,7 +95,7 @@ final router = GoRouter(
       parentNavigatorKey: rootNavigatorKey,
       pageBuilder: (context, state) {
         final storyIndex = state.extra is int ? state.extra as int : 0;
-        return MaterialPage(child: StoryScreen(story_index: storyIndex));
+        return MaterialPage(child: StoryScreen(storyIndex: storyIndex));
       },
     ),
     GoRoute(

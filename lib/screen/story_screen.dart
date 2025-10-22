@@ -1,41 +1,79 @@
-/*ストーリー画面*/
+import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/material.dart';
-import '../stories/suzunari_oto.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
-import '../constants/color.dart';
+import 'package:saving_girlfriend/constants/color.dart';
+import 'package:saving_girlfriend/models/story_model.dart';
+import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
-import 'dart:async';
+import 'package:saving_girlfriend/stories/story_repository.dart';
 
-// ↓ StatefulWidget → ConsumerStatefulWidget に変更
-class StoryScreen extends ConsumerStatefulWidget {
-  final int story_index;
-  const StoryScreen({super.key, required this.story_index});
+class StoryScreen extends ConsumerWidget {
+  final int storyIndex;
+  const StoryScreen({super.key, required this.storyIndex});
 
   @override
-  ConsumerState<StoryScreen> createState() => _StoryScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final characterIdAsync = ref.watch(currentGirlfriendProvider);
+
+    return characterIdAsync.when(
+      data: (characterId) {
+        if (characterId == null) {
+          return _ErrorScreen('キャラクターが選択されていません');
+        }
+        final storyRepo = ref.read(storyRepositoryProvider);
+        final story = storyRepo.getStoryByCharacterId(characterId);
+        final character = storyRepo.getCharacterById(characterId);
+
+        if (story == null || character == null) {
+          return _ErrorScreen('ストーリーデータが見つかりません');
+        }
+        if (storyIndex < 0 || storyIndex >= story.dialogue.length) {
+          return _ErrorScreen('エピソードが見つかりません');
+        }
+
+        return _StoryPlayer(
+          story: story,
+          character: character,
+          episodeIndex: storyIndex,
+        );
+      },
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, s) => _ErrorScreen('エラーが発生しました: $e'),
+    );
+  }
 }
 
-// ↓ State<StoryScreen> → ConsumerState<StoryScreen> に変更
-class _StoryScreenState extends ConsumerState<StoryScreen> {
-  late int _storyIndex;
+class _StoryPlayer extends ConsumerStatefulWidget {
+  final Story story;
+  final StoryCharacter character;
+  final int episodeIndex;
+
+  const _StoryPlayer({
+    required this.story,
+    required this.character,
+    required this.episodeIndex,
+  });
+
+  @override
+  ConsumerState<_StoryPlayer> createState() => _StoryPlayerState();
+}
+
+class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   int _lineIndex = 0;
-  bool _isValidIndex = true;
   bool _isProcessing = false;
   bool _isStreaming = false;
 
   late StreamController<String> _textStreamController;
   String _fullText = "";
+  List<String> get _currentEpisodeDialogue =>
+      widget.story.dialogue[widget.episodeIndex];
 
   @override
   void initState() {
     super.initState();
-    _storyIndex = widget.story_index;
-    if (_storyIndex < 0 ||
-        _storyIndex >= EpisodeSuzunariOto.suzunariOtoStory.length) {
-      _isValidIndex = false;
-    }
     _textStreamController = StreamController<String>();
     _startStreamingText();
   }
@@ -47,15 +85,15 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
   }
 
   void _startStreamingText() async {
-    if (!_isValidIndex) return;
+    if (_currentEpisodeDialogue.isEmpty) return;
 
     setState(() {
       _isStreaming = true;
     });
 
-    _fullText = EpisodeSuzunariOto.suzunariOtoStory[_storyIndex][_lineIndex];
+    _fullText = _currentEpisodeDialogue[_lineIndex];
     String currentText = "";
-    _textStreamController.add(""); // 最初は空
+    _textStreamController.add("");
 
     for (int i = 0; i < _fullText.length; i++) {
       if (!_isStreaming) {
@@ -76,9 +114,8 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
     });
   }
 
-  void _onTap() async {
+  void _onTap() {
     if (_isProcessing) return;
-
     setState(() {
       _isProcessing = true;
     });
@@ -97,137 +134,105 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
   }
 
   void _goToNextLine() async {
-    if (!_isValidIndex) return;
-
-    if (_lineIndex <
-        EpisodeSuzunariOto.suzunariOtoStory[_storyIndex].length - 1) {
+    if (_lineIndex < _currentEpisodeDialogue.length - 1) {
       setState(() {
         _lineIndex++;
       });
       _startStreamingText();
     } else {
-      // ストーリー再生フラグを保存
       final localStorage = await ref.read(localStorageServiceProvider.future);
-      final hasPlayed = await localStorage.hasPlayedStory();
 
-      final String nextPath = hasPlayed ? '/select_story' : '/home';
-      await localStorage.setPlayedStory(); // ストーリー再生済みにする（setメソッド名は実装に合わせて修正）
+      // 0話が過去に再生されたことがあるかを判断して次の遷移画面を変える
+      final hasPlayedEpisode0ForCharacter =
+          localStorage.hasPlayedEpisode0(widget.character.id);
 
       if (mounted) {
-        context.go(nextPath);
+        if (widget.episodeIndex == 0 && !hasPlayedEpisode0ForCharacter) {
+          // 初めて0話を再生するならホーム画面へ
+          context.go('/home');
+        } else {
+          context.go('/select_story');
+        }
+      }
+      // エピソード0が終了した場合のみ、再生済みフラグを立てる
+      if (widget.episodeIndex == 0) {
+        await localStorage.setEpisode0Played(widget.character.id);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isValidIndex)
-      // 範囲外の場合のエラー画面
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: AppColors.secondary,
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.secondary,
+        automaticallyImplyLeading: false,
+      ),
+      body: GestureDetector(
+        onTap: _onTap,
+        child: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(AppAssets.backgroundClassroom),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Stack(
+            alignment: Alignment.bottomCenter,
             children: [
-              const Icon(Icons.error, color: Colors.red, size: 64),
-              const SizedBox(height: 16),
-              const Text(
-                'ストーリーが見つかりません',
-                style: TextStyle(fontSize: 20, color: AppColors.error),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: 150,
-                child: ElevatedButton(
-                  onPressed: () => context.pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.mainIcon,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Image.asset(
+                    widget.character.assetPath,
+                    fit: BoxFit.contain,
+                    height: MediaQuery.of(context).size.height * 0.5,
                   ),
-                  child: const Text('戻る'),
+                  StreamBuilder<String>(
+                    stream: _textStreamController.stream,
+                    initialData: "",
+                    builder: (context, snapshot) {
+                      return _ChatWidget(text: snapshot.data ?? "");
+                    },
+                  ),
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _CircleButton(Icons.play_arrow, onPressed: _onTap),
+                      const SizedBox(width: 16),
+                      _CircleButton(Icons.skip_next,
+                          onPressed: () => context.pop()),
+                      const SizedBox(width: 16),
+                      _CircleButton(Icons.list_alt,
+                          onPressed: () => _showLogDialog(context)),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+                ],
+              ),
+              Positioned(
+                top: 20,
+                left: 20,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  color: Colors.pink[300],
+                  child: Text(
+                    '第${widget.episodeIndex + 1}話',
+                    style:
+                        const TextStyle(color: AppColors.subText, fontSize: 18),
+                  ),
                 ),
-              )
+              ),
             ],
           ),
         ),
-      );
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: AppColors.secondary,
-        ),
-        body: GestureDetector(
-          onTap: _onTap,
-          child: Container(
-              decoration: const BoxDecoration(
-                  image: DecorationImage(
-                image: AssetImage(AppAssets.backgroundClassroom),
-                fit: BoxFit.cover,
-              )),
-              child: Stack(
-                alignment: Alignment.bottomCenter,
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Image.asset(
-                        AppAssets.characterSuzunari,
-                        fit: BoxFit.contain,
-                        height: MediaQuery.of(context).size.height * 0.5,
-                      ),
-                      StreamBuilder<String>(
-                        stream: _textStreamController.stream,
-                        initialData: "",
-                        builder: (context, snapshot) {
-                          return ChatWidget(text: snapshot.data ?? "");
-                        },
-                      ),
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _circleButton(Icons.play_arrow, onPressed: _onTap),
-                          const SizedBox(width: 16),
-                          _circleButton(Icons.skip_next, onPressed: () {
-                            context.pop();
-                          }),
-                          const SizedBox(width: 16),
-                          _circleButton(Icons.list_alt, onPressed: () {
-                            _showLogDialog(context);
-                          }),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 30,
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    top: 40,
-                    left: 20,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      color: Colors.pink[300],
-                      child: Text(
-                        '第${_storyIndex + 1}話',
-                        style: const TextStyle(
-                            color: AppColors.subText, fontSize: 18),
-                      ),
-                    ),
-                  ),
-                ],
-              )),
-        ));
+      ),
+    );
   }
 
-  Widget _circleButton(IconData icon, {required VoidCallback onPressed}) {
+  Widget _CircleButton(IconData icon, {required VoidCallback onPressed}) {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.secondary,
@@ -248,14 +253,11 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        final log = EpisodeSuzunariOto.suzunariOtoStory[_storyIndex]
-            .sublist(0, _lineIndex + 1)
-            .join('\n\n');
+        final log =
+            _currentEpisodeDialogue.sublist(0, _lineIndex + 1).join('\n\n');
         return AlertDialog(
           title: const Text('ログ'),
-          content: SingleChildScrollView(
-            child: Text(log),
-          ),
+          content: SingleChildScrollView(child: Text(log)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -268,9 +270,9 @@ class _StoryScreenState extends ConsumerState<StoryScreen> {
   }
 }
 
-class ChatWidget extends StatelessWidget {
+class _ChatWidget extends StatelessWidget {
   final String text;
-  const ChatWidget({super.key, required this.text});
+  const _ChatWidget({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -283,24 +285,54 @@ class ChatWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
-            color: AppColors.nonActive,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
+              color: AppColors.nonActive, blurRadius: 4, offset: Offset(0, 2))
         ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 15),
-            ),
-          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 15))),
           const SizedBox(width: 8),
         ],
+      ),
+    );
+  }
+}
+
+class _ErrorScreen extends StatelessWidget {
+  final String message;
+  const _ErrorScreen(this.message);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(backgroundColor: AppColors.secondary),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error, color: Colors.red, size: 64),
+            const SizedBox(height: 16),
+            Text(message,
+                style: const TextStyle(fontSize: 20, color: AppColors.error)),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: 150,
+              child: ElevatedButton(
+                onPressed: () => context.pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.mainIcon,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  textStyle: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                child: const Text('戻る'),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

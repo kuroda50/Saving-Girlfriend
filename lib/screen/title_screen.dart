@@ -4,7 +4,7 @@ import 'package:saving_girlfriend/services/notification_service.dart';
 import '../constants/color.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/select_girlfriend_provider.dart';
+import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
 // -----------------------------------------------------------
 
 // StatelessWidget から ConsumerStatefulWidget に変更
@@ -24,22 +24,29 @@ class _TitleScreenState extends ConsumerState<TitleScreen> {
 
   // 画面遷移ロジック
   void _navigateToNextScreen() async {
-    // 1. Riverpod の FutureProvider から選択状態を非同期で読み取る
-    final selectionStatusAsync =
-        ref.read(selectionStatusProvider.future); // 👈 エラー2解消: refを使用
+    // プロバイダーを読み込み、彼女が選択されているか確認
+    final currentGirlfriendId =
+        await ref.read(currentGirlfriendProvider.future);
 
-    // ロードが完了している場合のみ処理を継続
-    // 2. 彼女選択済みフラグを取得（データがなければ false）
-    final hasplayedstory = await ref.read(localStorageServiceProvider.future);
-    final hasPlayed = await hasplayedstory.hasPlayedStory();
-
-    final String nextPath = hasPlayed
-        ? '/home' // 再生済みならホーム画
-        : '/select_girlfriend'; // (到達しないはず)
-
-    // 画面遷移を実行
     if (mounted) {
-      context.go(nextPath);
+      if (currentGirlfriendId != null) {
+        // 彼女が選択されている場合
+        final localStorage = await ref.read(localStorageServiceProvider.future);
+        final hasPlayedEpisode0 =
+            localStorage.hasPlayedEpisode0(currentGirlfriendId);
+
+        if (hasPlayedEpisode0) {
+          // 0話再生済みならホーム画面へ
+          context.go('/home');
+        } else {
+          // 未再生なら0話を再生
+          // ここではsetPlayedStoryは呼ばない。ストーリー画面で再生完了時に呼ぶ
+          context.go('/story', extra: 0);
+        }
+      } else {
+        // 彼女が選択されていない場合、選択画面へ
+        context.go('/select_girlfriend');
+      }
     }
   }
 
