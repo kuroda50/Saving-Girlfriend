@@ -1,5 +1,10 @@
+// Dart imports:
 import 'dart:convert';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:http/http.dart' as http;
 
 // ウィジェットの名前を GirlfriendWidget とします

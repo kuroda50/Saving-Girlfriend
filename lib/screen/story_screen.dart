@@ -1,13 +1,23 @@
+/*ストーリー画面*/
+
+// Dart imports:
 import 'dart:async';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+// Project imports:
 import 'package:saving_girlfriend/constants/assets.dart';
-import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/models/story_model.dart';
 import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 import 'package:saving_girlfriend/stories/story_repository.dart';
+import '../constants/color.dart';
+import '../stories/suzunari_oto.dart';
 
 class StoryScreen extends ConsumerWidget {
   final int storyIndex;

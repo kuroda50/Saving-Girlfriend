@@ -1,12 +1,12 @@
-import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/models/episode.dart';
 import 'package:saving_girlfriend/models/story_model.dart';
-import 'package:saving_girlfriend/providers/likeability_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
+import 'package:saving_girlfriend/providers/likeability_provider.dart';
 import 'package:saving_girlfriend/stories/story_repository.dart';
 
 class EpisodeScreen extends ConsumerWidget {
@@ -92,7 +92,6 @@ class _StoryViewState extends ConsumerState<_StoryView> {
                   isLocked: isLocked,
                 );
               }).toList();
-
               return Scrollbar(
                 controller: _scrollController,
                 thumbVisibility: true,

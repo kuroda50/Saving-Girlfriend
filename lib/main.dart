@@ -1,10 +1,12 @@
+// Flutter imports:
+// Package imports:
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// Project imports:
 import 'package:saving_girlfriend/route/go_router.dart';
 import 'package:saving_girlfriend/services/notification_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
