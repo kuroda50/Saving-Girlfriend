@@ -4,9 +4,8 @@ import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/models/comment_model.dart';
 import 'package:saving_girlfriend/widgets/super_chat_modal.dart';
 import '../providers/home_screen_provider.dart';
-import '../providers/likeability_provider.dart'; // ★★★ この行を追加 ★★★
-import '../providers/spendable_amount_provider.dart'; // ★ 新しいProviderをインポート
-import '../constants/assets.dart'; // ★★★ この行を追加 ★★★
+import '../providers/likeability_provider.dart';
+import '../providers/spendable_amount_provider.dart';
 
 // HomeScreen 本体
 class HomeScreen extends ConsumerWidget {
