@@ -1,29 +1,38 @@
+import 'dart:math'; // For random message selection
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // For Ref
+import 'package:saving_girlfriend/stories/story_repository.dart'; // For StoryCharacter
+import 'package:saving_girlfriend/models/story_model.dart'; // For StoryCharacter
+import 'package:saving_girlfriend/providers/likeability_provider.dart'; // For likeabilityProvider
+
+// Provider for NotificationService
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  return NotificationService(ref);
+});
 
 class NotificationService {
-  // シングルトン（インスタンスを一つだけ作成する）
-  static final NotificationService _notificationService =
-      NotificationService._internal();
-  factory NotificationService() {
-    return _notificationService;
-  }
-  NotificationService._internal();
+  final Ref _ref; // Riverpod Ref to access other providers
+  NotificationService(this._ref);
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  // scheduleNotification で使用するチャンネルと「同じ情報」を定義する
   static const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'channel_id', // ID (scheduleNotification と同じ)
-    'channel_name', // 名前 (scheduleNotification と同じ)
-    description: 'Channel description', // 説明
-    importance: Importance.max, // 重要度 (scheduleNotification と同じ)
+    'channel_id',
+    'channel_name',
+    description: 'Channel description',
+    importance: Importance.max,
   );
 
-  Future<void> initialize() async {
+  Future<void> initializeNotifications() async {
+    if (kIsWeb) {
+      // Webでは通知を初期化しない
+      return;
+    }
+
     // 1. 初期化設定 (Android)
-    // 'app_icon' は android/app/src/main/res/drawable/ に配置したアイコン名
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('app_icon');
 
@@ -56,6 +65,10 @@ class NotificationService {
 
   // 5. [重要] 通知権限のリクエスト (Android 13以降)
   Future<void> requestPermissions() async {
+    if (kIsWeb) {
+      // Webでは通知権限をリクエストしない
+      return;
+    }
     final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
         _plugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
@@ -63,7 +76,89 @@ class NotificationService {
     await androidPlugin?.requestExactAlarmsPermission(); // 必要に応じて
   }
 
-  // 6. スケジュール通知
+  /// 毎日19時に通知をスケジュールする
+  Future<void> scheduleDailyNotification(
+      String characterId, int notificationId) async {
+    if (kIsWeb) return;
+    final storyRepo = _ref.read(storyRepositoryProvider);
+    final character = storyRepo.getCharacterById(characterId);
+    if (character == null) return;
+
+    // 好感度プロバイダーから現在の好感度を取得
+    final likeability = await _ref.read(likeabilityProvider.future);
+
+    final String message =
+        _generateAffectionBasedMessage(character, likeability);
+
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      15, // 19:00
+      59,
+      0,
+    );
+
+    // もしスケジュール時刻が現在時刻より前なら、翌日に設定
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    await scheduleNotification(
+      id: notificationId, // Unique ID for this character's notification
+      title: '${character.name}からのメッセージ',
+      body: message,
+      scheduledDate: scheduledDate,
+      repeatDaily: true,
+    );
+  }
+
+  /// すべての通知をキャンセルする
+  Future<void> cancelAllNotifications() async {
+    if (kIsWeb) return;
+    await _plugin.cancelAll();
+  }
+
+  /// 指定された通知IDの通知をキャンセルする
+  Future<void> cancelNotification(int id) async {
+    if (kIsWeb) return;
+    await _plugin.cancel(id);
+  }
+
+  /// 好感度に基づいて通知メッセージを生成する
+  String _generateAffectionBasedMessage(
+      StoryCharacter character, int likeability) {
+    final messages = character.notificationMessages;
+    if (messages.isEmpty) return 'メッセージがありません。';
+
+    // 好感度に基づいて適切なメッセージリストを選択
+    // キーは好感度の閾値 (例: 0, 10, 30, 50, 80)
+    final sortedKeys = messages.keys.toList()..sort();
+    List<String> candidateMessages = [];
+
+    for (final threshold in sortedKeys.reversed) {
+      if (likeability >= threshold) {
+        candidateMessages = messages[threshold]!;
+        break;
+      }
+    }
+
+    if (candidateMessages.isEmpty) {
+      // どの閾値にも合致しない場合、最も低い閾値のメッセージを使用
+      if (messages.isNotEmpty) {
+        candidateMessages = messages[sortedKeys.first]!;
+      } else {
+        return 'メッセージがありません。';
+      }
+    }
+
+    // ランダムにメッセージを選択
+    return candidateMessages[Random().nextInt(candidateMessages.length)];
+  }
+
+  // 6. スケジュール通知 (既存のメソッド)
   Future<void> scheduleNotification({
     required int id,
     required String title,
@@ -71,6 +166,7 @@ class NotificationService {
     required DateTime scheduledDate,
     bool repeatDaily = false,
   }) async {
+    if (kIsWeb) return;
     // 7. 通知の詳細設定
     final NotificationDetails notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -103,16 +199,17 @@ class NotificationService {
     );
   }
 
-  // 10. 即時通知のテスト用
+  // 10. 即時通知のテスト用 (既存のメソッド)
   Future<void> showNotification({
     required int id,
     required String title,
     required String body,
   }) async {
+    if (kIsWeb) return;
     // scheduleNotification からチャンネル定義をコピー
     NotificationDetails notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
-        NotificationService.channel.id, // 以前定義した channel を使う
+        NotificationService.channel.id,
         NotificationService.channel.name,
         channelDescription: NotificationService.channel.description,
         importance: NotificationService.channel.importance,
@@ -128,10 +225,5 @@ class NotificationService {
       body,
       notificationDetails,
     );
-  }
-
-  // 通知をキャンセルする（おまけ）
-  Future<void> cancelNotification(int id) async {
-    await _plugin.cancel(id);
   }
 }

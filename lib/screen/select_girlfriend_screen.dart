@@ -1,15 +1,13 @@
 /* 彼女選択画面 */
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
-import 'package:saving_girlfriend/screen/select_story_screen.dart';
-import 'package:saving_girlfriend/screen/story_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // 👈 1. 状態保存のためのパッケージをインポート
-import 'package:go_router/go_router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Add this import
-import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart'; // Add this import
-import 'package:saving_girlfriend/services/local_storage_service.dart'; // Add this import
+import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
+import 'package:saving_girlfriend/services/local_storage_service.dart';
+import 'package:saving_girlfriend/services/notification_service.dart';
 
 class SelectGirlfriendScreen extends ConsumerStatefulWidget {
   // Change to ConsumerStatefulWidget
@@ -26,7 +24,7 @@ class _SelectGirlfriendScreenState
   // 表示するキャラクターのリスト
   final List<Map<String, dynamic>> characters = [
     {
-      'id': 'suzunari_oto', // Add character ID
+      'id': 'suzunari_oto',
       'name': '鈴鳴 音', // キャラクター名
       'image': 'assets/images/character/suzunari.png', // 鈴鳴音の画像URL (ローカルアセット)
       'description_tags': [
@@ -84,6 +82,14 @@ class _SelectGirlfriendScreenState
     await ref
         .read(currentGirlfriendProvider.notifier)
         .selectGirlfriend(selectedCharacterId);
+
+    // 通知サービスを取得
+    final notificationService = ref.read(notificationServiceProvider);
+    // 既存の通知をすべてキャンセル
+    await notificationService.cancelAllNotifications();
+
+    // 選択された彼女の通知をスケジュール (通知IDは固定値1を使用)
+    await notificationService.scheduleDailyNotification(selectedCharacterId, 1);
 
     // LocalStorageServiceを使って、0話が再生済みかチェック
     final localStorage = await ref.read(localStorageServiceProvider.future);

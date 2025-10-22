@@ -16,33 +16,6 @@ void main() async {
   // 通常はデバイスから取得しますが、ここでは例示
   tz.setLocalLocation(tz.getLocation('Asia/Tokyo'));
 
-  await NotificationService().initialize();
-  await NotificationService().requestPermissions(); // Android 13以降のために
-
-  final prefs = await SharedPreferences.getInstance();
-  const String firstLaunchKey = 'isFirstLaunch';
-  bool isFirstLaunch = prefs.getBool(firstLaunchKey) ?? true;
-
-  if (isFirstLaunch) {
-    // 初回起動時に毎日19時に通知をスケジュール
-    final now = DateTime.now();
-    DateTime scheduledDate = DateTime(now.year, now.month, now.day, 19, 0, 0);
-    // もし現在時刻が19時を過ぎていたら、翌日の19時に設定
-    if (now.hour >= 19) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
-
-    await NotificationService().scheduleNotification(
-      id: 0, // 通知ID
-      title: '今日の振り返り',
-      body: '今日の出来事を記録しましょう！',
-      scheduledDate: scheduledDate,
-      repeatDaily: true,
-    );
-
-    await prefs.setBool(firstLaunchKey, false);
-  }
-
   runApp(
     DevicePreview(
       enabled: !kReleaseMode,
@@ -54,8 +27,25 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
+
+  @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    final notificationService = ref.read(notificationServiceProvider);
+    await notificationService.initializeNotifications();
+    await notificationService.requestPermissions();
+  }
 
   @override
   Widget build(BuildContext context) {
