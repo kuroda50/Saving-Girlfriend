@@ -26,6 +26,7 @@ class LocalStorageService {
   static const String _likeabilityKeyPrefix = '_likeability'; // キャラごとに好感度を保存
   static const String _transactionHistoryKey = 'transaction_history';
   static const String _tributionHistoryKey = 'tribution_history';
+  static const String _hasPlayedStoryKey = 'has_played_story';
   // 設定関連のキー
   static const String _notificationsEnabledKey = 'notifications_enabled';
   static const String _bgmVolumeKey = 'bgm_volume';
@@ -87,14 +88,14 @@ class LocalStorageService {
 
   /// ストーリー再生済みフラグを保存
   Future<void> setPlayedStory() async {
-    await _prefs.setBool('has_played_story', true);
+    await _prefs.setBool(_hasPlayedStoryKey, true);
   }
 
   // --- 読み込み (Load) ---
 
   //story再生
   Future<bool> hasPlayedStory() async {
-    return _prefs.getBool('has_played_story') ?? false;
+    return _prefs.getBool(_hasPlayedStoryKey) ?? false;
   }
 
   /// ユーザーIDを読み込む
