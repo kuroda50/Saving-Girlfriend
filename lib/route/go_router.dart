@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:saving_girlfriend/providers/setting_provider.dart';
 import 'package:saving_girlfriend/route/app_navigation_bar.dart';
 import 'package:saving_girlfriend/screen/home_screen.dart';
 import 'package:saving_girlfriend/screen/select_girlfriend_screen.dart';
@@ -9,6 +11,7 @@ import 'package:saving_girlfriend/screen/story_screen.dart';
 import 'package:saving_girlfriend/screen/title_screen.dart';
 import 'package:saving_girlfriend/screen/transaction_history_screen.dart';
 import 'package:saving_girlfriend/screen/transaction_input_screen.dart';
+import 'package:saving_girlfriend/utils/dialog_utils.dart';
 
 // 各ブランチのナビゲーションスタックを管理するためのGlobalKey
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -86,6 +89,30 @@ final router = GoRouter(
               key: state.pageKey,
               child: const SettingsScreen(),
             ),
+            onExit: (context, state) async {
+              // Provider にアクセスするために Container を取得
+              final container = ProviderScope.containerOf(context);
+              final hasChanges = container.read(hasSettingsChangesProvider);
+
+              if (!hasChanges) {
+                return true; // 変更なし -> 遷移を許可
+              }
+
+              // 変更あり -> ダイアログを表示
+              final result = await showUnsavedChangesDialog(context);
+
+              if (result == true) {
+                // 「変更を破棄」が選ばれた
+                // リセット命令を Provider に送る
+                container
+                    .read(settingsResetTriggerProvider.notifier)
+                    .update((n) => n + 1);
+                return true; // 遷移を許可
+              } else {
+                // 「キャンセル」が選ばれた
+                return false; // 遷移をブロック
+              }
+            },
           ),
         ]),
       ],

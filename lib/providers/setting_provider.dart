@@ -57,3 +57,8 @@ final settingsRepositoryProvider =
       await ref.watch(localStorageServiceProvider.future);
   return SettingsRepository(localStorageService);
 });
+
+final hasSettingsChangesProvider = StateProvider<bool>((ref) => false);
+
+// 2. 外部からリセットを命令するための Provider
+final settingsResetTriggerProvider = StateProvider<int>((ref) => 0);
