@@ -15,7 +15,7 @@ class SettingNotifier extends AsyncNotifier<SettingsState> {
     return settingsRepository.getSettings();
   }
 
-  Future<void> _saveSettings(SettingsState newSettings) async {
+  Future<void> saveSettings(SettingsState newSettings) async {
     final settingsRepository = await _settingsRepositoryFuture;
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
@@ -27,13 +27,13 @@ class SettingNotifier extends AsyncNotifier<SettingsState> {
   Future<void> updateNotification(final bool isEnabled) async {
     final currentState = state.value ?? await future;
     final newSettings = currentState.copyWith(notificationsEnabled: isEnabled);
-    await _saveSettings(newSettings);
+    await saveSettings(newSettings);
   }
 
   Future<void> updateBgmVolume(final double volume) async {
     final currentState = state.value ?? await future;
     final newSettings = currentState.copyWith(bgmVolume: volume);
-    await _saveSettings(newSettings);
+    await saveSettings(newSettings);
   }
 
   Future<void> updateSavingGoals({
@@ -43,7 +43,7 @@ class SettingNotifier extends AsyncNotifier<SettingsState> {
     final currentState = state.value ?? await future;
     final newSettings = currentState.copyWith(
         targetSavingAmount: targetSavingAmount, dailyBudget: dailyBudget);
-    await _saveSettings(newSettings);
+    await saveSettings(newSettings);
   }
 }
 

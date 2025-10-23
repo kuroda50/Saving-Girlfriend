@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 // Project imports:
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/constants/settings_defaults.dart';
+import 'package:saving_girlfriend/models/settings_state.dart';
 import '../providers/setting_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -18,11 +19,13 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  late bool notificationsEnabled;
-  late double bgmVolume;
+  late bool _notificationsEnabled;
+  late double _bgmVolume;
   final TextEditingController targetSavingsController = TextEditingController();
   final TextEditingController dailyBudgetController = TextEditingController();
 
+  late bool _initialNotificationsEnabled;
+  late double _initialBgmVolume;
   late String _initialTargetSavings;
   late String _initialDailyBudget;
 
@@ -31,18 +34,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.initState();
     final initialSettings = ref.read(settingsProvider).value;
     if (initialSettings != null) {
-      notificationsEnabled = initialSettings.notificationsEnabled;
-      bgmVolume = initialSettings.bgmVolume;
+      _notificationsEnabled = initialSettings.notificationsEnabled;
+      _bgmVolume = initialSettings.bgmVolume;
       targetSavingsController.text =
           (initialSettings.targetSavingAmount / 10000).toInt().toString();
       dailyBudgetController.text = initialSettings.dailyBudget.toString();
     } else {
-      notificationsEnabled = SettingsDefaults.notificationsEnabled;
-      bgmVolume = SettingsDefaults.bgmVolume;
+      _notificationsEnabled = SettingsDefaults.notificationsEnabled;
+      _bgmVolume = SettingsDefaults.bgmVolume;
       targetSavingsController.text =
           (SettingsDefaults.targetSavingAmount / 10000).toInt().toString();
       dailyBudgetController.text = SettingsDefaults.dailyBudget.toString();
     }
+    // 初期値を保存
+    _initialNotificationsEnabled = _notificationsEnabled;
+    _initialBgmVolume = _bgmVolume;
     _initialTargetSavings = targetSavingsController.text;
     _initialDailyBudget = dailyBudgetController.text;
   }
@@ -56,9 +62,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   // 音量に応じたアイコンを返す
   IconData getVolumeIcon() {
-    if (bgmVolume == 0) {
+    if (_bgmVolume == 0) {
       return Icons.volume_off; // 0%
-    } else if (bgmVolume <= 70) {
+    } else if (_bgmVolume <= 70) {
       return Icons.volume_down; // 1~70%
     } else {
       return Icons.volume_up; // 71~100%
@@ -72,21 +78,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         10000;
     final dailyBudget = int.tryParse(dailyBudgetController.text) ??
         SettingsDefaults.dailyBudget;
-    await ref.read(settingsProvider.notifier).updateSavingGoals(
-        targetSavingAmount: targetSavingAmount, dailyBudget: dailyBudget);
 
-    if (mounted) {
-      context.pop();
-    }
+    // 全ての設定をまとめて保存
+    await ref.read(settingsProvider.notifier).saveSettings(SettingsState(
+          notificationsEnabled: _notificationsEnabled,
+          bgmVolume: _bgmVolume,
+          targetSavingAmount: targetSavingAmount,
+          dailyBudget: dailyBudget,
+        ));
+    // 初期値を更新
+    _initialNotificationsEnabled = _notificationsEnabled;
+    _initialBgmVolume = _bgmVolume;
+    _initialTargetSavings = targetSavingsController.text;
+    _initialDailyBudget = dailyBudgetController.text;
   }
 
-  bool _haveSavingGoalsChanged() {
+  bool _hasAnyChanges() {
     return _initialTargetSavings != targetSavingsController.text ||
-        _initialDailyBudget != dailyBudgetController.text;
+        _initialDailyBudget != dailyBudgetController.text ||
+        _initialBgmVolume != _bgmVolume ||
+        _initialNotificationsEnabled != _notificationsEnabled;
   }
 
   Future<void> _handlePop() async {
-    if (_haveSavingGoalsChanged()) {
+    if (_hasAnyChanges()) {
       final result = await showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -129,8 +144,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 actionsPadding: const EdgeInsets.symmetric(
                     horizontal: 16.0, vertical: 12.0),
               ));
-      if (!mounted) return;
-      if (result == true) {
+      if (mounted && result == true) {
         context.pop();
       }
     } else {
@@ -190,16 +204,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     alignment: Alignment.centerRight,
                                     child: ToggleButtons(
                                       isSelected: [
-                                        !notificationsEnabled,
-                                        notificationsEnabled
+                                        !_notificationsEnabled,
+                                        _notificationsEnabled
                                       ],
                                       onPressed: (index) {
                                         setState(() {
-                                          notificationsEnabled = (index == 1);
-                                          ref
-                                              .read(settingsProvider.notifier)
-                                              .updateNotification(
-                                                  notificationsEnabled);
+                                          _notificationsEnabled = (index == 1);
                                         });
                                       },
                                       selectedColor: AppColors.mainBackground,
@@ -244,27 +254,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       ),
                                       Expanded(
                                         child: Slider(
-                                          value: bgmVolume,
+                                          value: _bgmVolume,
                                           min: 0,
                                           max: 100,
                                           divisions: 50,
                                           activeColor: AppColors.secondary,
                                           onChanged: (value) {
                                             setState(() {
-                                              bgmVolume = value;
+                                              _bgmVolume = value;
                                             });
-                                          },
-                                          onChangeEnd: (value) {
-                                            ref
-                                                .read(settingsProvider.notifier)
-                                                .updateBgmVolume(value);
                                           },
                                         ),
                                       ),
                                       SizedBox(
                                         width: 40,
                                         child: Text(
-                                          '${bgmVolume.toInt()}%',
+                                          '${_bgmVolume.toInt()}%',
                                           textAlign: TextAlign.center,
                                           style: const TextStyle(
                                             fontSize: 14,
