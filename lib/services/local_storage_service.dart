@@ -30,6 +30,8 @@ class LocalStorageService {
   static const String _likeabilityKeyPrefix = '_likeability'; // キャラごとに好感度を保存
   static const String _transactionHistoryKey = 'transaction_history';
   static const String _tributionHistoryKey = 'tribution_history';
+  static const String _playedEpisode0CharactersKey =
+      'played_episode_0_characters'; // 0話再生済みキャラクターのIDリスト
   // 設定関連のキー
   static const String _notificationsEnabledKey = 'notifications_enabled';
   static const String _bgmVolumeKey = 'bgm_volume';
@@ -89,16 +91,27 @@ class LocalStorageService {
     await _prefs.setString(_budgetHistoryKey, jsonEncode(budgetHistoryJson));
   }
 
-  /// ストーリー再生済みフラグを保存
-  Future<void> setPlayedStory() async {
-    await _prefs.setBool('has_played_story', true);
+  /// 指定されたキャラクターの0話が再生済みであることを保存する
+  Future<void> setEpisode0Played(String characterId) async {
+    final List<String> playedCharacters = getPlayedEpisode0Characters();
+    if (!playedCharacters.contains(characterId)) {
+      playedCharacters.add(characterId);
+      await _prefs.setStringList(
+          _playedEpisode0CharactersKey, playedCharacters);
+    }
   }
 
   // --- 読み込み (Load) ---
 
-  //story再生
-  Future<bool> hasPlayedStory() async {
-    return _prefs.getBool('has_played_story') ?? false;
+  /// 指定されたキャラクターの0話が再生済みかどうかを返す
+  bool hasPlayedEpisode0(String characterId) {
+    final List<String> playedCharacters = getPlayedEpisode0Characters();
+    return playedCharacters.contains(characterId);
+  }
+
+  /// 0話が再生済みのキャラクターIDのリストを取得する
+  List<String> getPlayedEpisode0Characters() {
+    return _prefs.getStringList(_playedEpisode0CharactersKey) ?? [];
   }
 
   /// ユーザーIDを読み込む

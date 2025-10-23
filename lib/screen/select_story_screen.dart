@@ -1,40 +1,64 @@
-// Flutter imports:
 import 'package:flutter/material.dart';
-
-// Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-// Project imports:
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/models/episode.dart';
+import 'package:saving_girlfriend/models/story_model.dart';
+import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/providers/likeability_provider.dart';
+import 'package:saving_girlfriend/stories/story_repository.dart';
 
-class EpisodeScreen extends ConsumerStatefulWidget {
+class EpisodeScreen extends ConsumerWidget {
   const EpisodeScreen({super.key});
 
   @override
-  ConsumerState<EpisodeScreen> createState() => _EpisodeScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentGirlfriendAsync = ref.watch(currentGirlfriendProvider);
+
+    return Scaffold(
+      backgroundColor: AppColors.forthBackground,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(20.0),
+        child: AppBar(
+          backgroundColor: AppColors.secondary,
+          elevation: 0,
+        ),
+      ),
+      body: currentGirlfriendAsync.when(
+        data: (characterId) {
+          if (characterId == null) {
+            return const Center(child: Text('彼女が選択されていません。'));
+          }
+
+          final storyRepo = ref.read(storyRepositoryProvider);
+          final character = storyRepo.getCharacterById(characterId);
+          final story = storyRepo.getStoryByCharacterId(characterId);
+
+          if (character == null || story == null) {
+            return const Center(child: Text('ストーリーデータが見つかりません。'));
+          }
+
+          return _StoryView(character: character, story: story);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('エラー: $err')),
+      ),
+    );
+  }
 }
 
-class _EpisodeScreenState extends ConsumerState<EpisodeScreen> {
-  // --- エピソードデータのリスト ---
-  final List<Episode> _baseEpisodes = [
-    Episode(number: 0, title: '出会い', requiredLikeability: 0),
-    Episode(number: 1, title: '初めての会話', requiredLikeability: 10),
-    Episode(number: 2, title: '公園の散歩', requiredLikeability: 20),
-    Episode(number: 3, title: '好きな食べ物', requiredLikeability: 30),
-    Episode(number: 4, title: '休日の過ごし方', requiredLikeability: 40),
-    Episode(number: 5, title: '趣味の話', requiredLikeability: 50),
-    Episode(number: 6, title: '小さなプレゼント', requiredLikeability: 60),
-    Episode(number: 7, title: '雨の日の思い出', requiredLikeability: 70),
-    Episode(number: 8, title: '喧嘩と仲直り', requiredLikeability: 80),
-    Episode(number: 9, title: '伝えたい言葉', requiredLikeability: 90),
-    Episode(number: 10, title: 'そして未来へ', requiredLikeability: 100),
-  ];
+class _StoryView extends ConsumerStatefulWidget {
+  final StoryCharacter character;
+  final Story story;
 
-  // ScrollControllerの準備
+  const _StoryView({required this.character, required this.story});
+
+  @override
+  ConsumerState<_StoryView> createState() => _StoryViewState();
+}
+
+class _StoryViewState extends ConsumerState<_StoryView> {
   late final ScrollController _scrollController;
 
   @override
@@ -52,42 +76,18 @@ class _EpisodeScreenState extends ConsumerState<EpisodeScreen> {
   @override
   Widget build(BuildContext context) {
     final likeabilityAsync = ref.watch(likeabilityProvider);
-    return Scaffold(
-      backgroundColor: AppColors.forthBackground,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(20.0),
-        child: AppBar(
-          backgroundColor: AppColors.secondary,
-          elevation: 0,
-        ),
-      ),
-      body: Column(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              color: AppColors.mainBackground,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.shadow,
-                  blurRadius: 4.0,
-                  offset: Offset(0, 2), // 下方向に影を伸ばす
-                ),
-              ],
-            ),
-            // 元のPaddingはContainerの子にします
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildCharacterHeader(),
-            ),
-          ),
-          Expanded(
-              child: likeabilityAsync.when(
+
+    return Column(
+      children: [
+        _buildCharacterHeader(widget.character),
+        Expanded(
+          child: likeabilityAsync.when(
             data: (likeability) {
-              final episodes = _baseEpisodes.map((episode) {
+              final episodes = widget.story.episodes.map((episode) {
                 final bool isLocked = likeability < episode.requiredLikeability;
                 return Episode(
                   number: episode.number,
-                  title: isLocked ? '？？？' : episode.title, // ロック中はタイトルを隠す
+                  title: isLocked ? '？？？' : episode.title,
                   requiredLikeability: episode.requiredLikeability,
                   isLocked: isLocked,
                 );
@@ -119,70 +119,66 @@ class _EpisodeScreenState extends ConsumerState<EpisodeScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 12.0, horizontal: 20.0),
-                margin: const EdgeInsets.symmetric(horizontal: 24.0),
-                decoration: BoxDecoration(
-                  color: AppColors.errorBackground, // 背景色を指定
-                  borderRadius: BorderRadius.circular(12.0), // 角を丸くする
-                ),
-                child: Text(
-                  'エラーが発生しました:\n$err',
-                  style: const TextStyle(
-                    color: AppColors.error, // テキストの色を指定
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center, // 文字を中央揃えに
-                ),
-              ),
-            ),
-          )),
-        ],
-      ),
+            error: (err, stack) => Center(child: Text('好感度の読み込みエラー: $err')),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildCharacterHeader() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 100,
-            height: 100,
-            child: Image.asset(
-              AppAssets.characterSuzunari,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: AppColors.errorBackground,
-                  child:
-                      Icon(Icons.person, color: AppColors.secondary, size: 50),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Text(
-            '鈴鳴 音',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: AppColors.mainLogo,
-            ),
+  Widget _buildCharacterHeader(StoryCharacter character) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.mainBackground,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 4.0,
+            offset: Offset(0, 2),
           ),
         ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 20.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 100,
+                height: 100,
+                child: Image.asset(
+                  character.assetPath,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const CircleAvatar(
+                      radius: 40,
+                      backgroundColor: AppColors.errorBackground,
+                      child: Icon(Icons.person,
+                          color: AppColors.secondary, size: 50),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                character.name,
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.mainLogo,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-// --- 再利用可能なエピソード行ウィジェット（微調整版） ---
 class EpisodeListItem extends StatelessWidget {
   final Episode episode;
   final VoidCallback onPlay;
@@ -199,16 +195,13 @@ class EpisodeListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // isLockedの状態によって、アイコンの大きさを変える
     final double iconSize = episode.isLocked ? 45.0 : 55.0;
 
     return Padding(
-      // アイコンがはみ出す分を考慮して、リストアイテム全体の左側に余白を作る
       padding: EdgeInsets.fromLTRB(iconSize / 2 + 6, 6.0, 16.0, 6.0),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // --- 1. 背景のカード ---
           Container(
             padding: const EdgeInsets.all(12.0),
             decoration: BoxDecoration(
@@ -225,7 +218,6 @@ class EpisodeListItem extends StatelessWidget {
                 ]),
             child: Row(
               children: [
-                // アイコンが重なる分のスペースを確保
                 SizedBox(width: iconSize / 2 + 4),
                 Text(
                   '${episode.number}話',
@@ -276,11 +268,9 @@ class EpisodeListItem extends StatelessWidget {
               ],
             ),
           ),
-
-          // --- 2. アイコン ---
           Positioned(
             left: -(iconSize / 2),
-            top: 1.0, // ← ここを調整しました
+            top: 1.0,
             child: SizedBox(
               width: iconSize,
               height: iconSize,

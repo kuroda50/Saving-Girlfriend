@@ -1,24 +1,30 @@
 /* 彼女選択画面 */
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/constants/color.dart';
-import 'package:saving_girlfriend/screen/select_story_screen.dart';
-import 'package:saving_girlfriend/screen/story_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // 👈 1. 状態保存のためのパッケージをインポート
-import 'package:go_router/go_router.dart';
+import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
+import 'package:saving_girlfriend/services/local_storage_service.dart';
+import 'package:saving_girlfriend/services/notification_service.dart';
 
-class SelectGirlfriendScreen extends StatefulWidget {
+class SelectGirlfriendScreen extends ConsumerStatefulWidget {
+  // Change to ConsumerStatefulWidget
   const SelectGirlfriendScreen({super.key});
 
   @override
-  State<SelectGirlfriendScreen> createState() => _SelectGirlfriendScreenState();
+  ConsumerState<SelectGirlfriendScreen> createState() =>
+      _SelectGirlfriendScreenState(); // Change to ConsumerState
 }
 
-class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
+class _SelectGirlfriendScreenState
+    extends ConsumerState<SelectGirlfriendScreen> {
+  // Change to ConsumerState
   // 表示するキャラクターのリスト
   final List<Map<String, dynamic>> characters = [
     {
+      'id': 'suzunari_oto',
       'name': '鈴鳴 音', // キャラクター名
       'image': 'assets/images/character/suzunari.png', // 鈴鳴音の画像URL (ローカルアセット)
       'description_tags': [
@@ -30,11 +36,13 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
       ], // 説明タグ
     },
     {
+      'id': 'coming_soon_1', // Add character ID
       'name': 'ComingSoon',
       'image': AppAssets.characterComingsoon,
       'description_tags': ['ComingSoon'],
     },
     {
+      'id': 'coming_soon_2', // Add character ID
       'name': 'ComingSoon',
       'image': AppAssets.characterComingsoon,
       'description_tags': ['ComingSoon'],
@@ -60,32 +68,43 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
 
   // 👈 2. 彼女を選択し、状態を保存して次の画面へ遷移するメソッド
   void _selectGirlfriendAndSaveState() async {
+    final selectedCharacterId = characters[_currentIndex]['id'] as String;
+
     // 選択しようとしているキャラクターが「ComingSoon」ではないかチェック
-    if (characters[_currentIndex]['name'] == 'ComingSoon') {
+    if (selectedCharacterId.startsWith('coming_soon')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('この彼女はまだ選べません。')),
       );
       return;
     }
 
-    // 1. SharedPreferencesのインスタンスを取得
-    final prefs = await SharedPreferences.getInstance();
+    // Riverpodのプロバイダーを使って選択された彼女を保存
+    await ref
+        .read(currentGirlfriendProvider.notifier)
+        .selectGirlfriend(selectedCharacterId);
 
-    // 4. 次の画面へ遷移
-    final hasPlayed = prefs.getBool('has_played_story') ?? false;
-    final String nextPath = hasPlayed
-        ? '/home' // 再生済みならホーム画面
-        : '/story'; // (到達しないはず)
+    // 通知サービスを取得
+    final notificationService = ref.read(notificationServiceProvider);
+    // 既存の通知をすべてキャンセル
+    await notificationService.cancelAllNotifications();
+
+    // 選択された彼女の通知をスケジュール (通知IDは固定値1を使用)
+    await notificationService.scheduleDailyNotification(selectedCharacterId, 1);
+
+    // LocalStorageServiceを使って、0話が再生済みかチェック
+    final localStorage = await ref.read(localStorageServiceProvider.future);
+    final hasPlayedEpisode0 =
+        localStorage.hasPlayedEpisode0(selectedCharacterId);
 
     if (mounted) {
-      context.go(nextPath);
+      if (hasPlayedEpisode0) {
+        // 0話再生済みならホーム画面へ
+        context.go('/home');
+      } else {
+        // 未再生なら0話を再生
+        context.go('/story', extra: 0); // 0話を再生
+      }
     }
-    // 2. 「彼女が選択された」という状態を永続的に保存 (TitleScreenでチェックするフラグ)
-    await prefs.setBool('has_selected_girlfriend', true);
-
-    // 3. 選択した彼女のインデックスや名前も保存しておくと、後で利用できる
-    final selectedGirlfriendName = characters[_currentIndex]['name'] as String;
-    await prefs.setString('selected_girlfriend_name', selectedGirlfriendName);
   }
 
   @override
