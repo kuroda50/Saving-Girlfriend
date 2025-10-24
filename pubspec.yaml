@@ -73,4 +73,5 @@ flutter:
     - assets/images/background/
     - assets/images/character/
     - assets/images/icon/
-    - assets/bgm/
+    - assets/audio/bgm/
+    - assets/audio/se/
