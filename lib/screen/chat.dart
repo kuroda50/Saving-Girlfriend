@@ -4,24 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/characters.dart';
 import 'package:saving_girlfriend/constants/color.dart';
+import 'package:saving_girlfriend/models/message.dart';
 import 'package:saving_girlfriend/models/transaction_state.dart';
+import 'package:saving_girlfriend/providers/chat_history_provider.dart';
 import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/providers/setting_provider.dart';
 import 'package:saving_girlfriend/providers/transaction_history_provider.dart';
 import 'package:saving_girlfriend/providers/uuid_provider.dart';
-
-class Message {
-  final String id;
-  final String type; // 'girlfriend' or 'user'
-  final String text;
-  final String time;
-
-  Message(
-      {required this.id,
-      required this.type,
-      required this.text,
-      required this.time});
-}
 
 class Category {
   final String id;
@@ -39,11 +28,6 @@ class GirlfriendChatScreen extends ConsumerStatefulWidget {
 }
 
 class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
-  final List<Message> _messages = [
-    Message(
-        id: '1', type: 'girlfriend', text: 'おかえり。今日の支出を教えて。', time: _nowText()),
-  ];
-
   final List<Category> _categories = [
     Category(id: 'food', name: '食費'),
     Category(id: 'transport', name: '交通費'),
@@ -55,14 +39,9 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
 
   Category _selectedCategory = Category(id: 'food', name: '食費');
   String _amountText = '';
+  bool _isGirlfriendResponding = false; // 彼女が返信中かどうかを示す状態
 
   final ScrollController _scrollController = ScrollController();
-
-  static String _nowText() {
-    final now = DateTime.now();
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(now.hour)}:${two(now.minute)}';
-  }
 
   String _formatCurrency(int value) {
     final s = value.toString();
@@ -80,10 +59,11 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: type,
         text: text,
-        time: _nowText());
-    setState(() {
-      _messages.add(m);
-    });
+        time:
+            ChatHistoryNotifier.nowText()); // ChatHistoryNotifier.nowText() を使用
+    ref
+        .read(chatHistoryNotifierProvider.notifier)
+        .addMessage(m); // プロバイダー経由でメッセージを追加
     _scrollToBottom();
   }
 
@@ -133,13 +113,11 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
   }
 
   Future<void> _girlfriendRespond(Category cat, int amt, int todaySpent) async {
-    setState(() {
-      _messages.add(Message(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          type: 'girlfriend',
-          text: '…',
-          time: _nowText()));
-    });
+    ref.read(chatHistoryNotifierProvider.notifier).addMessage(Message(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        type: 'girlfriend',
+        text: '…',
+        time: ChatHistoryNotifier.nowText()));
     _scrollToBottom();
 
     final lines = _calcReactionLines(cat, amt);
@@ -149,31 +127,34 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
       await Future.delayed(
           Duration(milliseconds: 700 + (200 * i) + (100 * (i % 3))));
 
-      setState(() {
-        // replace the typing indicator with actual line
-        if (_messages.isNotEmpty &&
-            _messages.last.type == 'girlfriend' &&
-            _messages.last.text == '…') {
-          _messages.removeLast();
-        }
-        _messages.add(Message(
+      // replace the typing indicator with actual line
+      final currentMessages = ref.read(chatHistoryNotifierProvider).value!;
+      if (currentMessages.isNotEmpty &&
+          currentMessages.last.type == 'girlfriend' &&
+          currentMessages.last.text == '…') {
+        ref.read(chatHistoryNotifierProvider.notifier).updateLastMessage(
+            Message(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                type: 'girlfriend',
+                text: lines[i],
+                time: ChatHistoryNotifier.nowText()));
+      } else {
+        ref.read(chatHistoryNotifierProvider.notifier).addMessage(Message(
             id: DateTime.now().millisecondsSinceEpoch.toString(),
             type: 'girlfriend',
             text: lines[i],
-            time: _nowText()));
-      });
+            time: ChatHistoryNotifier.nowText()));
+      }
 
       _scrollToBottom();
 
       // if more lines to come, insert typing indicator before next
       if (i < lines.length - 1) {
-        setState(() {
-          _messages.add(Message(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              type: 'girlfriend',
-              text: '…',
-              time: _nowText()));
-        });
+        ref.read(chatHistoryNotifierProvider.notifier).addMessage(Message(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            type: 'girlfriend',
+            text: '…',
+            time: ChatHistoryNotifier.nowText()));
         _scrollToBottom();
       }
     }
@@ -194,7 +175,9 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
   }
 
   Future<void> _handleSubmit(int todaySpent) async {
-    if (_amountText.isEmpty) return;
+    if (_amountText.isEmpty || _isGirlfriendResponding) {
+      return; // 彼女が返信中の場合は処理しない
+    }
     final amt = int.tryParse(_amountText);
     if (amt == null || amt <= 0) return;
 
@@ -205,8 +188,13 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
       type: 'expense',
       date: DateTime.now(),
       amount: amt,
-      category: _selectedCategory.id,
+      category: _selectedCategory.name,
     );
+    setState(() {
+      _amountText = '';
+      _selectedCategory = _categories[0];
+      _isGirlfriendResponding = true; // 彼女の返信開始
+    });
     await ref
         .read(transactionsProvider.notifier)
         .addTransaction(newTransaction);
@@ -214,8 +202,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
     await _girlfriendRespond(_selectedCategory, amt, todaySpent + amt);
 
     setState(() {
-      _amountText = '';
-      _selectedCategory = _categories[0];
+      _isGirlfriendResponding = false; // 彼女の返信終了
     });
   }
 
@@ -249,7 +236,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             margin: const EdgeInsets.symmetric(vertical: 4),
             decoration: BoxDecoration(
-              color: isUser ? AppColors.primary : AppColors.forthBackground,
+              color: isUser ? AppColors.primary : AppColors.mainBackground,
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(16),
                 topRight: const Radius.circular(16),
@@ -314,7 +301,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
                 .fold<int>(0, (sum, tx) => sum + tx.amount);
 
             return Scaffold(
-              backgroundColor: AppColors.mainBackground,
+              backgroundColor: AppColors.forthBackground,
               appBar: PreferredSize(
                 preferredSize: const Size.fromHeight(80.0), // 高さを増やす
                 child: AppBar(
@@ -352,16 +339,24 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
                 child: Column(
                   children: [
                     Expanded(
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        itemCount: _messages.length,
-                        itemBuilder: (context, index) {
-                          final m = _messages[index];
-                          return _buildMessageTile(m);
-                        },
-                      ),
+                      child: ref.watch(chatHistoryNotifierProvider).when(
+                            loading: () => const Center(
+                                child: CircularProgressIndicator()),
+                            error: (err, stack) =>
+                                Center(child: Text('Error: $err')),
+                            data: (messages) {
+                              return ListView.builder(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                itemCount: messages.length,
+                                itemBuilder: (context, index) {
+                                  final m = messages[index];
+                                  return _buildMessageTile(m);
+                                },
+                              );
+                            },
+                          ),
                     ),
                     // input area (compact)
                     Container(
@@ -439,10 +434,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
                                                 .withOpacity(0.5))),
                                   ),
                                   onSubmitted: (String _) {
-                                    (_amountText.isEmpty ||
-                                            int.tryParse(_amountText) == null)
-                                        ? null
-                                        : _handleSubmit(todaySpent);
+                                    _handleSubmit(todaySpent);
                                   },
                                   onChanged: (v) {
                                     final filtered =
@@ -463,8 +455,9 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
                               const SizedBox(width: 8),
                               ElevatedButton(
                                 onPressed: (_amountText.isEmpty ||
-                                        int.tryParse(_amountText) == null)
-                                    ? null
+                                        int.tryParse(_amountText) == null ||
+                                        _isGirlfriendResponding)
+                                    ? null // ボタンを非活性化
                                     : () => _handleSubmit(todaySpent),
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.all(12),
