@@ -77,6 +77,7 @@ class _TransactionHistoryScreenState
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
       ),
+      backgroundColor: AppColors.forthBackground,
       body: transactionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('エラー: $err')),
@@ -165,7 +166,7 @@ class _TransactionHistoryScreenState
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 12,
-                                          color: AppColors.subText),
+                                          color: AppColors.mainText),
                                     ),
                                   ),
                                 ))
