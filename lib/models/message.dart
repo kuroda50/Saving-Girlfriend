@@ -1,6 +1,11 @@
+enum MessageType {
+  girlfriend,
+  user,
+}
+
 class Message {
   final String id;
-  final String type; // 'girlfriend' or 'user'
+  final MessageType type; // 'girlfriend' or 'user'
   final String text;
   final String time;
 
@@ -14,7 +19,7 @@ class Message {
   factory Message.fromJson(Map<String, dynamic> json) {
     return Message(
       id: json['id'],
-      type: json['type'],
+      type: MessageType.values.byName(json['type']),
       text: json['text'],
       time: json['time'],
     );
@@ -24,7 +29,7 @@ class Message {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'type': type,
+      'type': type.name,
       'text': text,
       'time': time,
     };

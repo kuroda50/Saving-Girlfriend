@@ -19,7 +19,7 @@ class ChatHistoryNotifier extends _$ChatHistoryNotifier {
       return [
         Message(
             id: '1',
-            type: 'girlfriend',
+            type: MessageType.girlfriend,
             text: 'おかえり。今日の支出を教えて。',
             time: nowText()),
       ];
