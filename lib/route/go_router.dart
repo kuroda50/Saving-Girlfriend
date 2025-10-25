@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/providers/setting_provider.dart';
 import 'package:saving_girlfriend/route/app_navigation_bar.dart';
+import 'package:saving_girlfriend/screen/chat.dart';
 import 'package:saving_girlfriend/screen/home_screen.dart';
 import 'package:saving_girlfriend/screen/select_girlfriend_screen.dart';
 import 'package:saving_girlfriend/screen/select_story_screen.dart';
@@ -10,7 +11,6 @@ import 'package:saving_girlfriend/screen/settings_screen.dart';
 import 'package:saving_girlfriend/screen/story_screen.dart';
 import 'package:saving_girlfriend/screen/title_screen.dart';
 import 'package:saving_girlfriend/screen/transaction_history_screen.dart';
-import 'package:saving_girlfriend/screen/transaction_input_screen.dart';
 import 'package:saving_girlfriend/utils/dialog_utils.dart';
 
 // 各ブランチのナビゲーションスタックを管理するためのGlobalKey
@@ -65,7 +65,8 @@ final router = GoRouter(
             GoRoute(
               path: '/transaction_input',
               pageBuilder: (context, state) => const NoTransitionPage(
-                child: TransactionInputScreen(),
+                // child: TransactionInputScreen(),
+                child: GirlfriendChatScreen(),
               ),
             ),
           ],

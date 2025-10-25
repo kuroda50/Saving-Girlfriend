@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Project imports:
 import 'package:saving_girlfriend/constants/settings_defaults.dart';
 import 'package:saving_girlfriend/models/budget_history.dart';
+import 'package:saving_girlfriend/models/message.dart';
 import 'package:saving_girlfriend/models/settings_state.dart';
 import 'package:saving_girlfriend/models/transaction_state.dart';
 import 'package:saving_girlfriend/models/tribute_history_state.dart';
@@ -37,12 +38,20 @@ class LocalStorageService {
   static const String _bgmVolumeKey = 'bgm_volume';
   static const String _targetSavingAmountKey = 'target_saving_amount';
   static const String _budgetHistoryKey = 'budget_history';
+  static const String _messagesKey = 'chat_messages'; // 会話履歴のキー
 
   // --- 保存 (Save) ---
 
   /// ユーザーIDを保存する
   Future<void> saveUserId(String userId) async {
     await _prefs.setString(_userIdKey, userId);
+  }
+
+  /// 会話履歴を保存する
+  Future<void> saveMessages(List<Message> messages) async {
+    final String encodedData =
+        jsonEncode(messages.map((m) => m.toJson()).toList());
+    await _prefs.setString(_messagesKey, encodedData);
   }
 
   /// 現在選択中のキャラクターを保存する
@@ -199,26 +208,14 @@ class LocalStorageService {
       )
     ];
   }
+
+  /// 会話履歴を読み込む
+  Future<List<Message>> loadMessages() async {
+    final String? encodedData = _prefs.getString(_messagesKey);
+    if (encodedData == null) {
+      return [];
+    }
+    final List<dynamic> decodedData = jsonDecode(encodedData);
+    return decodedData.map((item) => Message.fromJson(item)).toList();
+  }
 }
-
-// <データ設計>
-// current_character: "characterA" (String)
-// characterA_likeability: 85(int)
-// transaction_history
-// [
-//   {"id": "transaction_1759380715075", "type": "income", "date": "2024-06-25", "amount": 50000, "category": category},
-//   {"id": "transaction_1759380715075", "type": "expense", "date": "2024-06-25", "amount": 1000, "category": category},
-//   {"id": "transaction_1759380715075", "type": "expense", "date": "2024-06-26", "amount": 500, "category": category},
-// ]List<String>
-// tribute_history
-// [
-//  {"id": 0101101001..., "character": "SuzunariOto", "date": "2024-06-25", "amount": 500},
-//  {"id": 0101101001..., "character": "SuzunariOto", "date": "2024-06-25", "amount": 500},
-//  {"id": 0101101001..., "character": "SuzunariOto", "date": "2024-06-25", "amount": 500},
-// ]
-
-// 設定関連
-// notifications_enabled: true (bool)
-// bgm_volume: 75 (double)
-// target_saving_amount: 100000 (int)
-// daily_budget_amount: 1000 (int)

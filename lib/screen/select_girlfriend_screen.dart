@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:saving_girlfriend/constants/assets.dart';
+import 'package:saving_girlfriend/constants/characters.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
@@ -21,33 +21,6 @@ class SelectGirlfriendScreen extends ConsumerStatefulWidget {
 class _SelectGirlfriendScreenState
     extends ConsumerState<SelectGirlfriendScreen> {
   // Change to ConsumerState
-  // 表示するキャラクターのリスト
-  final List<Map<String, dynamic>> characters = [
-    {
-      'id': 'suzunari_oto',
-      'name': '鈴鳴 音', // キャラクター名
-      'image': 'assets/images/character/suzunari.png', // 鈴鳴音の画像URL (ローカルアセット)
-      'description_tags': [
-        '#あざとい',
-        '#高校の後輩',
-        '#甘え上手',
-        '#小悪魔系',
-        '#からかい上手'
-      ], // 説明タグ
-    },
-    {
-      'id': 'coming_soon_1', // Add character ID
-      'name': 'ComingSoon',
-      'image': AppAssets.characterComingsoon,
-      'description_tags': ['ComingSoon'],
-    },
-    {
-      'id': 'coming_soon_2', // Add character ID
-      'name': 'ComingSoon',
-      'image': AppAssets.characterComingsoon,
-      'description_tags': ['ComingSoon'],
-    },
-  ];
 
   late PageController _pageController; // PageViewを制御するためのPageController
   int _currentIndex = 0; // 現在表示されているキャラクターのインデックス（PageViewによって更新される）
@@ -68,7 +41,7 @@ class _SelectGirlfriendScreenState
 
   // 👈 2. 彼女を選択し、状態を保存して次の画面へ遷移するメソッド
   void _selectGirlfriendAndSaveState() async {
-    final selectedCharacterId = characters[_currentIndex]['id'] as String;
+    final selectedCharacterId = characters[_currentIndex].id;
 
     // 選択しようとしているキャラクターが「ComingSoon」ではないかチェック
     if (selectedCharacterId.startsWith('coming_soon')) {
@@ -143,12 +116,12 @@ class _SelectGirlfriendScreenState
                         decoration: BoxDecoration(
                           color: AppColors.mainBackground,
                           borderRadius: BorderRadius.circular(15.0),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
                               color: AppColors.shadow,
                               spreadRadius: 2,
                               blurRadius: 7,
-                              offset: const Offset(0, 3), // 影の位置
+                              offset: Offset(0, 3), // 影の位置
                             ),
                           ],
                         ),
@@ -161,12 +134,12 @@ class _SelectGirlfriendScreenState
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 20, vertical: 10),
                               decoration: BoxDecoration(
-                                color: const Color(0xE383AB), // ピンクの背景色
+                                color: const Color(0x00e383ab), // ピンクの背景色
                                 borderRadius: BorderRadius.circular(20.0), // 角丸
                               ),
                               child: Text(
                                 characters[index]
-                                    ['name'], // PageView.builderの'index'を使用
+                                    .name, // PageView.builderの'index'を使用
                                 style: const TextStyle(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
@@ -183,7 +156,7 @@ class _SelectGirlfriendScreenState
                               // ⚠️ ローカルアセットのパスであるため Image.network を Image.asset に変更
                               child: Image.asset(
                                 characters[index]
-                                    ['image'], // PageView.builderの'index'を使用
+                                    .image, // PageView.builderの'index'を使用
                                 height: 300,
                                 width: 250,
                                 fit: BoxFit.contain,
@@ -192,9 +165,9 @@ class _SelectGirlfriendScreenState
                                     height: 300,
                                     width: 250,
                                     color: AppColors.border,
+                                    alignment: Alignment.center,
                                     child: const Icon(Icons.broken_image,
                                         size: 50, color: AppColors.subIcon),
-                                    alignment: Alignment.center,
                                   );
                                 },
                               ),
@@ -211,9 +184,7 @@ class _SelectGirlfriendScreenState
                               child: Wrap(
                                 spacing: 8.0,
                                 runSpacing: 4.0,
-                                children: (characters[index]['description_tags']
-                                        as List<
-                                            String>) // PageView.builderの'index'を使用
+                                children: (characters[index].description_tags)
                                     .map((tag) => Text(
                                           tag,
                                           style: const TextStyle(
@@ -238,7 +209,7 @@ class _SelectGirlfriendScreenState
             Positioned(
               left: 10, // カードの外側、端に近い位置に調整
               child: IconButton(
-                icon: Icon(Icons.arrow_back_ios,
+                icon: const Icon(Icons.arrow_back_ios,
                     size: 40, color: AppColors.primary),
                 onPressed: () {
                   // コントローラーがアタッチされており、最初のページではない場合のみ実行
@@ -255,7 +226,7 @@ class _SelectGirlfriendScreenState
             Positioned(
               right: 10, // 位置を調整
               child: IconButton(
-                icon: Icon(Icons.arrow_forward_ios,
+                icon: const Icon(Icons.arrow_forward_ios,
                     size: 40, color: AppColors.primary),
                 onPressed: () {
                   // コントローラーがアタッチされており、最後のページではない場合のみ実行
