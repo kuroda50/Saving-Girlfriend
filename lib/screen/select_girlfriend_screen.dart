@@ -101,7 +101,7 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
             // キャラクターのスライド表示を処理するためのPageView
             // PageViewがStack内で適切なサイズを持つようにSizedBoxを使用
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.7, // 画面の高さの70%に調整
+              height: MediaQuery.of(context).size.height * 0.9, // 画面の高さの70%に調整
               width: MediaQuery.of(context).size.width, // 全幅
               child: PageView.builder(
                 controller: _pageController, // PageControllerをPageViewにアタッチ
@@ -114,102 +114,105 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
                 },
                 itemBuilder: (context, index) {
                   // スライドする個々のキャラクターカード
-                  return Column(
-                    // PageView内でカードを垂直方向中央に配置するためにColumnを使用
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20.0),
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: AppColors.mainBackground,
-                          borderRadius: BorderRadius.circular(15.0),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.shadow,
-                              spreadRadius: 2,
-                              blurRadius: 7,
-                              offset: const Offset(0, 3), // 影の位置
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // キャラクター名
-                            Container(
-                              // ピンクの背景と角丸のためにContainerを追加
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: const Color(0xE383AB), // ピンクの背景色
-                                borderRadius: BorderRadius.circular(20.0), // 角丸
+                  return GestureDetector(
+                    onTap: _selectGirlfriendAndSaveState,
+                    child: Column(
+                      // PageView内でカードを垂直方向中央に配置するためにColumnを使用
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 20.0),
+                          padding: const EdgeInsets.all(16.0),
+                          decoration: BoxDecoration(
+                            color: AppColors.mainBackground,
+                            borderRadius: BorderRadius.circular(15.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.shadow,
+                                spreadRadius: 2,
+                                blurRadius: 7,
+                                offset: const Offset(0, 3), // 影の位置
                               ),
-                              child: Text(
-                                characters[index]
-                                    ['name'], // PageView.builderの'index'を使用
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.mainText, // 白い文字色
-                                  fontFamily:
-                                      'Noto Sans JP', // 日本語文字用にNoto Sans JPを使用
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // キャラクター名
+                              Container(
+                                // ピンクの背景と角丸のためにContainerを追加
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xE383AB), // ピンクの背景色
+                                  borderRadius: BorderRadius.circular(20.0), // 角丸
+                                ),
+                                child: Text(
+                                  characters[index]
+                                      ['name'], // PageView.builderの'index'を使用
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.mainText, // 白い文字色
+                                    fontFamily:
+                                        'Noto Sans JP', // 日本語文字用にNoto Sans JPを使用
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            // キャラクター画像
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10.0),
-                              // ⚠️ ローカルアセットのパスであるため Image.network を Image.asset に変更
-                              child: Image.asset(
-                                characters[index]
-                                    ['image'], // PageView.builderの'index'を使用
-                                height: 300,
-                                width: 250,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    height: 300,
-                                    width: 250,
-                                    color: AppColors.border,
-                                    child: const Icon(Icons.broken_image,
-                                        size: 50, color: AppColors.subIcon),
-                                    alignment: Alignment.center,
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 15),
-                            // 説明タグのコンテナ
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: AppColors.secondary,
+                              const SizedBox(height: 10),
+                              // キャラクター画像
+                              ClipRRect(
                                 borderRadius: BorderRadius.circular(10.0),
+                                // ⚠️ ローカルアセットのパスであるため Image.network を Image.asset に変更
+                                child: Image.asset(
+                                  characters[index]
+                                      ['image'], // PageView.builderの'index'を使用
+                                  height: 400,
+                                  width: 350,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 400,
+                                      width: 350,
+                                      color: AppColors.border,
+                                      child: const Icon(Icons.broken_image,
+                                          size: 50, color: AppColors.subIcon),
+                                      alignment: Alignment.center,
+                                    );
+                                  },
+                                ),
                               ),
-                              child: Wrap(
-                                spacing: 8.0,
-                                runSpacing: 4.0,
-                                children: (characters[index]['description_tags']
-                                        as List<
-                                            String>) // PageView.builderの'index'を使用
-                                    .map((tag) => Text(
-                                          tag,
-                                          style: const TextStyle(
-                                            color: AppColors.primary,
-                                            fontSize: 16,
-                                            fontFamily: 'Noto Sans JP',
-                                          ),
-                                        ))
-                                    .toList(),
+                              const SizedBox(height: 15),
+                              // 説明タグのコンテナ
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondary,
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                child: Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 4.0,
+                                  children: (characters[index]
+                                          ['description_tags'] as List<
+                                              String>) // PageView.builderの'index'を使用
+                                      .map((tag) => Text(
+                                            tag,
+                                            style: const TextStyle(
+                                              color: AppColors.primary,
+                                              fontSize: 16,
+                                              fontFamily: 'Noto Sans JP',
+                                            ),
+                                          ))
+                                      .toList(),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   );
                 },
               ),
@@ -251,28 +254,6 @@ class _SelectGirlfriendScreenState extends State<SelectGirlfriendScreen> {
               ),
             ),
           ],
-        ),
-      ),
-      // 👈 3. 画面下部に「彼女を選ぶ」ボタンを追加
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary, // ボタンの背景色
-            minimumSize: const Size(double.infinity, 50), // ボタンのサイズ
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          onPressed: _selectGirlfriendAndSaveState, // 選択処理を呼び出す
-          child: const Text(
-            'この彼女を選ぶ',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.subText, // 文字色
-            ),
-          ),
         ),
       ),
     );

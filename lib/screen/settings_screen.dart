@@ -155,7 +155,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           return PopScope(
               canPop: false,
               onPopInvokedWithResult: (bool didPop, dynamic _) {
-                //  万が一popが成功した時は何もしない
+                //  万が一popが成功した時は何もしない
                 if (didPop) return;
                 _handlePop(); // 独自の戻る処理を呼び出す
               },
@@ -376,9 +376,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ],
                         ),
 
-                        // ( OKボタンなどはこの下に続く... )
+                        // OKボタンと彼女選択ボタンの間に間隔を設ける
                         const SizedBox(height: 40),
-                        // OKボタン
+
+                        // OKボタン (一番上に配置)
                         Center(
                           child: SizedBox(
                             width: double.infinity,
@@ -399,6 +400,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ),
                         ),
+                        // OKボタンと彼女選択ボタンの間に間隔を設ける
+                        const SizedBox(height: 40),
+                        // 彼女選択画面遷移ボタン (OKボタンの下に配置)
+                        Center(
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                context.push('/select_girlfriend');
+                              },
+                              // OKボタンと差別化しつつ、アプリのテーマに合わせるためsecondaryを使用
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.secondary,
+                                foregroundColor: AppColors.mainBackground,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                '彼女を選びなおす？',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          ),
+                        ),
+
                         const SizedBox(height: 24),
                       ],
                     ),
