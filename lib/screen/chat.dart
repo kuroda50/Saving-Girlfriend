@@ -75,6 +75,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
     });
   }
 
+  // 仮のリアクションを配置
   List<String> _calcReactionLines(Category cat, int amt) {
     // 10 simple reaction rules (no emojis). The order matters.
     if (cat.id == 'food' && amt < 800) {
