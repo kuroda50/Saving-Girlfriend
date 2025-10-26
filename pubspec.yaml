@@ -43,6 +43,7 @@ dependencies:
   timezone: ^0.10.1
 
   riverpod: any
+  audioplayers: ^6.5.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -72,4 +73,5 @@ flutter:
     - assets/images/background/
     - assets/images/character/
     - assets/images/icon/
-    - assets/bgm/
+    - assets/audio/bgm/
+    - assets/audio/se/
