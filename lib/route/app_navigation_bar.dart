@@ -21,6 +21,7 @@ class AppNavigationBar extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
+        height: 60,
         destinations: [
           const NavigationDestination(icon: Icon(Icons.home), label: 'ホーム'),
           NavigationDestination(

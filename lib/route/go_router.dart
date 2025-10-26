@@ -45,7 +45,7 @@ final router = GoRouter(
             ),
           ),
         ]),
-        // 4. 貢ぎ履歴ブランチ
+        // 2. 支出履歴
         StatefulShellBranch(
             navigatorKey: transactionHistoryNavigatorKey,
             routes: [
@@ -58,7 +58,7 @@ final router = GoRouter(
               ),
             ]),
 
-        // 5. 収支入力ブランチ
+        // 3. 収支入力ブランチ
         StatefulShellBranch(
           navigatorKey: transactionInputNavigatorKey,
           routes: [
@@ -71,7 +71,7 @@ final router = GoRouter(
             ),
           ],
         ),
-        // 3. ストーリー選択ブランチ
+        // 4. ストーリー選択ブランチ
         StatefulShellBranch(navigatorKey: selectStoryNavigatorKey, routes: [
           GoRoute(
             path: '/select_story',
@@ -82,7 +82,7 @@ final router = GoRouter(
             ),
           ),
         ]),
-        // 2. 設定ブランチ
+        // 5. 設定ブランチ
         StatefulShellBranch(navigatorKey: settingsNavigatorKey, routes: [
           GoRoute(
             path: '/setting',
