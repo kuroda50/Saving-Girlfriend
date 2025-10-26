@@ -18,13 +18,6 @@ class EpisodeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.forthBackground,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(20.0),
-        child: AppBar(
-          backgroundColor: AppColors.secondary,
-          elevation: 0,
-        ),
-      ),
       body: currentGirlfriendAsync.when(
         data: (characterId) {
           if (characterId == null) {
