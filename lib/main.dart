@@ -18,18 +18,16 @@ void main() async {
   // 通常はデバイスから取得しますが、ここでは例示
   tz.setLocalLocation(tz.getLocation('Asia/Tokyo'));
 
-  // Device Previewを有効にしたいときはコメントアウトを外してください
   runApp(
-    DevicePreview(
-      enabled: !kReleaseMode,
-      builder: (context) => const ProviderScope(
-        child: MyApp(),
-      ),
-    ),
+    kIsWeb
+        ? DevicePreview(
+            enabled: !kReleaseMode,
+            builder: (context) => const ProviderScope(
+              child: MyApp(),
+            ),
+          )
+        : const ProviderScope(child: MyApp()),
   );
-
-  // 通常のアプリ起動
-  // runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerStatefulWidget {
