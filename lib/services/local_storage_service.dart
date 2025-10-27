@@ -129,8 +129,8 @@ class LocalStorageService {
   }
 
   /// 現在選択中のキャラクターを読み込む
-  Future<String?> getCurrentCharacter() async {
-    return _prefs.getString(_currentCharacterKey);
+  Future<String> getCurrentCharacter() async {
+    return _prefs.getString(_currentCharacterKey) ?? '';
   }
 
   /// キャラクターの好感度を読み込む
