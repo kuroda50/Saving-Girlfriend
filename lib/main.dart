@@ -1,6 +1,7 @@
 // Flutter imports:
 // Package imports:
 import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Project imports:
@@ -18,17 +19,17 @@ void main() async {
   tz.setLocalLocation(tz.getLocation('Asia/Tokyo'));
 
   // Device Previewを有効にしたいときはコメントアウトを外してください
-  // runApp(
-  //   DevicePreview(
-  //     enabled: !kReleaseMode,
-  //     builder: (context) => const ProviderScope(
-  //       child: MyApp(),
-  //     ),
-  //   ),
-  // );
+  runApp(
+    DevicePreview(
+      enabled: !kReleaseMode,
+      builder: (context) => const ProviderScope(
+        child: MyApp(),
+      ),
+    ),
+  );
 
   // 通常のアプリ起動
-  runApp(const ProviderScope(child: MyApp()));
+  // runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerStatefulWidget {

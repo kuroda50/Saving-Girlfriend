@@ -10,7 +10,7 @@ import 'package:saving_girlfriend/screen/select_story_screen.dart';
 import 'package:saving_girlfriend/screen/settings_screen.dart';
 import 'package:saving_girlfriend/screen/story_screen.dart';
 import 'package:saving_girlfriend/screen/title_screen.dart';
-import 'package:saving_girlfriend/screen/transaction_history_screen.dart';
+import 'package:saving_girlfriend/screen/transaction_history/transaction_history_screen.dart';
 import 'package:saving_girlfriend/utils/dialog_utils.dart';
 
 // 各ブランチのナビゲーションスタックを管理するためのGlobalKey
