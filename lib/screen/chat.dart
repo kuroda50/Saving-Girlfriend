@@ -320,7 +320,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
                                       fontSize: 12, color: AppColors.subText)),
                               const SizedBox(height: 4),
                               Text(
-                                  '￥${_formatCurrency(todaySpent)}/${_formatCurrency(data.dailyBudget)}',
+                                  '使った金額 ￥${_formatCurrency(todaySpent)}/${_formatCurrency(data.dailyBudget)}',
                                   style: TextStyle(
                                       fontSize: 19,
                                       fontWeight: FontWeight.bold,

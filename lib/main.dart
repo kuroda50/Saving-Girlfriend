@@ -19,13 +19,14 @@ void main() async {
   tz.setLocalLocation(tz.getLocation('Asia/Tokyo'));
 
   runApp(
-    DevicePreview(
-      enabled: !kReleaseMode,
-      builder: (context) => const ProviderScope(
-        child: MyApp(),
-        // huskyでも動作するか確認.
-      ),
-    ),
+    kIsWeb
+        ? DevicePreview(
+            enabled: !kReleaseMode,
+            builder: (context) => const ProviderScope(
+              child: MyApp(),
+            ),
+          )
+        : const ProviderScope(child: MyApp()),
   );
 }
 
