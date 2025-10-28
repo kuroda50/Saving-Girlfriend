@@ -6,7 +6,7 @@ part 'current_girlfriend_provider.g.dart';
 @Riverpod(keepAlive: true)
 class CurrentGirlfriend extends _$CurrentGirlfriend {
   @override
-  Future<String?> build() async {
+  Future<String> build() async {
     final localStorageService =
         await ref.watch(localStorageServiceProvider.future);
     return localStorageService.getCurrentCharacter();
