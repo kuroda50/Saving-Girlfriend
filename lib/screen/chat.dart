@@ -70,7 +70,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.jumpTo(_scrollController.position.minScrollExtent);
       }
     });
   }
@@ -345,11 +345,13 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
                             data: (messages) {
                               return ListView.builder(
                                 controller: _scrollController,
+                                reverse: true,
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
                                 itemCount: messages.length,
                                 itemBuilder: (context, index) {
-                                  final m = messages[index];
+                                  final m =
+                                      messages[messages.length - 1 - index];
                                   return _buildMessageTile(m);
                                 },
                               );

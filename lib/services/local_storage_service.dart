@@ -26,26 +26,20 @@ class LocalStorageService {
   final SharedPreferences _prefs;
   LocalStorageService(this._prefs);
 
-  static const String _userIdKey = 'user_id';
   static const String _currentCharacterKey = 'current_character';
-  static const String _likeabilityKeyPrefix = '_likeability'; // キャラごとに好感度を保存
-  static const String _transactionHistoryKey = 'transaction_history';
-  static const String _tributionHistoryKey = 'tribution_history';
   static const String _playedEpisode0CharactersKey =
       'played_episode_0_characters'; // 0話再生済みキャラクターのIDリスト
-  // 設定関連のキー
   static const String _notificationsEnabledKey = 'notifications_enabled';
-  static const String _bgmVolumeKey = 'bgm_volume';
   static const String _targetSavingAmountKey = 'target_saving_amount';
+  static const String _bgmVolumeKey = 'bgm_volume';
+
+  // 履歴関連のキー
+  static const String _transactionHistoryKey = 'transaction_history';
+  static const String _tributionHistoryKey = 'tribution_history';
   static const String _budgetHistoryKey = 'budget_history';
-  static const String _messagesKey = 'chat_messages'; // 会話履歴のキー
+  static const String _messagesKey = 'chat_messages';
 
   // --- 保存 (Save) ---
-
-  /// ユーザーIDを保存する
-  Future<void> saveUserId(String userId) async {
-    await _prefs.setString(_userIdKey, userId);
-  }
 
   /// 会話履歴を保存する
   Future<void> saveMessages(List<Message> messages) async {
@@ -123,20 +117,9 @@ class LocalStorageService {
     return _prefs.getStringList(_playedEpisode0CharactersKey) ?? [];
   }
 
-  /// ユーザーIDを読み込む
-  Future<String?> getUserId() async {
-    return _prefs.getString(_userIdKey);
-  }
-
   /// 現在選択中のキャラクターを読み込む
   Future<String> getCurrentCharacter() async {
     return _prefs.getString(_currentCharacterKey) ?? '';
-  }
-
-  /// キャラクターの好感度を読み込む
-  Future<int> getLikeability(String characterId) async {
-    // ここを書き換える
-    return _prefs.getInt('$characterId$_likeabilityKeyPrefix') ?? 1;
   }
 
   Future<List<TransactionState>> getTransactionHistory() async {
