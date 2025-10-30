@@ -1,15 +1,11 @@
-// Flutter imports:
 import 'package:flutter/material.dart';
-// Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// Project imports:
 import 'package:saving_girlfriend/constants/assets.dart';
 import 'package:saving_girlfriend/models/comment_model.dart';
 import 'package:saving_girlfriend/widgets/super_chat_modal.dart';
-
 import '../providers/home_screen_provider.dart';
-import '../providers/likeability_provider.dart'; // ★★★ この行を追加 ★★★
-import '../providers/spendable_amount_provider.dart'; // ★ 新しいProviderをインポート
+import '../providers/likeability_provider.dart';
+import '../providers/spendable_amount_provider.dart';
 
 // HomeScreen 本体
 class HomeScreen extends ConsumerWidget {
@@ -79,7 +75,7 @@ class _LiveHeader extends ConsumerWidget {
               children: [
                 const CircleAvatar(
                   radius: 18,
-                  backgroundImage: AssetImage('assets/icons/suzunari_icon.png'),
+                  backgroundImage: AssetImage(AppAssets.characterSuzunari),
                 ),
                 const SizedBox(width: 8),
                 Column(
@@ -322,7 +318,7 @@ class _CommentsList extends ConsumerWidget {
 // 通常コメントの表示Widget
 class _NormalCommentItem extends StatelessWidget {
   final Comment comment;
-  const _NormalCommentItem({required this.comment});
+  const _NormalCommentItem({super.key, required this.comment});
 
   @override
   Widget build(BuildContext context) {

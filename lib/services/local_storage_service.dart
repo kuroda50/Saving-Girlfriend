@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Project imports:
 import 'package:saving_girlfriend/constants/settings_defaults.dart';
 import 'package:saving_girlfriend/models/budget_history.dart';
+import 'package:saving_girlfriend/models/message.dart';
 import 'package:saving_girlfriend/models/settings_state.dart';
 import 'package:saving_girlfriend/models/transaction_state.dart';
 import 'package:saving_girlfriend/models/tribute_history_state.dart';
@@ -25,22 +26,26 @@ class LocalStorageService {
   final SharedPreferences _prefs;
   LocalStorageService(this._prefs);
 
-  static const String _userIdKey = 'user_id';
   static const String _currentCharacterKey = 'current_character';
-  static const String _likeabilityKeyPrefix = '_likeability'; // キャラごとに好感度を保存
+  static const String _playedEpisode0CharactersKey =
+      'played_episode_0_characters'; // 0話再生済みキャラクターのIDリスト
+  static const String _notificationsEnabledKey = 'notifications_enabled';
+  static const String _targetSavingAmountKey = 'target_saving_amount';
+  static const String _bgmVolumeKey = 'bgm_volume';
+
+  // 履歴関連のキー
   static const String _transactionHistoryKey = 'transaction_history';
   static const String _tributionHistoryKey = 'tribution_history';
-  // 設定関連のキー
-  static const String _notificationsEnabledKey = 'notifications_enabled';
-  static const String _bgmVolumeKey = 'bgm_volume';
-  static const String _targetSavingAmountKey = 'target_saving_amount';
   static const String _budgetHistoryKey = 'budget_history';
+  static const String _messagesKey = 'chat_messages';
 
   // --- 保存 (Save) ---
 
-  /// ユーザーIDを保存する
-  Future<void> saveUserId(String userId) async {
-    await _prefs.setString(_userIdKey, userId);
+  /// 会話履歴を保存する
+  Future<void> saveMessages(List<Message> messages) async {
+    final String encodedData =
+        jsonEncode(messages.map((m) => m.toJson()).toList());
+    await _prefs.setString(_messagesKey, encodedData);
   }
 
   /// 現在選択中のキャラクターを保存する
@@ -89,32 +94,32 @@ class LocalStorageService {
     await _prefs.setString(_budgetHistoryKey, jsonEncode(budgetHistoryJson));
   }
 
-  /// ストーリー再生済みフラグを保存
-  Future<void> setPlayedStory() async {
-    await _prefs.setBool('has_played_story', true);
+  /// 指定されたキャラクターの0話が再生済みであることを保存する
+  Future<void> setEpisode0Played(String characterId) async {
+    final List<String> playedCharacters = getPlayedEpisode0Characters();
+    if (!playedCharacters.contains(characterId)) {
+      playedCharacters.add(characterId);
+      await _prefs.setStringList(
+          _playedEpisode0CharactersKey, playedCharacters);
+    }
   }
 
   // --- 読み込み (Load) ---
 
-  //story再生
-  Future<bool> hasPlayedStory() async {
-    return _prefs.getBool('has_played_story') ?? false;
+  /// 指定されたキャラクターの0話が再生済みかどうかを返す
+  bool hasPlayedEpisode0(String characterId) {
+    final List<String> playedCharacters = getPlayedEpisode0Characters();
+    return playedCharacters.contains(characterId);
   }
 
-  /// ユーザーIDを読み込む
-  Future<String?> getUserId() async {
-    return _prefs.getString(_userIdKey);
+  /// 0話が再生済みのキャラクターIDのリストを取得する
+  List<String> getPlayedEpisode0Characters() {
+    return _prefs.getStringList(_playedEpisode0CharactersKey) ?? [];
   }
 
   /// 現在選択中のキャラクターを読み込む
-  Future<String?> getCurrentCharacter() async {
-    return _prefs.getString(_currentCharacterKey);
-  }
-
-  /// キャラクターの好感度を読み込む
-  Future<int> getLikeability(String characterId) async {
-    // ここを書き換える
-    return _prefs.getInt('$characterId$_likeabilityKeyPrefix') ?? 1;
+  Future<String> getCurrentCharacter() async {
+    return _prefs.getString(_currentCharacterKey) ?? '';
   }
 
   Future<List<TransactionState>> getTransactionHistory() async {
@@ -186,26 +191,14 @@ class LocalStorageService {
       )
     ];
   }
+
+  /// 会話履歴を読み込む
+  Future<List<Message>> loadMessages() async {
+    final String? encodedData = _prefs.getString(_messagesKey);
+    if (encodedData == null) {
+      return [];
+    }
+    final List<dynamic> decodedData = jsonDecode(encodedData);
+    return decodedData.map((item) => Message.fromJson(item)).toList();
+  }
 }
-
-// <データ設計>
-// current_character: "characterA" (String)
-// characterA_likeability: 85(int)
-// transaction_history
-// [
-//   {"id": "transaction_1759380715075", "type": "income", "date": "2024-06-25", "amount": 50000, "category": category},
-//   {"id": "transaction_1759380715075", "type": "expense", "date": "2024-06-25", "amount": 1000, "category": category},
-//   {"id": "transaction_1759380715075", "type": "expense", "date": "2024-06-26", "amount": 500, "category": category},
-// ]List<String>
-// tribute_history
-// [
-//  {"id": 0101101001..., "character": "SuzunariOto", "date": "2024-06-25", "amount": 500},
-//  {"id": 0101101001..., "character": "SuzunariOto", "date": "2024-06-25", "amount": 500},
-//  {"id": 0101101001..., "character": "SuzunariOto", "date": "2024-06-25", "amount": 500},
-// ]
-
-// 設定関連
-// notifications_enabled: true (bool)
-// bgm_volume: 75 (double)
-// target_saving_amount: 100000 (int)
-// daily_budget_amount: 1000 (int)
