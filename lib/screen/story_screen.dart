@@ -17,7 +17,6 @@ import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 import 'package:saving_girlfriend/stories/story_repository.dart';
 import '../constants/color.dart';
-import '../stories/suzunari_oto.dart';
 
 class StoryScreen extends ConsumerWidget {
   final int storyIndex;
@@ -30,17 +29,17 @@ class StoryScreen extends ConsumerWidget {
     return characterIdAsync.when(
       data: (characterId) {
         if (characterId == null) {
-          return _ErrorScreen('キャラクターが選択されていません');
+          return const _ErrorScreen('キャラクターが選択されていません');
         }
         final storyRepo = ref.read(storyRepositoryProvider);
         final story = storyRepo.getStoryByCharacterId(characterId);
         final character = storyRepo.getCharacterById(characterId);
 
         if (story == null || character == null) {
-          return _ErrorScreen('ストーリーデータが見つかりません');
+          return const _ErrorScreen('ストーリーデータが見つかりません');
         }
         if (storyIndex < 0 || storyIndex >= story.dialogue.length) {
-          return _ErrorScreen('エピソードが見つかりません');
+          return const _ErrorScreen('エピソードが見つかりません');
         }
 
         return _StoryPlayer(
@@ -75,6 +74,8 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   int _lineIndex = 0;
   bool _isProcessing = false;
   bool _isStreaming = false;
+  bool _isAutoPlay = false;
+  Timer? _autoPlayTimer;
 
   late StreamController<String> _textStreamController;
   String _fullText = "";
@@ -91,6 +92,7 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   @override
   void dispose() {
     _textStreamController.close();
+    _autoPlayTimer?.cancel();
     super.dispose();
   }
 
@@ -106,50 +108,73 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
     _textStreamController.add("");
 
     for (int i = 0; i < _fullText.length; i++) {
+      if (!mounted) return; // Check on each iteration
+
       if (!_isStreaming) {
         _textStreamController.add(_fullText);
-        return;
-      }
-      await Future.delayed(const Duration(milliseconds: 40));
-      if (!_isStreaming) {
-        _textStreamController.add(_fullText);
-        return;
+        break;
       }
       currentText += _fullText[i];
       _textStreamController.add(currentText);
+      await Future.delayed(const Duration(milliseconds: 40));
     }
+
+    if (!mounted) return;
 
     setState(() {
       _isStreaming = false;
     });
+
+    if (_isAutoPlay) {
+      _scheduleNextLine();
+    }
   }
 
   void _onTap() {
     if (_isProcessing) return;
+
     setState(() {
       _isProcessing = true;
     });
 
     if (_isStreaming) {
+      // If streaming, just finish the animation.
+      // Auto-play remains active if it was on.
       setState(() {
         _isStreaming = false;
       });
     } else {
+      // If not streaming, tapping advances to the next line.
+      // If auto-play is on, we just skip the wait and go to the next line.
       _goToNextLine();
     }
 
-    setState(() {
-      _isProcessing = false;
+    // Using a short delay to prevent rapid state changes
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
     });
   }
 
   void _goToNextLine() async {
+    _autoPlayTimer?.cancel();
+
     if (_lineIndex < _currentEpisodeDialogue.length - 1) {
       setState(() {
         _lineIndex++;
       });
       _startStreamingText();
     } else {
+      // Story finished, turn off auto-play
+      if (_isAutoPlay) {
+        setState(() {
+          _isAutoPlay = false;
+        });
+      }
+
       final localStorage = await ref.read(localStorageServiceProvider.future);
 
       // 0話が過去に再生されたことがあるかを判断して次の遷移画面を変える
@@ -171,12 +196,41 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
     }
   }
 
+  void _toggleAutoPlay() {
+    setState(() {
+      _isAutoPlay = !_isAutoPlay;
+    });
+    if (_isAutoPlay && !_isStreaming) {
+      _goToNextLine();
+    } else if (!_isAutoPlay) {
+      _autoPlayTimer?.cancel();
+    }
+  }
+
+  void _scheduleNextLine() {
+    _autoPlayTimer?.cancel();
+    _autoPlayTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted && _isAutoPlay) {
+        _goToNextLine();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
         automaticallyImplyLeading: false,
+        title: Text(
+          '第${widget.episodeIndex}話 ${widget.story.episodes[widget.episodeIndex].title}',
+          style: const TextStyle(
+            color: AppColors.mainIcon,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: GestureDetector(
         onTap: _onTap,
@@ -198,42 +252,41 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
                     fit: BoxFit.contain,
                     height: MediaQuery.of(context).size.height * 0.5,
                   ),
-                  StreamBuilder<String>(
-                    stream: _textStreamController.stream,
-                    initialData: "",
-                    builder: (context, snapshot) {
-                      return _ChatWidget(text: snapshot.data ?? "");
-                    },
-                  ),
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Stack(
                     children: [
-                      _CircleButton(Icons.play_arrow, onPressed: _onTap),
-                      const SizedBox(width: 16),
-                      _CircleButton(Icons.skip_next,
-                          onPressed: () => context.pop()),
-                      const SizedBox(width: 16),
-                      _CircleButton(Icons.list_alt,
-                          onPressed: () => _showLogDialog(context)),
+                      Padding(
+                        // Add padding to the top of the chat widget to make space for the buttons
+                        padding: const EdgeInsets.only(top: 25.0),
+                        child: StreamBuilder<String>(
+                          stream: _textStreamController.stream,
+                          initialData: "",
+                          builder: (context, snapshot) {
+                            return _ChatWidget(text: snapshot.data ?? "");
+                          },
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        left: 32,
+                        child: Row(
+                          children: [
+                            _CircleButton(
+                              _isAutoPlay ? Icons.pause : Icons.play_arrow,
+                              onPressed: _toggleAutoPlay,
+                            ),
+                            const SizedBox(width: 8),
+                            _CircleButton(Icons.skip_next,
+                                onPressed: () => context.pop()),
+                            const SizedBox(width: 8),
+                            _CircleButton(Icons.list_alt,
+                                onPressed: () => _showLogDialog(context)),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 30),
                 ],
-              ),
-              Positioned(
-                top: 20,
-                left: 20,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  color: Colors.pink[300],
-                  child: Text(
-                    '第${widget.episodeIndex + 1}話',
-                    style:
-                        const TextStyle(color: AppColors.subText, fontSize: 18),
-                  ),
-                ),
               ),
             ],
           ),
@@ -243,18 +296,23 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   }
 
   Widget _CircleButton(IconData icon, {required VoidCallback onPressed}) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.secondary,
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: Icon(icon),
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(),
-        iconSize: 40,
-        color: AppColors.mainIcon,
-        onPressed: onPressed,
+    return ClipOval(
+      // Ensures the ripple effect is also circular
+      child: Material(
+        color: AppColors.secondary, // Button color
+        child: InkWell(
+          splashColor: AppColors.primary.withOpacity(0.5), // Ripple color
+          onTap: onPressed,
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: Icon(
+              icon,
+              size: 24,
+              color: AppColors.mainIcon,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -262,20 +320,90 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   void _showLogDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         final log =
             _currentEpisodeDialogue.sublist(0, _lineIndex + 1).join('\n\n');
-        return AlertDialog(
-          title: const Text('ログ'),
-          content: SingleChildScrollView(child: Text(log)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('閉じる'),
-            ),
-          ],
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: _buildCuteDialog(context, log),
         );
       },
+    );
+  }
+
+  Widget _buildCuteDialog(BuildContext context, String log) {
+    return Container(
+      padding: const EdgeInsets.all(24), // More padding
+      decoration: BoxDecoration(
+        color: AppColors.mainBackground, // White background
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 1,
+          )
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'ログ',
+            style: TextStyle(
+              color: AppColors.mainText, // Black text
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.forthBackground, // Light grey-blue
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: SingleChildScrollView(
+              child: Text(
+                log,
+                style: const TextStyle(
+                  color: AppColors.mainText,
+                  fontSize: 15,
+                  height: 1.6,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Using an OutlinedButton for a more modern feel
+          OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary, // Pink text/border
+              side: const BorderSide(color: AppColors.primary, width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+            ),
+            child: const Text(
+              '閉じる',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
