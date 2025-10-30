@@ -16,7 +16,7 @@ import 'package:saving_girlfriend/models/story_model.dart';
 import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/services/local_storage_service.dart';
 import 'package:saving_girlfriend/stories/story_repository.dart';
-import '../../../constants/color.dart';
+import '../constants/color.dart';
 
 class StoryScreen extends ConsumerWidget {
   final int storyIndex;
@@ -114,15 +114,9 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
         _textStreamController.add(_fullText);
         break;
       }
-      await Future.delayed(const Duration(milliseconds: 40));
-      if (!mounted) return; // Check after await
-
-      if (!_isStreaming) {
-        _textStreamController.add(_fullText);
-        break;
-      }
       currentText += _fullText[i];
       _textStreamController.add(currentText);
+      await Future.delayed(const Duration(milliseconds: 40));
     }
 
     if (!mounted) return;
