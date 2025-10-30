@@ -67,7 +67,8 @@ fvm flutter --version
 ```
 `Flutter 3.35.6` と表示されるはずです。
 
-以降、`flutter` コマンドの代わりに `fvm flutter` を使用してください。（例: `fvm flutter run`, `fvm flutter pub get`）
+以降、`flutter` コマンドの代わりに `fvm flutter` を使用してください。（例: `
+
 
 ---
 
@@ -99,7 +100,7 @@ fvm flutter run
 ├── android
 ├── assets
 │   └── images
-├── backend 
+├── backend
 ├── build
 ├── ios
 ├── lib

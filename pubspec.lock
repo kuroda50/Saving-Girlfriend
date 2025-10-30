@@ -318,6 +318,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_glitter_effect:
+    dependency: "direct main"
+    description:
+      name: flutter_glitter_effect
+      sha256: "6d2a07882862af3aa88abfc1fd5fbdbc81b4024d45669311aabe46c4962a8a44"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.3"
   flutter_lints:
     dependency: "direct dev"
     description:

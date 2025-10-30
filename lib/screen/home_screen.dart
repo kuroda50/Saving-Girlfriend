@@ -318,7 +318,7 @@ class _CommentsList extends ConsumerWidget {
 // 通常コメントの表示Widget
 class _NormalCommentItem extends StatelessWidget {
   final Comment comment;
-  const _NormalCommentItem({super.key, required this.comment});
+  const _NormalCommentItem({required this.comment});
 
   @override
   Widget build(BuildContext context) {

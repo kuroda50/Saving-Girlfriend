@@ -41,6 +41,7 @@ dependencies:
   uuid: ^4.5.1
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
+  flutter_glitter_effect: 1.0.3
 
   riverpod: any
   audioplayers: ^6.5.1
