@@ -2,9 +2,14 @@
 import 'package:flutter/material.dart';
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/widgets/particle_effects.dart' as effects;
 
-import '../providers/particle_provider.dart'; // particleProvider が定義されているファイル
+// Project imports:
+import '../../providers/particle_provider.dart';
+import 'swipe_sparkle.dart'; // ←★ これが 'SwipeSparkle' の定義
+import 'tap_sparkle_burst.dart';
+import 'trail_particle.dart';
+
+// ↑↑↑↑ ★ここまで★ ↑↑↑↑
 
 class ParticleRenderer extends ConsumerWidget {
   const ParticleRenderer({super.key});
@@ -19,7 +24,7 @@ class ParticleRenderer extends ConsumerWidget {
       children: [
         // Notifierが持つリストを描画する
         for (final particle in particleState.trailParticles)
-          effects.TrailParticle(
+          TrailParticle(
             // ★最重要：必ず ValueKey を指定する
             key: ValueKey(particle.id),
             position: particle.position,
@@ -27,7 +32,7 @@ class ParticleRenderer extends ConsumerWidget {
 
         // ▼▼▼▼ ここから追加 ▼▼▼▼
         for (final particle in particleState.swipeSparkles) // ← 小さい破裂
-          effects.SwipeSparkle(
+          SwipeSparkle(
             // ←★ 新しいウィジェットを呼ぶ
             key: ValueKey(particle.id),
             position: particle.position,
@@ -35,7 +40,7 @@ class ParticleRenderer extends ConsumerWidget {
         // ▲▲▲▲ ここまで追加 ▲▲▲▲
 
         for (final particle in particleState.sparkles)
-          effects.TapSparkleBurst(
+          TapSparkleBurst(
             // ★最重要：必ず ValueKey を指定する
             key: ValueKey(particle.id),
             position: particle.position,

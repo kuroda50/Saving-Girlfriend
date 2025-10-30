@@ -9,7 +9,7 @@ import 'package:saving_girlfriend/providers/particle_provider.dart';
 // Project imports:
 import 'package:saving_girlfriend/route/go_router.dart';
 import 'package:saving_girlfriend/services/notification_service.dart';
-import 'package:saving_girlfriend/widgets/particle_renderer.dart';
+import "package:saving_girlfriend/widgets/effects/particle_renderer.dart";
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
