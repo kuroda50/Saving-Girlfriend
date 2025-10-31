@@ -7,8 +7,9 @@ class AppAssets {
   // --- Background ---
   static const String backgroundClassroom = '$_background/classroom.jpg';
   static const String backgroundTitle = '$_background/title.png';
+  static const String backgroundHomeScreen = '$_background/stream.png';
   // --- Character ---
-  static const String characterSuzunari = '$_character/suzunari.png';
+  static const String characterSuzunari = '$_character/suzunarioto.png';
   static const String characterComingsoon = '$_character/comingsoon.webp';
   static const String characterTitleicon = '$_character/titleicon.png';
   // --- Icon ---
