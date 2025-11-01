@@ -19,11 +19,24 @@ class StoryCharacter {
 class Story {
   final String characterId; // 対応するキャラクターのID
   final List<Episode> episodes; // そのキャラクターのエピソードリスト
-  final List<List<String>> dialogue; // そのキャラクターのセリフデータ
+
+  // ★変更点: List<List<String>> から List<List<DialogueLine>> に変更
+  final List<List<DialogueLine>> dialogue; // そのキャラクターのセリフデータ
 
   const Story({
     required this.characterId,
     required this.episodes,
     required this.dialogue,
+  });
+}
+
+// 話者とセリフをセットで保持するクラス
+class DialogueLine {
+  final String speaker; // 話者名 (例: "鈴鳴おと", "自分")
+  final String text; // セリフ
+
+  const DialogueLine({
+    required this.speaker,
+    required this.text,
   });
 }

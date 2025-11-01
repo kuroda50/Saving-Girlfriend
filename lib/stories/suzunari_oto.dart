@@ -1,35 +1,54 @@
-/// 鈴鳴おとのセリフデータ
-const List<List<String>> suzunariOtoDialogue = [
+// lib/stories/suzunari_oto.dart
+
+import 'package:saving_girlfriend/models/story_model.dart';
+
+// 鈴鳴おとのセリフデータ本体
+// ★変更点: 型を List<List<DialogueLine>> に修正
+const List<List<DialogueLine>> suzunariOtoDialogue = [
   // Episode 0: 出会い
   [
-    'おと「ここ、座ってもいいですか？」',
-    '図書館のすみにある静かな席\nノートに目を落としていた俺は 声に気づいて顔を上げた',
-    'そこにいたのは 見たことのない女の子\nたぶん1年生 髪をゆるく結んで セーラー服に小さな鈴のキーホルダーが揺れてた',
-    '「…いいけど」',
-    '「ありがとうございます」',
-    'にこっと笑って 彼女は俺の隣に座った\nそして静かにノートを広げて 鉛筆を走らせる',
-    '「ここ、静かでいいですね」',
-    '「まあ…いつも人いないから」',
-    '「落ち着く場所って 大事ですよね」',
-    'なんて答えればいいのかわからず 俺は「うん」とだけ返した\nそれでも彼女はにこにこしていた',
-    '「先輩って 2年生ですか？」',
-    '「うん」',
-    '「ですよね わたし1年です 鈴鳴おとって言います」',
-    '「俺は○○」',
-    '「〇〇せんぱい」',
-    '呼ばれて 少し胸が高まった\nけど 不思議と嫌じゃなかった',
-    '「ここ、毎日来てもいいですか？」',
-    '「…好きにすれば」',
-    '「じゃあ 来ます」',
-    'それだけ言って 鈴鳴はまたノートに集中しはじめた\n隣からシャーペンのカリカリという音だけが聞こえる',
-    'その日から 時々 彼女は来るようになった\nおしゃべりは多くないけど 目が合うと必ずにこって笑う',
-    'それだけで 何も言わなくても時間が流れた',
-    '梅雨に入ったころ 鈴鳴はふいに来なくなった',
-    '理由もわからないまま 俺はまた一人で 窓の外を眺めるようになった',
-    'けれど 時々風の音に混じって 鈴の音が聞こえた気がした',
+    // 元のデータから話者とセリフを分離
+    DialogueLine(speaker: '鈴鳴おと', text: 'ここ、座ってもいいですか？'),
+    DialogueLine(
+        speaker: 'モノローグ', text: '図書館のすみにある静かな席\nノートに目を落としていた俺は 声に気づいて顔を上げた'),
+    DialogueLine(
+        speaker: 'モノローグ',
+        text: 'そこにいたのは 見たことのない女の子\nたぶん1年生 髪をゆるく結んで セーラー服に小さな鈴のキーホルダーが揺れてた'),
+    DialogueLine(speaker: '自分', text: '…いいけど'),
+    DialogueLine(speaker: '鈴鳴おと', text: 'ありがとうございます'),
+    DialogueLine(
+        speaker: 'モノローグ', text: 'にこっと笑って 彼女は俺の隣に座った\nそして静かにノートを広げて 鉛筆を走らせる'),
+    DialogueLine(speaker: '鈴鳴おと', text: 'ここ、静かでいいですね'),
+    DialogueLine(speaker: '自分', text: 'まあ…いつも人いないから'),
+    DialogueLine(speaker: '鈴鳴おと', text: '落ち着く場所って 大事ですよね'),
+    DialogueLine(
+        speaker: 'モノローグ',
+        text: 'なんて答えればいいのかわからず 俺は「うん」とだけ返した\nそれでも彼女はにこにこしていた'),
+    DialogueLine(speaker: '鈴鳴おと', text: '先輩って 2年生ですか？'),
+    DialogueLine(speaker: '自分', text: 'うん'),
+    DialogueLine(speaker: '鈴鳴おと', text: 'ですよね わたし1年です 鈴鳴おとって言います'),
+    DialogueLine(speaker: '自分', text: '俺は○○'),
+    DialogueLine(speaker: '鈴鳴おと', text: '〇〇せんぱい'),
+    DialogueLine(speaker: 'モノローグ', text: '呼ばれて 少し胸が高まった\nけど 不思議と嫌じゃなかった'),
+    DialogueLine(speaker: '鈴鳴おと', text: 'ここ、毎日来てもいいですか？'),
+    DialogueLine(speaker: '自分', text: '…好きにすれば'),
+    DialogueLine(speaker: '鈴鳴おと', text: 'じゃあ 来ます'),
+    DialogueLine(
+        speaker: 'モノローグ',
+        text: 'それだけ言って 鈴鳴はまたノートに集中しはじめた\n隣からシャーペンのカリカリという音だけが聞こえる'),
+    DialogueLine(
+        speaker: 'モノローグ',
+        text: 'その日から 時々 彼女は来るようになった\nおしゃべりは多くないけど 目が合うと必ずにこって笑う'),
+    DialogueLine(speaker: 'モノローグ', text: 'それだけで 何も言わなくても時間が流れた'),
+    DialogueLine(speaker: 'モノローグ', text: '梅雨に入ったころ 鈴鳴はふいに来なくなった'),
+    DialogueLine(speaker: 'モノローグ', text: '理由もわからないまま 俺はまた一人で 窓の外を眺めるようになった'),
+    DialogueLine(speaker: 'モノローグ', text: 'けれど 時々風の音に混じって 鈴の音が聞こえた気がした'),
   ],
+
   // Episode 1: 初めての会話 (データ未入力)
-  [],
+  [
+    // const DialogueLine(speaker: '鈴鳴おと', text: 'セリフ...'),
+  ],
   // Episode 2: 公園の散歩 (データ未入力)
   [],
   // Episode 3: 好きな食べ物 (データ未入力)
