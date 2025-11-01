@@ -49,23 +49,24 @@ const suzunariOtoCharacter = StoryCharacter(
   },
 );
 
-/// --- ストーリー定義 ---
+final List<Episode> SuzunariOtoEpisodes = [
+  Episode(number: 0, title: '出会い', requiredLikeability: 0),
+  Episode(number: 1, title: '初めての会話', requiredLikeability: 10),
+  Episode(number: 2, title: '公園の散歩', requiredLikeability: 20),
+  Episode(number: 3, title: '好きな食べ物', requiredLikeability: 30),
+  Episode(number: 4, title: '休日の過ごし方', requiredLikeability: 40),
+  Episode(number: 5, title: '趣味の話', requiredLikeability: 50),
+  Episode(number: 6, title: '小さなプレゼント', requiredLikeability: 60),
+  Episode(number: 7, title: '雨の日の思い出', requiredLikeability: 70),
+  Episode(number: 8, title: '喧嘩と仲直り', requiredLikeability: 80),
+  Episode(number: 9, title: '伝えたい言葉', requiredLikeability: 90),
+  Episode(number: 10, title: 'そして未来へ', requiredLikeability: 100),
+];
+
 final suzunariOtoStory = Story(
   characterId: suzunariOtoCharacter.id,
-  episodes: [
-    Episode(number: 0, title: '出会い', requiredLikeability: 0),
-    Episode(number: 1, title: '初めての会話', requiredLikeability: 10),
-    Episode(number: 2, title: '公園の散歩', requiredLikeability: 20),
-    Episode(number: 3, title: '好きな食べ物', requiredLikeability: 30),
-    Episode(number: 4, title: '休日の過ごし方', requiredLikeability: 40),
-    Episode(number: 5, title: '趣味の話', requiredLikeability: 50),
-    Episode(number: 6, title: '小さなプレゼント', requiredLikeability: 60),
-    Episode(number: 7, title: '雨の日の思い出', requiredLikeability: 70),
-    Episode(number: 8, title: '喧嘩と仲直り', requiredLikeability: 80),
-    Episode(number: 9, title: '伝えたい言葉', requiredLikeability: 90),
-    Episode(number: 10, title: 'そして未来へ', requiredLikeability: 100),
-  ],
-  dialogue: suzunariOtoDialogue,
+  episodes: SuzunariOtoEpisodes, // 上で定義した変数を使用
+  dialogue: suzunariOtoDialogue, // suzunari_oto.dart からインポートしたデータを使用
 );
 
 /// --- リポジトリ ---

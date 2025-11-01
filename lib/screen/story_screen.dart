@@ -78,9 +78,13 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   Timer? _autoPlayTimer;
 
   late StreamController<String> _textStreamController;
-  String _fullText = "";
-  List<String> get _currentEpisodeDialogue =>
+
+  // ★変更点: List<String> から List<DialogueLine> に変更
+  List<DialogueLine> get _currentEpisodeDialogue =>
       widget.story.dialogue[widget.episodeIndex];
+
+  // ★変更点: 現在の行のDialogueLineを取得するgetterを追加
+  DialogueLine get _currentLine => _currentEpisodeDialogue[_lineIndex];
 
   @override
   void initState() {
@@ -103,18 +107,20 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
       _isStreaming = true;
     });
 
-    _fullText = _currentEpisodeDialogue[_lineIndex];
+    // ★変更点: _currentLine.text を使用
+    final String fullText = _currentLine.text;
     String currentText = "";
     _textStreamController.add("");
 
-    for (int i = 0; i < _fullText.length; i++) {
-      if (!mounted) return; // Check on each iteration
+    for (int i = 0; i < fullText.length; i++) {
+      if (!mounted) return;
 
       if (!_isStreaming) {
-        _textStreamController.add(_fullText);
+        // ★変更点: fullText をストリームに追加
+        _textStreamController.add(fullText);
         break;
       }
-      currentText += _fullText[i];
+      currentText += fullText[i];
       _textStreamController.add(currentText);
       await Future.delayed(const Duration(milliseconds: 40));
     }
@@ -138,18 +144,13 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
     });
 
     if (_isStreaming) {
-      // If streaming, just finish the animation.
-      // Auto-play remains active if it was on.
       setState(() {
         _isStreaming = false;
       });
     } else {
-      // If not streaming, tapping advances to the next line.
-      // If auto-play is on, we just skip the wait and go to the next line.
       _goToNextLine();
     }
 
-    // Using a short delay to prevent rapid state changes
     Future.delayed(const Duration(milliseconds: 50), () {
       if (mounted) {
         setState(() {
@@ -168,7 +169,6 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
       });
       _startStreamingText();
     } else {
-      // Story finished, turn off auto-play
       if (_isAutoPlay) {
         setState(() {
           _isAutoPlay = false;
@@ -176,20 +176,16 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
       }
 
       final localStorage = await ref.read(localStorageServiceProvider.future);
-
-      // 0話が過去に再生されたことがあるかを判断して次の遷移画面を変える
       final hasPlayedEpisode0ForCharacter =
           localStorage.hasPlayedEpisode0(widget.character.id);
 
       if (mounted) {
         if (widget.episodeIndex == 0 && !hasPlayedEpisode0ForCharacter) {
-          // 初めて0話を再生するならホーム画面へ
           context.go('/home');
         } else {
           context.go('/select_story');
         }
       }
-      // エピソード0が終了した場合のみ、再生済みフラグを立てる
       if (widget.episodeIndex == 0) {
         await localStorage.setEpisode0Played(widget.character.id);
       }
@@ -255,13 +251,16 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
                   Stack(
                     children: [
                       Padding(
-                        // Add padding to the top of the chat widget to make space for the buttons
                         padding: const EdgeInsets.only(top: 25.0),
                         child: StreamBuilder<String>(
                           stream: _textStreamController.stream,
                           initialData: "",
                           builder: (context, snapshot) {
-                            return _ChatWidget(text: snapshot.data ?? "");
+                            // ★変更点: 現在の話者名（_currentLine.speaker）を渡す
+                            return _ChatWidget(
+                              speaker: _currentLine.speaker,
+                              text: snapshot.data ?? "",
+                            );
                           },
                         ),
                       ),
@@ -297,11 +296,10 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
 
   Widget _CircleButton(IconData icon, {required VoidCallback onPressed}) {
     return ClipOval(
-      // Ensures the ripple effect is also circular
       child: Material(
-        color: AppColors.secondary, // Button color
+        color: AppColors.secondary,
         child: InkWell(
-          splashColor: AppColors.primary.withOpacity(0.5), // Ripple color
+          splashColor: AppColors.primary.withOpacity(0.5),
           onTap: onPressed,
           child: SizedBox(
             width: 40,
@@ -317,88 +315,164 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
     );
   }
 
+  // 1. _showLogDialog メソッド (呼び出すメソッド名を変更)
   void _showLogDialog(BuildContext context) {
+    // 現在の行までのセリフリストを取得
+    final logLines = _currentEpisodeDialogue.sublist(0, _lineIndex + 1);
+    // メインキャラクターの名前を取得（比較用）
+    final mainCharacterName = widget.character.name;
+
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.6), // 背景の暗さは維持
       builder: (context) {
-        final log =
-            _currentEpisodeDialogue.sublist(0, _lineIndex + 1).join('\n\n');
         return Dialog(
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16), // ダイアログの角丸
           ),
           elevation: 0,
           backgroundColor: Colors.transparent,
-          child: _buildCuteDialog(context, log),
+          // ★変更点: _buildCuteLogDialog を呼び出すように変更
+          child: _buildCuteLogDialog(context, mainCharacterName, logLines),
         );
       },
     );
   }
 
-  Widget _buildCuteDialog(BuildContext context, String log) {
+  // 2. _buildProsekaLogDialog を削除し、こちらの _buildCuteLogDialog に差し替え
+  Widget _buildCuteLogDialog(BuildContext context, String mainCharacterName,
+      List<DialogueLine> logLines) {
     return Container(
-      padding: const EdgeInsets.all(24), // More padding
+      height: MediaQuery.of(context).size.height * 0.75,
       decoration: BoxDecoration(
-        color: AppColors.mainBackground, // White background
-        borderRadius: BorderRadius.circular(16),
+        // ★変更点: 背景を AppColors.mainBackground (白系) に
+        color: AppColors.mainBackground,
+        borderRadius: BorderRadius.circular(16), // 角丸
+        border: Border.all(
+            color: AppColors.primary.withOpacity(0.5), width: 2), // 枠線をピンクに
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: AppColors.primary.withOpacity(0.1), // 影もピンク系に
             blurRadius: 10,
-            spreadRadius: 1,
+            spreadRadius: 2,
           )
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'ログ',
-            style: TextStyle(
-              color: AppColors.mainText, // Black text
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.6,
-            ),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.forthBackground, // Light grey-blue
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: SingleChildScrollView(
-              child: Text(
-                log,
-                style: const TextStyle(
-                  color: AppColors.mainText,
-                  fontSize: 15,
-                  height: 1.6,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Using an OutlinedButton for a more modern feel
-          OutlinedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary, // Pink text/border
-              side: const BorderSide(color: AppColors.primary, width: 1.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-            ),
-            child: const Text(
-              '閉じる',
+          // 1. ヘッダー ("ログ")
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16.0),
+            child: Text(
+              'ログ',
               style: TextStyle(
-                fontSize: 16,
+                // ★変更点: 文字色をメインテキストカラーに
+                color: AppColors.mainText,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          // 区切り線
+          Container(
+            height: 1,
+            // ★変更点: 区切り線をピンク系に
+            color: AppColors.primary.withOpacity(0.3),
+          ),
+
+          // 2. セリフのリスト
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: logLines.length,
+              itemBuilder: (context, index) {
+                final line = logLines[index];
+                final bool isMainCharacter = line.speaker == mainCharacterName;
+
+                // ★変更点: メインキャラはピンク、その他はセカンダリカラー（青緑）
+                final Color speakerColor = isMainCharacter
+                    ? AppColors.primary // ピンク
+                    : AppColors.secondary; // 青緑
+                final String speakerName = line.speaker;
+
+                // セリフの背景色
+                final Color bubbleColor = isMainCharacter
+                    ? AppColors.primary.withOpacity(0.05) // 薄いピンク
+                    : AppColors.forthBackground; // 薄い青
+
+                // セリフの枠線色
+                final Color bubbleBorderColor = isMainCharacter
+                    ? AppColors.primary.withOpacity(0.4)
+                    : AppColors.secondary.withOpacity(0.4);
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 話者名
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4.0, bottom: 4.0),
+                        child: Text(
+                          speakerName,
+                          style: TextStyle(
+                            color: speakerColor, // 動的な色を適用
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      // セリフの吹き出し
+                      Container(
+                        padding: const EdgeInsets.all(12.0),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                            color: bubbleColor,
+                            borderRadius: BorderRadius.circular(12.0), // 角丸
+                            border: Border.all(
+                                color: bubbleBorderColor, width: 1.5)),
+                        child: Text(
+                          line.text,
+                          style: const TextStyle(
+                            color: AppColors.mainText, // 文字色を黒系に
+                            fontSize: 15,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // 3. 閉じるボタン
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary, // ボタン背景色をピンクに
+                  foregroundColor: AppColors.mainIcon, // ボタン文字色を白に
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30), // 角を丸く
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  '閉じる',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ),
@@ -408,15 +482,19 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   }
 }
 
+// ★変更点: _ChatWidget が話者名(speaker)を受け取るように変更
 class _ChatWidget extends StatelessWidget {
-  final String text;
-  const _ChatWidget({required this.text});
+  final String speaker; // 話者名 (データとしては受け取る)
+  final String text; // セリフ
+  const _ChatWidget({required this.speaker, required this.text});
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      // ★変更点: 高さを 100 に戻す
       height: 100,
       margin: const EdgeInsets.all(16),
+      // ★変更点: Paddingを8に戻す
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: AppColors.mainBackground.withOpacity(0.95),
@@ -426,11 +504,21 @@ class _ChatWidget extends StatelessWidget {
               color: AppColors.nonActive, blurRadius: 4, offset: Offset(0, 2))
         ],
       ),
+      // ★変更点: Column ではなく Row を使う元のレイアウトに戻す
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 15))),
+          // 話者名ヘッダーを削除し、セリフだけを表示
+          Expanded(
+            child: SingleChildScrollView(
+              // セリフが長い場合に備える
+              child: Text(
+                text,
+                style: const TextStyle(fontSize: 15, height: 1.4),
+              ),
+            ),
+          ),
           const SizedBox(width: 8),
         ],
       ),
