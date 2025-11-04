@@ -104,6 +104,15 @@ class LocalStorageService {
     }
   }
 
+  void addPlayedReactionIdForRule(String ruleId, String phraseId) {
+    final key = 'played_reaction_ids_rule_$ruleId';
+    final ids = _prefs.getStringList(key) ?? [];
+    if (!ids.contains(phraseId)) {
+      ids.add(phraseId);
+      _prefs.setStringList(key, ids);
+    }
+  }
+
   // --- 読み込み (Load) ---
 
   /// 指定されたキャラクターの0話が再生済みかどうかを返す
@@ -200,5 +209,17 @@ class LocalStorageService {
     }
     final List<dynamic> decodedData = jsonDecode(encodedData);
     return decodedData.map((item) => Message.fromJson(item)).toList();
+  }
+
+  List<String> getPlayedReactionIdsForRule(String ruleId) {
+    final key = 'played_reaction_ids_rule_$ruleId';
+    return _prefs.getStringList(key) ?? [];
+  }
+
+  // --- 消去 (Remove) ---
+
+  void clearPlayedReactionIdsForRule(String ruleId) {
+    final key = 'played_reaction_ids_rule_$ruleId';
+    _prefs.remove(key);
   }
 }

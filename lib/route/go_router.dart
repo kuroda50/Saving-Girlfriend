@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/providers/setting_provider.dart';
 import 'package:saving_girlfriend/route/app_navigation_bar.dart';
-import 'package:saving_girlfriend/screen/chat.dart';
+import 'package:saving_girlfriend/screen/chat/chat.dart';
 import 'package:saving_girlfriend/screen/home_screen.dart';
 import 'package:saving_girlfriend/screen/select_girlfriend_screen.dart';
 import 'package:saving_girlfriend/screen/select_story_screen.dart';

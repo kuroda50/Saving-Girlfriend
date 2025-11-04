@@ -5,19 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/characters.dart';
 import 'package:saving_girlfriend/constants/color.dart';
 import 'package:saving_girlfriend/models/message.dart';
+import 'package:saving_girlfriend/models/transaction_category.dart';
 import 'package:saving_girlfriend/models/transaction_state.dart';
 import 'package:saving_girlfriend/providers/chat_history_provider.dart';
 import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/providers/setting_provider.dart';
 import 'package:saving_girlfriend/providers/transaction_history_provider.dart';
 import 'package:saving_girlfriend/providers/uuid_provider.dart';
-
-class Category {
-  final String id;
-  final String name;
-
-  Category({required this.id, required this.name});
-}
+import 'package:saving_girlfriend/screen/chat/reaction_service.dart';
+import 'package:saving_girlfriend/services/local_storage_service.dart';
 
 class GirlfriendChatScreen extends ConsumerStatefulWidget {
   const GirlfriendChatScreen({super.key});
@@ -28,18 +24,22 @@ class GirlfriendChatScreen extends ConsumerStatefulWidget {
 }
 
 class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
-  final List<Category> _categories = [
-    Category(id: 'food', name: '食費'),
-    Category(id: 'transport', name: '交通費'),
-    Category(id: 'entertainment', name: '趣味・娯楽'),
-    Category(id: 'social', name: '交際費'),
-    Category(id: 'daily', name: '日用品'),
-    Category(id: 'other', name: 'その他'),
+  final List<TransactionCategory> _categories = [
+    TransactionCategory(id: 'food', name: '食費'),
+    TransactionCategory(id: 'transport', name: '交通費'),
+    TransactionCategory(id: 'entertainment', name: '趣味・娯楽'),
+    TransactionCategory(id: 'social', name: '交際費'),
+    TransactionCategory(id: 'daily', name: '日用品'),
+    TransactionCategory(id: 'other', name: 'その他'),
   ];
 
-  Category _selectedCategory = Category(id: 'food', name: '食費');
+  TransactionCategory _selectedCategory =
+      TransactionCategory(id: 'food', name: '食費');
   String _amountText = '';
   bool _isGirlfriendResponding = false; // 彼女が返信中かどうかを示す状態
+  int oneYenCount = 0;
+  int overOneMillionCount = 0;
+  int lastInputAmount = 0;
 
   final ScrollController _scrollController = ScrollController();
 
@@ -75,41 +75,8 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
     });
   }
 
-  // 仮のリアクションを配置
-  List<String> _calcReactionLines(Category cat, int amt) {
-    // 10 simple reaction rules (no emojis). The order matters.
-    if (cat.id == 'food' && amt < 800) {
-      return ['ごはんは安く済んだんだね。', '節約できてていいと思う。'];
-    }
-    if (cat.id == 'food' && amt >= 2000) {
-      return ['ちょっと高めだね。', 'たまにはいいけど、次は気をつけよう。'];
-    }
-    if (cat.id == 'entertainment') {
-      return ['趣味に使ったんだ。', '楽しめたならいいけど、使いすぎ注意ね。'];
-    }
-    if (cat.id == 'social') {
-      return ['交際費か。', 'ちゃんと楽しめたなら問題ないよ。'];
-    }
-    if (amt < 300) {
-      return ['控えめだね。', 'その調子でいこう。'];
-    }
-    if (amt > 3000) {
-      return ['かなり使ったね。', '少しペースを落とそうか。'];
-    }
-    if (cat.id == 'transport') {
-      return ['交通費だね。', 'どこに行ってたの？'];
-    }
-    if (cat.id == 'daily') {
-      return ['日用品の出費か。', '必要なものなら仕方ないね。'];
-    }
-    if (cat.id == 'other') {
-      return ['その他の出費か。', '何に使ったのか気になるよ。'];
-    }
-    // default
-    return ['わかった。', 'ありがと。'];
-  }
-
-  Future<void> _girlfriendRespond(Category cat, int amt, int todaySpent) async {
+  Future<void> _girlfriendRespond(
+      TransactionCategory cat, int amt, int todaySpent) async {
     ref.read(chatHistoryNotifierProvider.notifier).addMessage(Message(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: MessageType.girlfriend,
@@ -117,7 +84,18 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
         time: ChatHistoryNotifier.nowText()));
     _scrollToBottom();
 
-    final lines = _calcReactionLines(cat, amt);
+    final localStorageService =
+        await ref.read(localStorageServiceProvider.future);
+    final reactionService = ReactionService(localStorageService);
+
+    final context = EvaluationContext(
+        category: cat,
+        amount: amt,
+        oneYenCount: oneYenCount,
+        overOneMillionCount: overOneMillionCount,
+        lastInputAmount: lastInputAmount);
+    lastInputAmount = amt;
+    final lines = reactionService.evaluate(context);
 
     for (int i = 0; i < lines.length; i++) {
       // wait a bit (human-like)
@@ -156,19 +134,8 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
       }
     }
 
-    final dailyBudget = await ref
-        .read(settingsProvider.future)
-        .then((value) => value.dailyBudget);
-
     // summary after reactions
     await Future.delayed(const Duration(milliseconds: 800));
-    if (todaySpent >= dailyBudget) {
-      _addMessage(MessageType.girlfriend,
-          '今日は${_formatCurrency(todaySpent)}円使ってる。予算オーバーだね。');
-    } else {
-      _addMessage(MessageType.girlfriend,
-          '今日の残りは${_formatCurrency(dailyBudget - todaySpent)}円。節約がんばろう。');
-    }
   }
 
   Future<void> _handleSubmit(int todaySpent) async {
@@ -177,16 +144,29 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
     }
     final amt = int.tryParse(_amountText);
     if (amt == null || amt <= 0) return;
+    final TransactionCategory category = _selectedCategory;
 
-    _addMessage(MessageType.user,
-        '${_selectedCategory.name}: ${_formatCurrency(amt)}円');
+    _addMessage(MessageType.user, '${category.name}: ${_formatCurrency(amt)}円');
+
+    setState(() {
+      if (amt == 1) {
+        oneYenCount++;
+      } else {
+        oneYenCount = 0;
+      }
+      if (amt >= 1000000) {
+        overOneMillionCount++;
+      } else {
+        overOneMillionCount = 0;
+      }
+    });
 
     final newTransaction = TransactionState(
       id: ref.read(uuidProvider).v4(),
       type: 'expense',
       date: DateTime.now(),
       amount: amt,
-      category: _selectedCategory.name,
+      category: category.name,
     );
     setState(() {
       _amountText = '';
@@ -197,7 +177,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
         .read(transactionsProvider.notifier)
         .addTransaction(newTransaction);
 
-    await _girlfriendRespond(_selectedCategory, amt, todaySpent + amt);
+    await _girlfriendRespond(category, amt, todaySpent + amt);
 
     setState(() {
       _isGirlfriendResponding = false; // 彼女の返信終了
