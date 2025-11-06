@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:saving_girlfriend/app/screens/home_screen.dart';
 import 'package:saving_girlfriend/features/story/screens/select_story_screen.dart';
 import 'package:saving_girlfriend/features/story/screens/story_screen.dart';
+import 'package:saving_girlfriend/features/title/screens/title_screen.dart';
 import 'package:saving_girlfriend/features/transaction/screens/chat_screen.dart';
 import 'package:saving_girlfriend/features/transaction/screens/transaction_history_screen.dart';
 import 'package:saving_girlfriend/providers/setting_provider.dart';
 import 'package:saving_girlfriend/route/app_navigation_bar.dart';
-import 'package:saving_girlfriend/screen/home_screen.dart';
 import 'package:saving_girlfriend/screen/select_girlfriend_screen.dart';
 import 'package:saving_girlfriend/screen/settings_screen.dart';
-import 'package:saving_girlfriend/screen/title_screen.dart';
 import 'package:saving_girlfriend/utils/dialog_utils.dart';
 
 // 各ブランチのナビゲーションスタックを管理するためのGlobalKey

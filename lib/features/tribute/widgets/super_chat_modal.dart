@@ -1,7 +1,7 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
 
-import 'package:saving_girlfriend/models/comment_model.dart'; // ★ 色情報を取得するためにインポート
+import 'package:saving_girlfriend/features/live_stream/models/comment_model.dart'; // ★ 色情報を取得するためにインポート
 
 // ★ この関数はそのまま残しますが、中身は新しいモーダルを呼び出すようにします
 void showSuperChatModal(BuildContext context,

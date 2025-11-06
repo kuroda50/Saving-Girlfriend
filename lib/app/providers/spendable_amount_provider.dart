@@ -6,11 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
 import 'package:saving_girlfriend/features/transaction/providers/transaction_history_provider.dart';
+import 'package:saving_girlfriend/features/tribute/models/tribute_history_state.dart';
+import 'package:saving_girlfriend/features/tribute/providers/tribute_history_provider.dart';
 // Project imports:
 import 'package:saving_girlfriend/models/budget_history.dart';
-import 'package:saving_girlfriend/models/tribute_history_state.dart';
 import 'package:saving_girlfriend/providers/budget_history_provider.dart';
-import 'package:saving_girlfriend/providers/tribute_history_provider.dart';
 
 part 'spendable_amount_provider.g.dart';
 

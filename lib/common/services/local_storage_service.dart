@@ -7,9 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/common/constants/settings_defaults.dart';
 import 'package:saving_girlfriend/common/models/message.dart';
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
+import 'package:saving_girlfriend/features/tribute/models/tribute_history_state.dart';
 import 'package:saving_girlfriend/models/budget_history.dart';
 import 'package:saving_girlfriend/models/settings_state.dart';
-import 'package:saving_girlfriend/models/tribute_history_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final sharedPreferencesProvider =

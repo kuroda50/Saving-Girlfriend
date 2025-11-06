@@ -3,8 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:saving_girlfriend/common/providers/uuid_provider.dart';
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
 // Project imports:
-import 'package:saving_girlfriend/models/tribute_history_state.dart';
-import 'package:saving_girlfriend/repositories/tribute_history_repository.dart';
+import 'package:saving_girlfriend/features/tribute/models/tribute_history_state.dart';
+import 'package:saving_girlfriend/features/tribute/repositories/tribute_history_repository.dart';
 
 part 'tribute_history_provider.g.dart';
 

@@ -1,6 +1,6 @@
 // Project imports:
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
-import 'package:saving_girlfriend/models/tribute_history_state.dart';
+import 'package:saving_girlfriend/features/tribute/models/tribute_history_state.dart';
 
 class TributeHistoryRepository {
   final LocalStorageService _localStorageService;

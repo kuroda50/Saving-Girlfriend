@@ -5,32 +5,32 @@ import 'dart:math'; // 視聴者数変動のために使用
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/common/constants/assets.dart';
-import 'package:saving_girlfriend/features/story/data/scenario_data.dart';
 // Project imports:
-import 'package:saving_girlfriend/models/comment_model.dart';
+import 'package:saving_girlfriend/features/live_stream/models/comment_model.dart';
+import 'package:saving_girlfriend/features/story/data/scenario_data.dart';
 import 'package:saving_girlfriend/providers/likeability_provider.dart';
 
 // ★★★ ScenarioEventType と ScenarioEvent は scenario_data.dart に移動 ★★★
 
 // 画面の状態を定義するクラス
-class HomeScreenState {
+class LiveStreamState {
   // ( ... 変更なし ... )
   final List<Comment> comments;
   final int viewers;
   final String characterDialogue;
 
-  HomeScreenState({
+  LiveStreamState({
     this.comments = const [],
     this.viewers = 118, // 初期値（buildメソッドで上書きされます）
     this.characterDialogue = '...',
   });
 
-  HomeScreenState copyWith({
+  LiveStreamState copyWith({
     List<Comment>? comments,
     int? viewers,
     String? characterDialogue,
   }) {
-    return HomeScreenState(
+    return LiveStreamState(
       comments: comments ?? this.comments,
       viewers: viewers ?? this.viewers,
       characterDialogue: characterDialogue ?? this.characterDialogue,
@@ -39,7 +39,7 @@ class HomeScreenState {
 }
 
 // 状態とロジックを管理するNotifierクラス
-class HomeScreenNotifier extends Notifier<HomeScreenState> {
+class LiveStreamNotifier extends Notifier<LiveStreamState> {
   // ( ... スパチャ関連の定義は変更なし ... )
   final Map<String, String> _predefinedSuperChatResponses = {
     '髪カット代': '普通の女性は美容院代は1000円じゃ足りないんだよ？',
@@ -83,7 +83,7 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
 
   // ★★★ Notifier の初期化処理（buildメソッド） ★★★
   @override
-  HomeScreenState build() {
+  LiveStreamState build() {
     // ★★★ _initializeAllScenarios() の呼び出しを削除 ★★★
 
     // ★ 好感度リスナー（変更なし）
@@ -119,7 +119,7 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
 
     // ★ 視聴者数のランダム変動（変更なし）
     final initialViewers = 110 + Random().nextInt(21);
-    return HomeScreenState(viewers: initialViewers);
+    return LiveStreamState(viewers: initialViewers);
   }
 
   // ★★★ _calculateLevelメソッド（変更なし） ★★★
@@ -188,6 +188,6 @@ class HomeScreenNotifier extends Notifier<HomeScreenState> {
 }
 
 // Providerの定義（変更なし）
-final homeScreenProvider =
-    NotifierProvider<HomeScreenNotifier, HomeScreenState>(
-        HomeScreenNotifier.new);
+final liveStreamProvider =
+    NotifierProvider<LiveStreamNotifier, LiveStreamState>(
+        LiveStreamNotifier.new);

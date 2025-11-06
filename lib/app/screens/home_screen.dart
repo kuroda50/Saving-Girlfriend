@@ -6,12 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/app/providers/spendable_amount_provider.dart';
 import 'package:saving_girlfriend/common/constants/assets.dart';
+import 'package:saving_girlfriend/features/live_stream/models/comment_model.dart';
+import 'package:saving_girlfriend/features/live_stream/providers/live_stream_provider.dart';
 import 'package:saving_girlfriend/features/story/data/scenario_data.dart';
-import 'package:saving_girlfriend/models/comment_model.dart';
-import 'package:saving_girlfriend/widgets/super_chat_modal.dart';
-
-import '../providers/home_screen_provider.dart';
-import '../providers/likeability_provider.dart';
+import 'package:saving_girlfriend/features/tribute/widgets/super_chat_modal.dart';
+import 'package:saving_girlfriend/providers/likeability_provider.dart';
 
 // HomeScreen 本体
 // HomeScreen 本体 (StatefulWidgetに変更)
@@ -132,7 +131,7 @@ class _LiveHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 視聴者数と好感度の状態を監視
-    final homeState = ref.watch(homeScreenProvider);
+    final homeState = ref.watch(liveStreamProvider);
     final likeabilityAsync = ref.watch(likeabilityProvider);
 
     // ★★★ 配信タイトルを取得するための処理を追加（HomeScreenStateに currentLikeabilityLevel がないため likeabilityProvider の値から決定） ★★★
@@ -310,7 +309,7 @@ class _BottomUiBar extends ConsumerWidget {
                 context,
                 onSend: (amount, comment) {
                   ref
-                      .read(homeScreenProvider.notifier)
+                      .read(liveStreamProvider.notifier)
                       .addSuperChat(amount, comment);
                 },
               );
@@ -368,7 +367,7 @@ class _DialogueBubbleState extends ConsumerState<_DialogueBubble>
 
     // 最初のセリフをセットアップ
     _setupAnimation(
-      ref.read(homeScreenProvider.select((s) => s.characterDialogue)),
+      ref.read(liveStreamProvider.select((s) => s.characterDialogue)),
     );
   }
 
@@ -406,7 +405,7 @@ class _DialogueBubbleState extends ConsumerState<_DialogueBubble>
   Widget build(BuildContext context) {
     // Providerから現在のセリフを取得
     final fullDialogue =
-        ref.watch(homeScreenProvider.select((s) => s.characterDialogue));
+        ref.watch(liveStreamProvider.select((s) => s.characterDialogue));
     final screenWidth = MediaQuery.of(context).size.width;
 
     // もしProviderのセリフが内部のセリフと異なれば、新しいセリフとしてアニメーションを開始
@@ -518,7 +517,7 @@ class _CommentsListState extends ConsumerState<_CommentsList> {
   Widget build(BuildContext context) {
     // ref.watch ではなく ref.listen を使い、コメントリストの「変化」を監視
     ref.listen(
-      homeScreenProvider.select((s) => s.comments),
+      liveStreamProvider.select((s) => s.comments),
       (previousList, newList) {
         // --- 1. 初回ロード時の処理 ---
         if (previousList == null) {

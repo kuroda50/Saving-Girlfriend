@@ -5,7 +5,7 @@ import 'dart:math';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 // Project imports:
-import 'package:saving_girlfriend/providers/tribute_history_provider.dart';
+import 'package:saving_girlfriend/features/tribute/providers/tribute_history_provider.dart';
 
 part 'likeability_provider.g.dart';
 
