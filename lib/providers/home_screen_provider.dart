@@ -5,7 +5,7 @@ import 'dart:math'; // 視聴者数変動のために使用
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/constants/assets.dart';
-import 'package:saving_girlfriend/date/scenario_data.dart';
+import 'package:saving_girlfriend/data/scenario_data.dart';
 // Project imports:
 import 'package:saving_girlfriend/models/comment_model.dart';
 import 'package:saving_girlfriend/providers/likeability_provider.dart';
