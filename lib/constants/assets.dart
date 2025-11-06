@@ -6,8 +6,10 @@ class AppAssets {
 
   // --- Background ---
   static const String backgroundClassroom = '$_background/classroom.jpg';
+  static const String backgroundTitle = '$_background/title.png';
+  static const String backgroundHomeScreen = '$_background/stream.png';
   // --- Character ---
-  static const String characterSuzunari = '$_character/suzunari.png';
+  static const String characterSuzunari = '$_character/suzunarioto.png';
   static const String characterComingsoon = '$_character/comingsoon.webp';
   static const String characterTitleicon = '$_character/titleicon.png';
   // --- Icon ---
@@ -25,7 +27,6 @@ class AppAssets {
   static const String iconUser5 = '$_icon/user5.png.png';
   static const String iconUser6 = '$_icon/user6.png.jpg';
   static const String iconUser7 = '$_icon/user7.png.jpg';
-
 
   /// BGMへのベースパス
   static const String _bgm = 'assets/bgm';

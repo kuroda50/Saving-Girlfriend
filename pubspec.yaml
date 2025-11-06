@@ -39,8 +39,13 @@ dependencies:
   flutter_riverpod: ^2.5.1
   riverpod_annotation: ^2.6.1
   uuid: ^4.5.1
+  flutter_local_notifications: ^19.5.0
+  timezone: ^0.10.1
+  flutter_glitter_effect: 1.0.3
 
   riverpod: ^2.5.1
+  audioplayers: ^6.5.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -70,4 +75,5 @@ flutter:
     - assets/images/background/
     - assets/images/character/
     - assets/images/icon/
-    - assets/bgm/
+    - assets/audio/bgm/
+    - assets/audio/se/
