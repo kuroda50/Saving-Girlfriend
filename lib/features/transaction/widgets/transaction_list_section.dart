@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
 import 'package:saving_girlfriend/features/transaction/providers/transaction_history_provider.dart';
 import 'package:saving_girlfriend/features/transaction/utils/utils.dart';
-import 'package:saving_girlfriend/widgets/transaction_modal.dart';
+import 'package:saving_girlfriend/features/transaction/widgets/transaction_modal.dart';
 
 class TransactionListSection extends ConsumerWidget {
   final DateTime selectedDate;

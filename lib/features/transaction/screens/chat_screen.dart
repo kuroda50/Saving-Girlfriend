@@ -8,12 +8,12 @@ import 'package:saving_girlfriend/common/models/message.dart';
 import 'package:saving_girlfriend/common/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/common/providers/uuid_provider.dart';
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
+import 'package:saving_girlfriend/features/settings/providers/setting_provider.dart';
 import 'package:saving_girlfriend/features/transaction/models/transaction_category.dart';
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
 import 'package:saving_girlfriend/features/transaction/providers/chat_history_provider.dart';
 import 'package:saving_girlfriend/features/transaction/providers/transaction_history_provider.dart';
 import 'package:saving_girlfriend/features/transaction/services/reaction_service.dart';
-import 'package:saving_girlfriend/providers/setting_provider.dart';
 
 class GirlfriendChatScreen extends ConsumerStatefulWidget {
   const GirlfriendChatScreen({super.key});

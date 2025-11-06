@@ -5,11 +5,11 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// Project imports:
+import 'package:saving_girlfriend/app/route/go_router.dart';
 import 'package:saving_girlfriend/common/providers/particle_provider.dart';
 import "package:saving_girlfriend/common/widgets/effects/particle_renderer.dart";
 import 'package:saving_girlfriend/features/story/services/notification_service.dart';
-// Project imports:
-import 'package:saving_girlfriend/route/go_router.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 

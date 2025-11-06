@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of '../../../providers/budget_history_provider.dart';
+part of '../../budget/providers/budget_history_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
