@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:saving_girlfriend/app/providers/likeability_provider.dart';
 import 'package:saving_girlfriend/common/constants/assets.dart';
 import 'package:saving_girlfriend/common/constants/color.dart';
 import 'package:saving_girlfriend/common/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/features/story/models/episode.dart';
 import 'package:saving_girlfriend/features/story/models/story_model.dart';
 import 'package:saving_girlfriend/features/story/repositories/story_repository.dart';
-import 'package:saving_girlfriend/providers/likeability_provider.dart';
 
 class EpisodeScreen extends ConsumerWidget {
   const EpisodeScreen({super.key});

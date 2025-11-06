@@ -7,7 +7,7 @@ import 'package:saving_girlfriend/common/constants/characters.dart';
 import 'package:saving_girlfriend/common/constants/color.dart';
 import 'package:saving_girlfriend/common/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
-import 'package:saving_girlfriend/services/notification_service.dart';
+import 'package:saving_girlfriend/features/story/services/notification_service.dart';
 
 class SelectGirlfriendScreen extends ConsumerStatefulWidget {
   // Change to ConsumerStatefulWidget

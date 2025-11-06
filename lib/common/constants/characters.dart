@@ -1,5 +1,5 @@
 import 'package:saving_girlfriend/common/constants/assets.dart';
-import 'package:saving_girlfriend/models/character.dart';
+import 'package:saving_girlfriend/common/models/character.dart';
 
 final List<Character> characters = [
   const Character(

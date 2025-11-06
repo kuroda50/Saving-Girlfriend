@@ -4,11 +4,10 @@ import 'dart:async';
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+// Project imports:
+import 'package:saving_girlfriend/app/providers/likeability_provider.dart';
 import 'package:saving_girlfriend/features/tribute/models/tribute_history_state.dart';
 import 'package:saving_girlfriend/features/tribute/providers/tribute_history_provider.dart';
-
-// Project imports:
-import 'package:saving_girlfriend/providers/likeability_provider.dart';
 
 void main() {
   group('likeabilityProvider', () {
