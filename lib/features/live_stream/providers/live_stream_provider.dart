@@ -6,9 +6,9 @@ import 'dart:math'; // 視聴者数変動のために使用
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/app/providers/likeability_provider.dart';
 import 'package:saving_girlfriend/common/constants/assets.dart';
+import 'package:saving_girlfriend/features/live_stream/data/scenario_data.dart';
 // Project imports:
 import 'package:saving_girlfriend/features/live_stream/models/comment_model.dart';
-import 'package:saving_girlfriend/features/story/data/scenario_data.dart';
 
 // ★★★ ScenarioEventType と ScenarioEvent は scenario_data.dart に移動 ★★★
 
