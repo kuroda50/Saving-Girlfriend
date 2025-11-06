@@ -93,27 +93,79 @@ fvm flutter --version
 fvm flutter run
 ```
 
-## ディレクトリ構成
+## ディレクトリ構成とアーキテクチャ
+
+このプロジェクトでは、MVVM + Feature-base アーキテクチャを採用しています。これにより、コードの可読性、保守性、拡張性を高めています。
+
+### 主要なディレクトリ構成
 
 ```
 .
-├── android
-├── assets
-│   └── images
-├── backend
-├── build
-├── ios
-├── lib
-│   ├── components
-│   ├── constants
-│   ├── providers
-│   ├── route
-│   ├── screen
-│   ├── services
-│   └── widgets
-├── linux
-├── macos
-├── test
-├── web
-└── windows
+├── lib/
+│   ├── app/                  # アプリケーション全体を構成する層
+│   │   ├── providers/        # 複数のFeatureを統合するProvider (例: spendableAmountProvider)
+│   │   ├── route/            # アプリケーション全体のルーティング定義 (go_router.dart, app_navigation_bar.dart)
+│   │   └── screens/          # 複数のFeatureを組み合わせて表示する画面 (例: HomeScreen)
+│   │
+│   ├── features/             # 各機能（Feature）を独立して管理する層
+│   │   ├── live_stream/      # ライブ配信風UI (コメント表示、キャラクターセリフ)
+│   │   │   ├── models/
+│   │   │   ├── providers/
+│   │   │   └── widgets/
+│   │   │
+│   │   ├── story/            # ストーリーの選択・再生機能
+│   │   │   ├── data/
+│   │   │   ├── models/
+│   │   │   ├── repositories/
+│   │   │   ├── screens/
+│   │   │   └── services/
+│   │   │
+│   │   ├── settings/         # アプリケーション設定の管理
+│   │   │   ├── models/
+│   │   │   ├── providers/
+│   │   │   ├── repositories/
+│   │   │   └── screens/
+│   │   │
+│   │   ├── transaction/      # 収支入力・履歴表示機能
+│   │   │   ├── models/
+│   │   │   ├── providers/
+│   │   │   ├── repositories/
+│   │   │   ├── screens/
+│   │   │   ├── services/
+│   │   │   └── utils/
+│   │   │
+│   │   ├── tribute/          # 貢ぐ（スパチャ）機能
+│   │   │   ├── models/
+│   │   │   ├── providers/
+│   │   │   ├── repositories/
+│   │   │   └── widgets/
+│   │   │
+│   │   └── budget/           # 予算管理機能
+│   │       ├── models/
+│   │       └── providers/
+│   │
+│   └── common/               # 汎用的でFeatureに依存しない共通部品
+│       ├── constants/        # アプリ全体で利用する定数 (assets, colorなど)
+│       ├── models/           # 複数のFeatureで共有されるモデル (Character, Messageなど)
+│       ├── providers/        # 汎用的なProvider (uuidProvider, particleProviderなど)
+│       ├── services/         # 汎用的なサービス (LocalStorageService, NotificationServiceなど)
+│       ├── utils/            # 汎用的なユーティリティ関数 (dialog_utilsなど)
+│       └── widgets/          # 汎用的なUIコンポーネント (effectsなど)
 ```
+
+### ディレクトリ間の依存関係
+
+このアーキテクチャでは、以下の厳格な依存関係のルールを設けることで、コードのモジュール性と保守性を高めています。
+
+-   **`app`レイヤー**:
+    -   `features`レイヤーと`common`レイヤーのコンポーネントを`import`して利用できます。
+    -   アプリケーション全体のルーティングや、複数のFeatureを統合する画面・ロジックを担います。
+
+-   **`features`レイヤー**:
+    -   `common`レイヤーのコンポーネントを`import`して利用できます。
+    -   **他の`features`レイヤーのコンポーネントを直接`import`すべきではありません。**
+    -   各Featureは自己完結しており、特定の機能に特化したロジックとUIを含みます。
+
+-   **`common`レイヤー**:
+    -   **他のどのレイヤーのコンポーネントも`import`すべきではありません。** （Dart/Flutter SDKのライブラリは除く）
+    -   アプリケーション全体で利用される、汎用的でFeatureに依存しない共通部品を提供します。
