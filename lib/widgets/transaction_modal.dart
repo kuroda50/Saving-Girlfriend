@@ -1,14 +1,12 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 // Project imports:
-import 'package:saving_girlfriend/constants/color.dart';
-import 'package:saving_girlfriend/models/transaction_state.dart';
-import 'package:saving_girlfriend/providers/uuid_provider.dart';
+import 'package:saving_girlfriend/common/constants/color.dart';
+import 'package:saving_girlfriend/common/providers/uuid_provider.dart';
+import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
 
 // モーダルを呼び出すためのグローバル関数
 void showTransactionModal(

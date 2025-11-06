@@ -1,11 +1,12 @@
 import 'dart:math'; // For random message selection
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // For Ref
-import 'package:saving_girlfriend/stories/story_repository.dart'; // For StoryCharacter
-import 'package:saving_girlfriend/models/story_model.dart'; // For StoryCharacter
+import 'package:saving_girlfriend/features/story/models/story_model.dart'; // For StoryCharacter
+import 'package:saving_girlfriend/features/story/repositories/story_repository.dart'; // For StoryCharacter
 import 'package:saving_girlfriend/providers/likeability_provider.dart'; // For likeabilityProvider
+import 'package:timezone/timezone.dart' as tz;
 
 // Provider for NotificationService
 final notificationServiceProvider = Provider<NotificationService>((ref) {

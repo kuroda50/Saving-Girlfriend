@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 // Project imports:
-import 'package:saving_girlfriend/constants/color.dart';
-import 'package:saving_girlfriend/constants/settings_defaults.dart';
+import 'package:saving_girlfriend/common/constants/color.dart';
+import 'package:saving_girlfriend/common/constants/settings_defaults.dart';
 import 'package:saving_girlfriend/models/settings_state.dart';
 import '../providers/setting_provider.dart'; // hasSettingsChangesProvider をインポート
 

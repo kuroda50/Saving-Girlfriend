@@ -4,14 +4,14 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/constants/assets.dart';
-import 'package:saving_girlfriend/date/scenario_data.dart';
+import 'package:saving_girlfriend/app/providers/spendable_amount_provider.dart';
+import 'package:saving_girlfriend/common/constants/assets.dart';
+import 'package:saving_girlfriend/features/story/data/scenario_data.dart';
 import 'package:saving_girlfriend/models/comment_model.dart';
 import 'package:saving_girlfriend/widgets/super_chat_modal.dart';
 
 import '../providers/home_screen_provider.dart';
 import '../providers/likeability_provider.dart';
-import '../providers/spendable_amount_provider.dart';
 
 // HomeScreen 本体
 // HomeScreen 本体 (StatefulWidgetに変更)

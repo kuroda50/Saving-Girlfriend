@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 // Project imports:
-import 'package:saving_girlfriend/constants/assets.dart';
+import 'package:saving_girlfriend/common/constants/assets.dart';
 
 class AppNavigationBar extends StatelessWidget {
   const AppNavigationBar({

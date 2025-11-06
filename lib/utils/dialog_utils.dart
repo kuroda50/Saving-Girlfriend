@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:saving_girlfriend/constants/color.dart';
+import 'package:saving_girlfriend/common/constants/color.dart';
 
 Future<bool?> showUnsavedChangesDialog(BuildContext context) async {
   return await showDialog<bool>(

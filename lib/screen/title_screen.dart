@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:saving_girlfriend/constants/assets.dart';
-import 'package:saving_girlfriend/providers/current_girlfriend_provider.dart';
-import 'package:saving_girlfriend/services/local_storage_service.dart';
+import 'package:saving_girlfriend/common/constants/assets.dart';
+import 'package:saving_girlfriend/common/providers/current_girlfriend_provider.dart';
+import 'package:saving_girlfriend/common/services/local_storage_service.dart';
 
 class TitleScreen extends ConsumerStatefulWidget {
   const TitleScreen({super.key});

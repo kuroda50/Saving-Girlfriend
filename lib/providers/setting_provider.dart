@@ -1,10 +1,9 @@
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:saving_girlfriend/common/services/local_storage_service.dart';
 // Project imports:
 import 'package:saving_girlfriend/models/settings_state.dart';
 import 'package:saving_girlfriend/repositories/settings_repository.dart';
-import 'package:saving_girlfriend/services/local_storage_service.dart';
 
 class SettingNotifier extends AsyncNotifier<SettingsState> {
   Future<SettingsRepository> get _settingsRepositoryFuture =>

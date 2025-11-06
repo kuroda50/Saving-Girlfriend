@@ -1,14 +1,13 @@
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:saving_girlfriend/app/providers/spendable_amount_provider.dart';
+import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
+import 'package:saving_girlfriend/features/transaction/providers/transaction_history_provider.dart';
 // Project imports:
 import 'package:saving_girlfriend/models/budget_history.dart';
-import 'package:saving_girlfriend/models/transaction_state.dart';
 import 'package:saving_girlfriend/models/tribute_history_state.dart';
 import 'package:saving_girlfriend/providers/budget_history_provider.dart';
-import 'package:saving_girlfriend/providers/spendable_amount_provider.dart';
-import 'package:saving_girlfriend/providers/transaction_history_provider.dart';
 import 'package:saving_girlfriend/providers/tribute_history_provider.dart';
 
 void main() {
