@@ -115,6 +115,7 @@ class _SelectGirlfriendScreenState
                     _currentIndex = index;
                   });
                 },
+<<<<<<< HEAD
                 itemBuilder: (context, index) {
                   final character = characters[index]; // 現在のキャラクターデータを取得
                   // スライドする個々のキャラクターカード
@@ -162,11 +163,136 @@ class _SelectGirlfriendScreenState
                                       alignment: Alignment.center,
                                       child: const Icon(Icons.broken_image,
                                           size: 50, color: AppColors.subIcon),
+=======
+               itemBuilder: (context, index) {
+                  // スライドする個々のキャラクターカード
+                  return GestureDetector( // ★ issue84の機能: カード全体をタップで選択
+                    onTap: _selectGirlfriendAndSaveState,
+                    child: Column(
+                      // PageView内でカードを垂直方向中央に配置するためにColumnを使用
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 20.0),
+                          padding: const EdgeInsets.all(16.0),
+                          decoration: BoxDecoration(
+                            color: AppColors.mainBackground,
+                            borderRadius: BorderRadius.circular(15.0),
+                            boxShadow: const [ // ★ mainのconstを採用
+                              BoxShadow(
+                                color: AppColors.shadow,
+                                spreadRadius: 2,
+                                blurRadius: 7,
+                                offset: Offset(0, 3), // 影の位置
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // キャラクター名
+                              Container(
+                                // ピンクの背景と角丸のためにContainerを追加
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                decoration: BoxDecoration(
+                                  // ★ issue84のピンク色を採用 (透明度 0xFF を追加)
+                                  color: const Color(0xFFE383AB), 
+                                  borderRadius: BorderRadius.circular(20.0), // 角丸
+                                ),
+                                child: Text(
+                                  characters[index]
+                                      .name, // ★ mainのデータアクセス形式を採用
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.mainText, // 白い文字色
+                                    fontFamily:
+                                        'Noto Sans JP', // 日本語文字用にNoto Sans JPを使用
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              // キャラクター画像
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10.0),
+                                // ローカルアセットのパスであるため Image.asset を使用
+                                child: Image.asset(
+                                  characters[index]
+                                      .image, // ★ mainのデータアクセス形式を採用
+                                  height: 300,
+                                  width: 250,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 300,
+                                      width: 250,
+                                      color: AppColors.border,
+                                      alignment: Alignment.center,
+                                      child: const Icon(Icons.broken_image,
+                                          size: 50, color: AppColors.subIcon),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 15),
+                              // 説明タグのコンテナ (以前解決した部分のコードを再利用)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondary,
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                child: Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 4.0,
+                                  children: characters[index]
+                                      .descriptionTags // ★ mainのデータモデルに合わせたプロパティアクセスに変更
+                                      .map((tag) => Text(
+                                            tag,
+                                            style: const TextStyle(
+                                              color: AppColors.primary,
+                                              fontSize: 16,
+                                              fontFamily: 'Noto Sans JP',
+                                            ),
+                                          ))
+                                      .toList(),
+                                ),
+
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+                                borderRadius: BorderRadius.circular(10.0),
+                                // ⚠️ ローカルアセットのパスであるため Image.network を Image.asset に変更
+                                child: Image.asset(
+                                  characters[index]
+                                      ['image'], // PageView.builderの'index'を使用
+                                  height: 400,
+                                  width: 350,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 400,
+                                      width: 350,
+                                      color: AppColors.border,
+                                      child: const Icon(Icons.broken_image,
+                                          size: 50, color: AppColors.subIcon),
+                                      alignment: Alignment.center,
+>>>>>>> d267ce8cb4f2de226e97acbe0a092aa8903ca576
                                     );
                                   },
                                 ),
                               ),
                               const SizedBox(height: 15),
+<<<<<<< HEAD
                               // 2. キャラクター名
                               Container(
                                 // ピンクの背景と角丸のためにContainerを追加
@@ -188,6 +314,9 @@ class _SelectGirlfriendScreenState
                               ),
                               const SizedBox(height: 10),
                               // 3. 説明タグのコンテナ
+=======
+                              // 説明タグのコンテナ
+>>>>>>> d267ce8cb4f2de226e97acbe0a092aa8903ca576
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 50, vertical: 8),
@@ -209,6 +338,10 @@ class _SelectGirlfriendScreenState
                                           ))
                                       .toList(),
                                 ),
+<<<<<<< HEAD
+=======
+
+>>>>>>> d267ce8cb4f2de226e97acbe0a092aa8903ca576
                               ),
                             ],
                           ),
