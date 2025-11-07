@@ -181,7 +181,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final bgmVolume = _bgmVolume; // ローカル変数として定義
 
     return settingAsyncValue.when(
-<<<<<<< HEAD
       loading: () => const Scaffold(
         backgroundColor: AppColors.forthBackground,
         body: Center(child: CircularProgressIndicator()),
@@ -198,25 +197,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             if (didPop) return;
           },
           child: Scaffold(
-=======
-        loading: () => const Scaffold(
-              backgroundColor: AppColors.forthBackground,
-              body: Center(child: CircularProgressIndicator()),
-            ),
-        error: (error, stackTrace) => Scaffold(
-              backgroundColor: AppColors.forthBackground,
-              body: Center(child: Text('エラーが発生しました: $error')),
-            ),
-        data: (settings) {
-
-          // リセット命令をリッスン（監視）する
-          ref.listen(settingsResetTriggerProvider, (previous, next) {
-            if (previous != next) {
-              _resetLocalState();
-            }
-          });
-          return Scaffold(
->>>>>>> d267ce8cb4f2de226e97acbe0a092aa8903ca576
             backgroundColor: AppColors.forthBackground,
             appBar: AppBar(
               title: const Text('設定'),
@@ -482,43 +462,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ),
                             ),
                           ),
-<<<<<<< HEAD
                           const SizedBox(height: 24),
                         ],
                       ),
-=======
-                        ),
-                        // OKボタンと彼女選択ボタンの間に間隔を設ける
-                        const SizedBox(height: 40),
-                        // 彼女選択画面遷移ボタン (OKボタンの下に配置)
-                        Center(
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                context.push('/select_girlfriend');
-                              },
-                              // OKボタンと差別化しつつ、アプリのテーマに合わせるためsecondaryを使用
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.secondary,
-                                foregroundColor: AppColors.mainBackground,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: const Text(
-                                '彼女を選びなおす？',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-                      ],
-
->>>>>>> d267ce8cb4f2de226e97acbe0a092aa8903ca576
                     ),
                   ],
                 ),
