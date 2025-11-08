@@ -46,3 +46,4 @@ node_modules/
 
 # FVM Version Cache
 .fvm/
+.vscode/
