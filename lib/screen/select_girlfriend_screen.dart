@@ -38,17 +38,209 @@ class _SelectGirlfriendScreenState
     super.dispose();
   }
 
+  // Coming Soonキャラクターが選択されたときに表示するダイアログ
+  void _showComingSoonDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0), // 角丸を大きく
+          ),
+          elevation: 0,
+          backgroundColor:
+              Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24.0),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color.fromARGB(255, 255, 230, 240), // 非常に淡いピンク
+                  Color.fromARGB(255, 255, 210, 225), // 淡いピンク
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20.0),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.5),
+                  spreadRadius: 3,
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                // タイトル
+                Text(
+                  '💖 Coming Soon 💖',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primary,
+                    fontFamily: 'Noto Sans JP',
+                  ),
+                ),
+                const SizedBox(height: 15),
+                // 内容
+                const Text(
+                  'この彼女は準備中です。\nもうちょっと待っててね！',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.secondary,
+                    fontFamily: 'Noto Sans JP',
+                  ),
+                ),
+                const SizedBox(height: 25),
+                // 閉じるボタン
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                  ),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // 彼女を選択し、状態を保存して次の画面へ遷移するメソッド
   void _selectGirlfriendAndSaveState() async {
-    final selectedCharacterId = characters[_currentIndex].id;
+    final selectedCharacter = characters[_currentIndex];
+    final selectedCharacterId = selectedCharacter.id;
 
     // 選択しようとしているキャラクターが「ComingSoon」ではないかチェック
     if (selectedCharacterId.startsWith('coming_soon')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ここはまだ選べません。')),
-      );
+      if (mounted) {
+        // SnackBarの代わりにカスタムダイアログを表示
+        _showComingSoonDialog();
+      }
       return;
     }
+
+    // ★ 確認ダイアログの表示 (かわいいデザインにカスタム)
+    final bool? shouldSelect = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0), // 角丸を大きく
+          ),
+          elevation: 0,
+          backgroundColor:
+              Colors.transparent, // 背景を透明にして下のContainerのグラデーションを活かす
+          child: Container(
+            padding: const EdgeInsets.all(24.0),
+            decoration: BoxDecoration(
+              // 少女漫画風デザイン: グラデーション
+              gradient: const LinearGradient(
+                colors: [
+                  Color.fromARGB(255, 255, 230, 240), // 非常に淡いピンク
+                  Color.fromARGB(255, 255, 210, 225), // 淡いピンク
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20.0),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.5),
+                  spreadRadius: 3,
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                // タイトル
+                Text(
+                  '${selectedCharacter.name} を運命の彼女に決定しますか？',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary, // 濃い色
+                    fontFamily: 'Noto Sans JP',
+                  ),
+                ),
+                const SizedBox(height: 25),
+                // アクションボタン
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    // 「いいえ」ボタン
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor:
+                            AppColors.thirdBackground.withOpacity(0.5),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                      ),
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      child: const Text(
+                        'キャンセル',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16),
+                      ),
+                    ),
+                    // 「はい」ボタン
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                      ),
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      child: const Text(
+                        '決定！',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    // ユーザーが「はい」を選択しなかった場合は処理を中断
+    if (shouldSelect != true) {
+      return;
+    }
+
+    // --- 選択が確定された後の処理 (既存ロジック) ---
 
     // Riverpodのプロバイダーを使って選択された彼女を保存
     await ref
