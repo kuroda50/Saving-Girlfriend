@@ -6,7 +6,7 @@ part of 'spendable_amount_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$spendableAmountHash() => r'59dea6f996b7c57b2837b28d33f3f0111eed38c0';
+String _$spendableAmountHash() => r'c957c5c2aef6469875f4d069aa4c601f2c32e8f7';
 
 /// See also [spendableAmount].
 @ProviderFor(spendableAmount)
