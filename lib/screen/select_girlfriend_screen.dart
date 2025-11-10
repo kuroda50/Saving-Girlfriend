@@ -3,45 +3,42 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:math' as math;
+import 'package:flutter_svg/flutter_svg.dart'; // SVG対応のために追加
+// Project imports:
 import 'package:saving_girlfriend/common/constants/assets.dart';
 import 'package:saving_girlfriend/common/constants/characters.dart';
 import 'package:saving_girlfriend/common/constants/color.dart';
 import 'package:saving_girlfriend/common/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
 import 'package:saving_girlfriend/features/story/services/notification_service.dart';
-// Project imports:
 
 class SelectGirlfriendScreen extends ConsumerStatefulWidget {
-  // Change to ConsumerStatefulWidget
   const SelectGirlfriendScreen({super.key});
 
   @override
   ConsumerState<SelectGirlfriendScreen> createState() =>
-      _SelectGirlfriendScreenState(); // Change to ConsumerState
+      _SelectGirlfriendScreenState();
 }
 
 class _SelectGirlfriendScreenState
     extends ConsumerState<SelectGirlfriendScreen> {
-  // Change to ConsumerState
-
   late PageController _pageController; // PageViewを制御するためのPageController
-  int _currentIndex = 0; // 現在表示されているキャラクターのインデックス（PageViewによって更新される）
+  int _currentIndex = 0; // 現在表示されているキャラクターのインデックス
 
   @override
   void initState() {
     super.initState();
-    // PageControllerを初期化し、初期ページを設定
     _pageController = PageController(initialPage: _currentIndex);
   }
 
   @override
   void dispose() {
-    // PageControllerを破棄
     _pageController.dispose();
     super.dispose();
   }
 
-  // 👈 2. 彼女を選択し、状態を保存して次の画面へ遷移するメソッド
+  // 彼女を選択し、状態を保存して次の画面へ遷移するメソッド
   void _selectGirlfriendAndSaveState() async {
     final selectedCharacterId = characters[_currentIndex].id;
 
@@ -84,8 +81,19 @@ class _SelectGirlfriendScreenState
 
   @override
   Widget build(BuildContext context) {
+    // 画面サイズを取得
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // 画像の最大幅を画面幅の95%に設定
+    const double maxImageWidthRatio = 0.95;
+    final double maxImageWidth = screenWidth * maxImageWidthRatio;
+
+    // ⭐画像の高さを画面の約80%に設定（五分の四に拡大）
+    final double imageHeight = screenHeight * 0.50;
+
     return Scaffold(
-      backgroundColor: AppColors.forthBackground, // 背景色を追加
+      backgroundColor: AppColors.forthBackground, // 背景色
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
         elevation: 0,
@@ -94,6 +102,7 @@ class _SelectGirlfriendScreenState
         child: Stack(
           alignment: Alignment.center,
           children: [
+            // 背景画像
             Positioned.fill(
               child: Image.asset(
                 AppAssets.backgroundHomeScreen,
@@ -101,44 +110,50 @@ class _SelectGirlfriendScreenState
               ),
             ),
             // キャラクターのスライド表示を処理するためのPageView
-            // PageViewがStack内で適切なサイズを持つようにSizedBoxを使用
             SizedBox(
-              height: MediaQuery.of(context).size.height * 1.0, // 画面の高さの100%に調整
-              width: MediaQuery.of(context).size.width, // 全幅
+              height: screenHeight, // 画面の高さ全体を使用
+              width: screenWidth, // 全幅
               child: PageView.builder(
-                controller: _pageController, // PageControllerをPageViewにアタッチ
-                itemCount: characters.length, // キャラクターの総数
+                controller: _pageController,
+                itemCount: characters.length,
                 onPageChanged: (index) {
-                  // ページが変更されたときに現在のインデックスを更新
                   setState(() {
                     _currentIndex = index;
                   });
                 },
                 itemBuilder: (context, index) {
-                  final character = characters[index]; // 現在のキャラクターデータを取得
-                  // スライドする個々のキャラクターカード
+                  final character = characters[index];
+
                   return GestureDetector(
-                    // ★ issue84の機能: カード全体をタップで選択
                     onTap: _selectGirlfriendAndSaveState,
                     child: Column(
-                      // PageView内でカードを垂直方向中央に配置するためにColumnを使用
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 30.0),
-                          padding: const EdgeInsets.all(30.0),
-                          constraints: const BoxConstraints(
-                            maxWidth: 400, // カードの最大幅を制限
+                          margin: const EdgeInsets.symmetric(horizontal: 10.0),
+                          padding: const EdgeInsets.all(10.0),
+                          constraints: BoxConstraints(
+                            maxWidth: maxImageWidth + 20,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(15.0),
-                            boxShadow: const [
+                            // 少女漫画風デザイン: グラデーション
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color.fromARGB(255, 255, 230, 240), // 非常に淡いピンク
+                                Color.fromARGB(255, 255, 210, 225), // 淡いピンク
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius:
+                                BorderRadius.circular(25.0), // さらに丸みを帯びさせる
+                            boxShadow: [
                               BoxShadow(
-                                color: AppColors.shadow,
-                                spreadRadius: 2,
-                                blurRadius: 7,
-                                offset: Offset(0, 3), // 影の位置
+                                color: AppColors.primary
+                                    .withOpacity(0.5), // 影の色を濃く、柔らかく
+                                spreadRadius: 3,
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
                               ),
                             ],
                           ),
@@ -147,16 +162,17 @@ class _SelectGirlfriendScreenState
                             children: [
                               // 1. キャラクター画像
                               ClipRRect(
-                                borderRadius: BorderRadius.circular(10.0),
+                                borderRadius:
+                                    BorderRadius.circular(20.0), // 角丸を大きく
                                 child: Image.asset(
                                   character.image, // ★ キャラクター画像を表示
-                                  height: 500,
-                                  width: 400,
-                                  fit: BoxFit.contain,
+                                  height: imageHeight, // ⭐ここが80%の高さ
+                                  width: maxImageWidth, // 画像を最大限まで拡大
+                                  fit: BoxFit.fitHeight, // 高さに合わせて画像をフィットさせる
                                   errorBuilder: (context, error, stackTrace) {
                                     return Container(
-                                      height: 500,
-                                      width: 400,
+                                      height: imageHeight,
+                                      width: maxImageWidth,
                                       color: AppColors.border,
                                       alignment: Alignment.center,
                                       child: const Icon(Icons.broken_image,
@@ -165,22 +181,21 @@ class _SelectGirlfriendScreenState
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 10),
-                              // 2. キャラクター名
+                              const SizedBox(height: 15),
+                              // 2. キャラクター名 (濃いピンクのハイライト)
                               Container(
-                                // ピンクの背景と角丸のためにContainerを追加
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 10),
+                                    horizontal: 25, vertical: 8),
                                 decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.circular(20.0), // 角丸
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(30.0),
                                 ),
                                 child: Text(
                                   character.name, // ★ キャラクター名を表示
                                   style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.mainText, // 白い文字色
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white, // 白い文字色
                                     fontFamily: 'Noto Sans JP',
                                   ),
                                 ),
@@ -189,19 +204,20 @@ class _SelectGirlfriendScreenState
                               // 3. 説明タグのコンテナ
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 50, vertical: 8),
+                                    horizontal: 40, vertical: 7),
                                 decoration: BoxDecoration(
-                                  color: AppColors.secondary,
+                                  color: const Color.fromARGB(255, 236, 92, 140)
+                                      .withOpacity(0.8), // タグの背景色を調整
                                   borderRadius: BorderRadius.circular(10.0),
                                 ),
                                 child: Wrap(
-                                  spacing: 8.0,
+                                  spacing: 7.0,
                                   runSpacing: 4.0,
                                   children: character.description_tags
                                       .map((tag) => Text(
                                             tag,
                                             style: const TextStyle(
-                                              color: AppColors.primary,
+                                              color: AppColors.forthBackground,
                                               fontSize: 16,
                                               fontFamily: 'Noto Sans JP',
                                             ),
@@ -219,41 +235,51 @@ class _SelectGirlfriendScreenState
               ),
             ),
 
-            // 左矢印ボタン
+            // 左矢印ボタン (SVGに置き換え + 10度回転)
             Positioned(
-              top: MediaQuery.of(context).size.height * 0.45, // 縦方向中央付近に配置
+              top: screenHeight * 0.35, // 縦方向中央付近に配置
               left: 10,
               child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios,
-                    size: 40, color: AppColors.primary),
                 onPressed: () {
-                  // コントローラーがアタッチされており、最初のページではない場合のみ実行
                   if (_pageController.hasClients && _pageController.page! > 0) {
                     _pageController.previousPage(
-                      duration: const Duration(milliseconds: 300), // アニメーション時間
-                      curve: Curves.easeIn, // アニメーションカーブ
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeIn,
                     );
                   }
                 },
+                icon: Transform.rotate(
+                  angle: -math.pi / 5,
+                  child: SvgPicture.asset(
+                    AppAssets.iconhidari,
+                    width: 50,
+                    height: 50,
+                  ),
+                ),
               ),
             ),
-            // 右矢印ボタン
+            // 右矢印ボタン (SVGに置き換え + 10度回転)
             Positioned(
-              top: MediaQuery.of(context).size.height * 0.45, // 縦方向中央付近に配置
+              top: screenHeight * 0.35, // 縦方向中央付近に配置
               right: 10,
               child: IconButton(
-                icon: const Icon(Icons.arrow_forward_ios,
-                    size: 40, color: AppColors.primary),
                 onPressed: () {
-                  // コントローラーがアタッチされており、最後のページではない場合のみ実行
                   if (_pageController.hasClients &&
                       _pageController.page! < characters.length - 1) {
                     _pageController.nextPage(
-                      duration: const Duration(milliseconds: 300), // アニメーション時間
-                      curve: Curves.easeIn, // アニメーションカーブ
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeIn,
                     );
                   }
                 },
+                icon: Transform.rotate(
+                  angle: math.pi / 5, // 時計回りに10度に相当するラジアン値
+                  child: SvgPicture.asset(
+                    AppAssets.iconmigi, // SVG画像パス
+                    width: 50,
+                    height: 50,
+                  ),
+                ),
               ),
             ),
           ],
