@@ -1,10 +1,17 @@
+// lib/features/transaction/widgets/transaction_list_section.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
+// import 'package:saving_girlfriend/features/transaction/widgets/transaction_modal.dart'; // 元のモーダルは不要
+
+// ▼▼▼ 必要な import (ご提示いただいたコードで既に追加済み) ▼▼▼
+import 'package:saving_girlfriend/features/transaction/providers/chat_history_provider.dart';
 import 'package:saving_girlfriend/features/transaction/providers/transaction_history_provider.dart';
 import 'package:saving_girlfriend/features/transaction/utils/utils.dart';
-import 'package:saving_girlfriend/features/transaction/widgets/transaction_modal.dart';
+import 'package:saving_girlfriend/features/transaction/widgets/girlfriend_edit_modal.dart';
+// ▲▲▲ ------------------------------------------ ▲▲▲
 
 class TransactionListSection extends ConsumerWidget {
   final DateTime selectedDate;
@@ -33,6 +40,7 @@ class TransactionListSection extends ConsumerWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
+  // ... (変更なし) ...
   final DateTime selectedDate;
 
   const _SectionTitle({required this.selectedDate});
@@ -86,6 +94,7 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
+  // ... (変更なし) ...
   const _EmptyState();
 
   @override
@@ -127,6 +136,7 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _TransactionList extends StatelessWidget {
+  // ... (変更なし) ...
   final List<TransactionState> selectedTransactions;
 
   const _TransactionList({required this.selectedTransactions});
@@ -200,7 +210,7 @@ class _TransactionListItem extends ConsumerWidget {
           // トランザクション情報
           Row(
             children: [
-              // アイコン
+              // ... (アイコン、カテゴリ、金額は変更なし) ...
               Container(
                 width: 42,
                 height: 42,
@@ -242,7 +252,6 @@ class _TransactionListItem extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              // カテゴリと金額（蛍光ペン風ハイライト）
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,10 +266,8 @@ class _TransactionListItem extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    // 金額に蛍光ペン風のハイライト
                     Stack(
                       children: [
-                        // ハイライト背景
                         Positioned(
                           left: 0,
                           right: 0,
@@ -276,7 +283,6 @@ class _TransactionListItem extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        // 金額テキスト
                         Text(
                           currencyFormatter.format(amount),
                           style: TextStyle(
@@ -293,21 +299,58 @@ class _TransactionListItem extends ConsumerWidget {
                   ],
                 ),
               ),
+
               // 編集・削除ボタン
               if (isToday) ...[
                 _ActionButton(
                   icon: Icons.edit,
-                  onPressed: () {
-                    showTransactionModal(
-                      context,
-                      onSave: (updatedData) {
-                        final transactionId = updatedData.id;
-                        ref
-                            .read(transactionsProvider.notifier)
-                            .updateTransaction(transactionId, updatedData);
+                  onPressed: () async {
+                    final oldTransaction = transaction;
+
+                    // 1. 新しい「彼女風モーダル」を呼び出し、結果を待つ
+                    final updatedData =
+                        await showModalBottomSheet<TransactionState?>(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (modalContext) {
+                        return GirlfriendEditModal(transaction: oldTransaction);
                       },
-                      initialTransaction: transaction,
                     );
+
+                    // 2. モーダルが結果を返した場合
+                    if (updatedData != null && context.mounted) {
+                      // 3. 支出履歴を更新 (await を追加)
+                      await ref
+                          .read(transactionsProvider.notifier)
+                          .updateTransaction(updatedData.id, updatedData);
+
+                      // 4. チャット履歴に報告 (await を追加)
+                      await ref
+                          .read(chatHistoryNotifierProvider.notifier)
+                          .addEditReportMessage(oldTransaction, updatedData);
+
+                      // 5. 彼女風トーストを表示
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            '直しといたよ！',
+                            style: TextStyle(
+                              fontFamily: 'Klee One',
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor:
+                              const Color(0xFFFF69B4).withOpacity(0.95),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        ),
+                      );
+                    }
                   },
                 ),
                 const SizedBox(width: 6),
@@ -335,7 +378,7 @@ class _TransactionListItem extends ConsumerWidget {
                             ),
                           ),
                           content: const Text(
-                            'この履歴を削除するのね？',
+                            'この履歴を削除してもいいですか？',
                             style: TextStyle(fontFamily: 'Klee One'),
                           ),
                           actions: [
@@ -358,12 +401,51 @@ class _TransactionListItem extends ConsumerWidget {
                                 ),
                                 elevation: 3,
                               ),
-                              onPressed: () {
+
+                              // ▼▼▼ 【ここを修正】 "onPressed" を async に変更 ▼▼▼
+                              onPressed: () async {
+                                // 削除するトランザクションを保持
+                                final deletedTransaction = transaction;
+
+                                // ダイアログを閉じる
                                 Navigator.of(dialogContext).pop();
-                                ref
+
+                                // 1. トランザクションを削除 (await)
+                                await ref
                                     .read(transactionsProvider.notifier)
-                                    .removeTransaction(transaction.id);
+                                    .removeTransaction(deletedTransaction.id);
+
+                                // 2. チャットに削除報告を追加 (await)
+                                await ref
+                                    .read(chatHistoryNotifierProvider.notifier)
+                                    .addDeleteReportMessage(deletedTransaction);
+
+                                // 3. 削除完了トーストを表示
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text(
+                                        '消しといたよ！',
+                                        style: TextStyle(
+                                          fontFamily: 'Klee One',
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                      backgroundColor: const Color(0xFFFF69B4)
+                                          .withOpacity(0.95),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      margin: const EdgeInsets.fromLTRB(
+                                          16, 0, 16, 16),
+                                    ),
+                                  );
+                                }
                               },
+                              // ▲▲▲ --------------------------------------- ▲▲▲
+
                               child: const Text("削除"),
                             ),
                           ],
@@ -410,7 +492,6 @@ class _TransactionListItem extends ConsumerWidget {
             ),
             child: Stack(
               children: [
-                // 付箋のテープ風装飾
                 Positioned(
                   top: -6,
                   left: 8,
@@ -430,7 +511,6 @@ class _TransactionListItem extends ConsumerWidget {
                     ),
                   ),
                 ),
-                // コメントテキスト
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
@@ -454,6 +534,7 @@ class _TransactionListItem extends ConsumerWidget {
 }
 
 class _ActionButton extends StatelessWidget {
+  // ... (変更なし) ...
   final IconData icon;
   final VoidCallback onPressed;
 
