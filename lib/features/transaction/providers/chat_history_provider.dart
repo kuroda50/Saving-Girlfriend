@@ -89,12 +89,22 @@ class ChatHistoryNotifier extends _$ChatHistoryNotifier {
     // 2. 残り利用可能額を取得
     // (注: このプロバイダが更新されるのを待つため、futureをreadします)
     final spendableAmount = await ref.read(spendableAmountProvider.future);
-    final remainingAmountStr =
-        NumberFormat.currency(locale: 'ja_JP', symbol: '¥')
-            .format(spendableAmount);
-
-    final messageText =
-        'あ、さっきの支出（$dateStrの$categoryName）、$newAmountStr円に直しといたよ！ 今日の残りは$remainingAmountStrになったね！';
+    // ▼▼▼▼ ここから変更 ▼▼▼▼
+    // 3. 残額に応じてメッセージを分岐
+    final String messageText;
+    if (spendableAmount > 0) {
+      // (A) 残額がプラスの場合
+      final remainingAmountStr =
+          NumberFormat.currency(locale: 'ja_JP', symbol: '¥')
+              .format(spendableAmount);
+      messageText =
+          'あ、さっきの支出（$dateStrの$categoryName）、$newAmountStr円に直しといたよ！ 今日の残りは$remainingAmountStrになったね！';
+    } else {
+      // (B) 残額が0円以下（マイナス）の場合
+      messageText =
+          'あ、さっきの支出（$dateStrの$categoryName）、$newAmountStr円に直しといたよ！ あ、でも今日使えるお金超えちゃってるから気をつけてね…！';
+    }
+    // ▲▲▲▲ ここまで変更 ▲▲▲▲
 
     // 3. 新しいMessageオブジェクトを作成
     final newMessage = Message(
@@ -120,12 +130,23 @@ class ChatHistoryNotifier extends _$ChatHistoryNotifier {
 
     // 2. 残り利用可能額を取得 (削除 *後* の金額)
     final spendableAmount = await ref.read(spendableAmountProvider.future);
-    final remainingAmountStr =
-        NumberFormat.currency(locale: 'ja_JP', symbol: '¥')
-            .format(spendableAmount);
 
-    final messageText =
-        'あ、さっきの支出（$dateStrの$categoryName）、消しといたよ！ 今日の残りは$remainingAmountStrになったね！';
+    // ▼▼▼▼ ここから変更 ▼▼▼▼
+    // 3. 残額に応じてメッセージを分岐
+    final String messageText;
+    if (spendableAmount > 0) {
+      // (A) 残額がプラスの場合
+      final remainingAmountStr =
+          NumberFormat.currency(locale: 'ja_JP', symbol: '¥')
+              .format(spendableAmount);
+      messageText =
+          'あ、さっきの支出（$dateStrの$categoryName）、消しといたよ！ 今日の残りは$remainingAmountStrになったね！';
+    } else {
+      // (B) 残額が0円以下（マイナス）の場合
+      messageText =
+          'あ、さっきの支出（$dateStrの$categoryName）、消しといたよ！ でも、まだ今日使えるお金超えちゃってるみたい…！';
+    }
+    // ▲▲▲▲ ここまで変更 ▲▲▲▲
 
     // 3. 新しいMessageオブジェクトを作成
     final newMessage = Message(

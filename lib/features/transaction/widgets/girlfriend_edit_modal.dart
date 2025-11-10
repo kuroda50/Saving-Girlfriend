@@ -54,7 +54,7 @@ class _GirlfriendEditModalState extends ConsumerState<GirlfriendEditModal> {
     final parsedAmount = int.tryParse(_amountController.text);
 
     // 2. デフォルト（無効な入力の場合）は、元の金額を使用する (amount は int)
-    int finalAmount = widget.transaction.amount.toInt();
+    int finalAmount = widget.transaction.amount;
 
     // 3. もしパースに成功し、かつ0より大きい数値だったら
     if (parsedAmount != null && parsedAmount > 0) {

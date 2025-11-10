@@ -34,11 +34,11 @@ Future<int> spendableAmount(SpendableAmountRef ref) async {
           tx.date.month == today.month &&
           tx.date.day == today.day)
       // ▼▼▼ double (0.0) から int (0) で計算するように変更 ▼▼▼
-      .fold(0, (sum, tx) => sum + tx.amount.toInt()); // .toInt() を追加 (intで加算)
+      .fold(0, (sum, tx) => sum + tx.amount); // .toInt() を追加 (intで加算)
 
   // 4. 利用可能額を計算して返す
   // ▼▼▼ double (0.0) から int (0) で計算するように変更 ▼▼▼
-  return (latestBudget?.amount.toInt() ?? 0) - todayExpenses;
+  return (latestBudget?.amount ?? 0) - todayExpenses;
 }
 
 /// 日々の利用可能額を startDate から endOfToday まで累積計算します。
