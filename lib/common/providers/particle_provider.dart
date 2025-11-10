@@ -1,3 +1,5 @@
+// lib/common/providers/particle_provider.dart (修正後のコード)
+
 // Package imports:
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -15,25 +17,29 @@ class Particle {
 // 2. パーティクルの状態を定義
 @immutable
 class ParticleState {
-  final List<Particle> sparkles; // 指を離した時の「大きい」破裂
+  final List<Particle> sparkles;
   final List<Particle> trailParticles;
-  final List<Particle> swipeSparkles; // スワイプ中の「小さい」破裂
+  final List<Particle> swipeSparkles;
+  final List<Particle> tapRipples; // ← ★ 1. 新しいリストを追加
 
   const ParticleState({
     this.sparkles = const [],
     this.trailParticles = const [],
-    this.swipeSparkles = const [], // ←★追加
+    this.swipeSparkles = const [],
+    this.tapRipples = const [], // ← ★ 1. 初期値を追加
   });
 
   ParticleState copyWith({
     List<Particle>? sparkles,
     List<Particle>? trailParticles,
-    List<Particle>? swipeSparkles, // ←★追加
+    List<Particle>? swipeSparkles,
+    List<Particle>? tapRipples, // ← ★ 1. copyWith に追加
   }) {
     return ParticleState(
       sparkles: sparkles ?? this.sparkles,
       trailParticles: trailParticles ?? this.trailParticles,
-      swipeSparkles: swipeSparkles ?? this.swipeSparkles, // ←★追加
+      swipeSparkles: swipeSparkles ?? this.swipeSparkles,
+      tapRipples: tapRipples ?? this.tapRipples, // ← ★ 1. copyWith に追加
     );
   }
 }
@@ -42,43 +48,53 @@ class ParticleState {
 class ParticleNotifier extends StateNotifier<ParticleState> {
   ParticleNotifier() : super(const ParticleState());
 
-  // MyAppにあった _lastSparkleTime をこちらに移動
   DateTime? _lastSparkleTime;
+  DateTime? _lastTrailTime;
+  DateTime? _lastRippleTime; // ← ★ 2. 波紋用のスロットル時間を追加
   final Random _random = Random();
 
-  // MyAppにあった _addSparkle のロジックを移植
-  void addSparkle(Offset position) {
+  // ▼▼▼▼ 【新設】タップ時の「波紋」専用メソッド ▼▼▼▼
+  void addTapRipple(Offset position) {
     // スロットル（間引き）処理
-    const interval = Duration(milliseconds: 20); // ←★ ぱやぱやし過ぎなら 30 や 40 に増やす
+    const interval = Duration(milliseconds: 50); // 50ms間隔
     final now = DateTime.now();
-    if (_lastSparkleTime != null &&
-        now.difference(_lastSparkleTime!) < interval) {
+    if (_lastRippleTime != null &&
+        now.difference(_lastRippleTime!) < interval) {
       return;
     }
-    _lastSparkleTime = now;
+    _lastRippleTime = now;
 
-    // ID付きのParticleオブジェクトを作成
-    final swipeSparkle = Particle(position: position); // ←★ 小さい破裂用
-    final trail = Particle(position: position); // ← 軌跡用
+    final ripple = Particle(position: position);
 
-    // Stateを更新してリストに追加
     state = state.copyWith(
-      // sparkles: ... ←★ ここは触らない（大きい破裂は addSwipeTrail でしか出ない）
-      trailParticles: [...state.trailParticles, trail],
-      swipeSparkles: [...state.swipeSparkles, swipeSparkle], // ←★ 小さい破裂を追加
+      tapRipples: [...state.tapRipples, ripple],
     );
 
-    // ★ 小さい破裂を削除する (600ms後。SwipeSparkleのアニメーション時間と合わせる)
+    // 波紋の削除 (600ms後。TapRippleEffectのアニメーション時間と合わせる)
     Future.delayed(const Duration(milliseconds: 600), () {
       if (!mounted) return;
       state = state.copyWith(
-        swipeSparkles:
-            state.swipeSparkles.where((p) => p.id != swipeSparkle.id).toList(),
+        tapRipples: state.tapRipples.where((p) => p.id != ripple.id).toList(),
       );
     });
+  }
+  // ▲▲▲▲ 【新設】ここまで ▲▲▲▲
+
+  // スワイプ中の「軌跡」専用メソッド (変更なし)
+  void addTrail(Offset position) {
+    const interval = Duration(milliseconds: 30);
+    final now = DateTime.now();
+    if (_lastTrailTime != null && now.difference(_lastTrailTime!) < interval) {
+      return;
+    }
+    _lastTrailTime = now;
+
+    final trail = Particle(position: position);
+    state = state.copyWith(
+      trailParticles: [...state.trailParticles, trail],
+    );
 
     Future.delayed(const Duration(milliseconds: 1500), () {
-      // ← 軌跡の削除 (そのまま)
       if (!mounted) return;
       state = state.copyWith(
         trailParticles:
@@ -87,9 +103,33 @@ class ParticleNotifier extends StateNotifier<ParticleState> {
     });
   }
 
-  // MyAppにあった _addSwipeTrail のロジックを移植
+  // （ボタン用）「小さい破裂」専用メソッド (変更なし)
+  void addSparkle(Offset position) {
+    const interval = Duration(milliseconds: 20);
+    final now = DateTime.now();
+    if (_lastSparkleTime != null &&
+        now.difference(_lastSparkleTime!) < interval) {
+      return;
+    }
+    _lastSparkleTime = now;
+
+    final swipeSparkle = Particle(position: position);
+    state = state.copyWith(
+      swipeSparkles: [...state.swipeSparkles, swipeSparkle],
+    );
+
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (!mounted) return;
+      state = state.copyWith(
+        swipeSparkles:
+            state.swipeSparkles.where((p) => p.id != swipeSparkle.id).toList(),
+      );
+    });
+  }
+
+  // （ボタン用）「大きい破裂」専用メソッド (変更なし)
   void addSwipeTrail(Offset pos) {
-    // 5回のループ (Sparkles)
+    // ... (変更なし) ...
     for (int i = 0; i < 3; i++) {
       Future.delayed(Duration(milliseconds: i * 60), () {
         if (!mounted) return;
@@ -98,10 +138,8 @@ class ParticleNotifier extends StateNotifier<ParticleState> {
               (_random.nextDouble() - 0.5) * 25,
               (_random.nextDouble() - 0.5) * 25,
             );
-
         final sparkle = Particle(position: offset);
         state = state.copyWith(sparkles: [...state.sparkles, sparkle]);
-
         Future.delayed(const Duration(milliseconds: 1000), () {
           if (!mounted) return;
           state = state.copyWith(
@@ -110,35 +148,8 @@ class ParticleNotifier extends StateNotifier<ParticleState> {
         });
       });
     }
-
-    // 10回のループ (TrailParticles)
-    for (int i = 0; i < 6; i++) {
-      Future.delayed(Duration(milliseconds: 100 + i * 80), () {
-        if (!mounted) return;
-        final offset = pos +
-            Offset(
-              (_random.nextDouble() - 0.5) * 50,
-              (_random.nextDouble() - 0.5) * 50,
-            );
-
-        final trail = Particle(position: offset);
-        state =
-            state.copyWith(trailParticles: [...state.trailParticles, trail]);
-
-        Future.delayed(const Duration(milliseconds: 1800), () {
-          if (!mounted) return;
-          state = state.copyWith(
-            trailParticles:
-                state.trailParticles.where((p) => p.id != trail.id).toList(),
-          );
-        });
-      });
-    }
-
-    // 最後のタップバースト (Sparkle)
     final burstSparkle = Particle(position: pos);
     state = state.copyWith(sparkles: [...state.sparkles, burstSparkle]);
-
     Future.delayed(const Duration(milliseconds: 700), () {
       if (!mounted) return;
       state = state.copyWith(
