@@ -68,7 +68,8 @@ class _StoryPlayer extends ConsumerStatefulWidget {
   ConsumerState<_StoryPlayer> createState() => _StoryPlayerState();
 }
 
-class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
+class _StoryPlayerState extends ConsumerState<_StoryPlayer>
+    with SingleTickerProviderStateMixin {
   int _lineIndex = 0;
   bool _isProcessing = false;
   bool _isStreaming = false;
@@ -76,6 +77,9 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   Timer? _autoPlayTimer;
 
   late StreamController<String> _textStreamController;
+
+  late AnimationController _animationController;
+  late Animation<double> _animation;
 
   // ★変更点: List<String> から List<DialogueLine> に変更
   List<DialogueLine> get _currentEpisodeDialogue =>
@@ -88,6 +92,16 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   void initState() {
     super.initState();
     _textStreamController = StreamController<String>();
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: 25.0, end: 15.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
     _startStreamingText();
   }
 
@@ -95,6 +109,7 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   void dispose() {
     _textStreamController.close();
     _autoPlayTimer?.cancel();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -158,7 +173,7 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
     });
   }
 
-  void _goToNextLine() async {
+  void _goToNextLine() {
     _autoPlayTimer?.cancel();
 
     if (_lineIndex < _currentEpisodeDialogue.length - 1) {
@@ -167,26 +182,31 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
       });
       _startStreamingText();
     } else {
-      if (_isAutoPlay) {
-        setState(() {
-          _isAutoPlay = false;
-        });
-      }
+      _endStory();
+    }
+  }
 
-      final localStorage = await ref.read(localStorageServiceProvider.future);
-      final hasPlayedEpisode0ForCharacter =
-          localStorage.hasPlayedEpisode0(widget.character.id);
+  // ★追加: ストーリー終了時の画面遷移ロジックを分離
+  void _endStory() async {
+    if (_isAutoPlay) {
+      setState(() {
+        _isAutoPlay = false;
+      });
+    }
 
-      if (mounted) {
-        if (widget.episodeIndex == 0 && !hasPlayedEpisode0ForCharacter) {
-          context.go('/home');
-        } else {
-          context.go('/select_story');
-        }
+    final localStorage = await ref.read(localStorageServiceProvider.future);
+    final hasPlayedEpisode0ForCharacter =
+        localStorage.hasPlayedEpisode0(widget.character.id);
+
+    if (mounted) {
+      if (widget.episodeIndex == 0 && !hasPlayedEpisode0ForCharacter) {
+        context.go('/home');
+      } else {
+        context.go('/select_story');
       }
-      if (widget.episodeIndex == 0) {
-        await localStorage.setEpisode0Played(widget.character.id);
-      }
+    }
+    if (widget.episodeIndex == 0) {
+      await localStorage.setEpisode0Played(widget.character.id);
     }
   }
 
@@ -210,9 +230,23 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
     });
   }
 
+  // ★追加: スキップ機能
+  void _skipToEnd() {
+    if (_isProcessing) return;
+
+    setState(() {
+      _isProcessing = true;
+      _isStreaming = false;
+      _autoPlayTimer?.cancel();
+    });
+
+    _endStory();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
         automaticallyImplyLeading: false,
@@ -241,27 +275,62 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Image.asset(
-                    widget.character.assetPath,
-                    fit: BoxFit.contain,
-                    height: MediaQuery.of(context).size.height * 0.5,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Image.asset(
+                        widget.character.assetPath,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                   Stack(
                     children: [
+                      // 1. セリフの吹き出し（最下層）
                       Padding(
                         padding: const EdgeInsets.only(top: 25.0),
                         child: StreamBuilder<String>(
                           stream: _textStreamController.stream,
                           initialData: "",
                           builder: (context, snapshot) {
-                            // ★変更点: 現在の話者名（_currentLine.speaker）を渡す
+                            // ★修正: fullTextを渡し、レイアウトを安定させる
                             return _ChatWidget(
                               speaker: _currentLine.speaker,
                               text: snapshot.data ?? "",
+                              fullText: _currentLine.text,
                             );
                           },
                         ),
                       ),
+
+                      // 2. セリフ送りを示す三角アイコン
+                      // 条件: 文字送りが完了していて、かつ次のセリフが残っている場合のみ表示
+                      if (!_isStreaming &&
+                          _lineIndex < _currentEpisodeDialogue.length - 1)
+                        AnimatedBuilder(
+                          animation: _animation,
+                          builder: (context, child) {
+                            return Positioned(
+                              right: 30,
+                              bottom: _animation.value,
+                              child: child!,
+                            );
+                          },
+                          child: const Icon(
+                            Icons.arrow_drop_down,
+                            color: Colors.pink,
+                            size: 40,
+                            shadows: [
+                              Shadow(
+                                blurRadius: 6.0,
+                                color: Colors.black,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      // 3. 操作ボタン群（オートプレイ、スキップ、ログ）
                       Positioned(
                         top: 0,
                         left: 32,
@@ -273,7 +342,7 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
                             ),
                             const SizedBox(width: 8),
                             _CircleButton(Icons.skip_next,
-                                onPressed: () => context.pop()),
+                                onPressed: _skipToEnd),
                             const SizedBox(width: 8),
                             _CircleButton(Icons.list_alt,
                                 onPressed: () => _showLogDialog(context)),
@@ -390,6 +459,11 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
                 final line = logLines[index];
                 final bool isMainCharacter = line.speaker == mainCharacterName;
 
+                // 話者名を表示するかどうかの判定
+                // 条件: 最初の行、または前の行と話者が違う場合
+                final bool showSpeaker =
+                    index == 0 || logLines[index - 1].speaker != line.speaker;
+
                 // ★変更点: メインキャラはピンク、その他はセカンダリカラー（青緑）
                 final Color speakerColor = isMainCharacter
                     ? AppColors.primary // ピンク
@@ -412,17 +486,19 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 話者名
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4.0, bottom: 4.0),
-                        child: Text(
-                          speakerName,
-                          style: TextStyle(
-                            color: speakerColor, // 動的な色を適用
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                      if (showSpeaker)
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(left: 4.0, bottom: 4.0),
+                          child: Text(
+                            speakerName,
+                            style: TextStyle(
+                              color: speakerColor, // 動的な色を適用
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
                       // セリフの吹き出し
                       Container(
                         padding: const EdgeInsets.all(12.0),
@@ -480,20 +556,24 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   }
 }
 
-// ★変更点: _ChatWidget が話者名(speaker)を受け取るように変更
 class _ChatWidget extends StatelessWidget {
-  final String speaker; // 話者名 (データとしては受け取る)
-  final String text; // セリフ
-  const _ChatWidget({required this.speaker, required this.text});
+  final String speaker;
+  final String text;
+  final String fullText;
+  const _ChatWidget({
+    required this.speaker,
+    required this.text,
+    required this.fullText,
+  });
 
   @override
   Widget build(BuildContext context) {
+    const textStyle = TextStyle(fontSize: 16, height: 1.4);
+
     return Container(
-      // ★変更点: 高さを 100 に戻す
-      height: 100,
+      height: 120,
       margin: const EdgeInsets.all(16),
-      // ★変更点: Paddingを8に戻す
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
       decoration: BoxDecoration(
         color: AppColors.mainBackground.withOpacity(0.95),
         borderRadius: BorderRadius.circular(16),
@@ -502,22 +582,49 @@ class _ChatWidget extends StatelessWidget {
               color: AppColors.nonActive, blurRadius: 4, offset: Offset(0, 2))
         ],
       ),
-      // ★変更点: Column ではなく Row を使う元のレイアウトに戻す
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          const SizedBox(width: 8),
-          // 話者名ヘッダーを削除し、セリフだけを表示
-          Expanded(
-            child: SingleChildScrollView(
-              // セリフが長い場合に備える
+          // 1. 話者名
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 24,
+            child: Visibility(
+              visible: speaker != 'モノローグ',
               child: Text(
-                text,
-                style: const TextStyle(fontSize: 15, height: 1.4),
+                speaker,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          // 2. セリフ
+          Positioned(
+            top: speaker == 'モノローグ' ? 0 : 24,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Stack(
+              children: [
+                // 透明なテキストで事前にレイアウトを確保し、ちらつきを防ぐ
+                Text(
+                  fullText,
+                  maxLines: 3,
+                  style: textStyle.copyWith(color: Colors.transparent),
+                ),
+                // 表示用テキスト
+                Text(
+                  text,
+                  maxLines: 4,
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
