@@ -1,25 +1,28 @@
-enum MessageType {
-  girlfriend,
-  user,
-}
-
-class Message {
+class AppMessage {
+  int dbId;
   final String id;
-  final MessageType type; // 'girlfriend' or 'user'
+
+  // MessageTypeのindexを保存
+  final int type;
+
   final String text;
   final String time;
 
-  Message(
-      {required this.id,
+  AppMessage(
+      {this.dbId = 0,
+      required this.id,
       required this.type,
       required this.text,
       required this.time});
 
+  MessageType get messageType => MessageType.values[type];
+
   // JSONに変換するファクトリコンストラクタ
-  factory Message.fromJson(Map<String, dynamic> json) {
-    return Message(
+  factory AppMessage.fromJson(Map<String, dynamic> json) {
+    return AppMessage(
       id: json['id'],
-      type: MessageType.values.byName(json['type']),
+      // fromJsonではStringからenumに変換し、そのindexを保存
+      type: MessageType.values.byName(json['type']).index,
       text: json['text'],
       time: json['time'],
     );
@@ -29,9 +32,15 @@ class Message {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'type': type.name,
+      // toJsonではindexからenumのname(String)に変換
+      'type': MessageType.values[type].name,
       'text': text,
       'time': time,
     };
   }
+}
+
+enum MessageType {
+  girlfriend,
+  user,
 }

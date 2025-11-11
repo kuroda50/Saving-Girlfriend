@@ -5,6 +5,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:saving_girlfriend/app/providers/migration_provider.dart';
 // Project imports:
 import 'package:saving_girlfriend/app/route/go_router.dart';
 import 'package:saving_girlfriend/common/providers/particle_provider.dart';
@@ -20,6 +21,13 @@ void main() async {
   // デバイスのローカルタイムゾーンを設定（ここでは例として 'Asia/Tokyo'）
   // 通常はデバイスから取得しますが、ここでは例示
   tz.setLocalLocation(tz.getLocation('Asia/Tokyo'));
+
+  // Create a ProviderContainer to access providers before runApp.
+  final container = ProviderContainer();
+  // Await the completion of the data migration.
+  await container.read(migrationProvider.future);
+  // Dispose the container once the migration is done.
+  container.dispose();
 
   runApp(
     kIsWeb

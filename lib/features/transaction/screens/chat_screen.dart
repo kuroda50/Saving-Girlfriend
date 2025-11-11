@@ -57,7 +57,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
   void _addMessage(MessageType type, String text) {
     final m = Message(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        type: type,
+        type: type.index,
         text: text,
         time:
             ChatHistoryNotifier.nowText()); // ChatHistoryNotifier.nowText() を使用
@@ -79,7 +79,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
       TransactionCategory cat, int amt, int todaySpent) async {
     ref.read(chatHistoryNotifierProvider.notifier).addMessage(Message(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        type: MessageType.girlfriend,
+        type: MessageType.girlfriend.index,
         text: '…',
         time: ChatHistoryNotifier.nowText()));
     _scrollToBottom();
@@ -110,13 +110,13 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
         ref.read(chatHistoryNotifierProvider.notifier).updateLastMessage(
             Message(
                 id: DateTime.now().millisecondsSinceEpoch.toString(),
-                type: MessageType.girlfriend,
+                type: MessageType.girlfriend.index,
                 text: lines[i],
                 time: ChatHistoryNotifier.nowText()));
       } else {
         ref.read(chatHistoryNotifierProvider.notifier).addMessage(Message(
             id: DateTime.now().millisecondsSinceEpoch.toString(),
-            type: MessageType.girlfriend,
+            type: MessageType.girlfriend.index,
             text: lines[i],
             time: ChatHistoryNotifier.nowText()));
       }
@@ -127,7 +127,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
       if (i < lines.length - 1) {
         ref.read(chatHistoryNotifierProvider.notifier).addMessage(Message(
             id: DateTime.now().millisecondsSinceEpoch.toString(),
-            type: MessageType.girlfriend,
+            type: MessageType.girlfriend.index,
             text: '…',
             time: ChatHistoryNotifier.nowText()));
         _scrollToBottom();
@@ -191,7 +191,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
   }
 
   Widget _buildMessageTile(Message m) {
-    final bool isUser = m.type == MessageType.user;
+    final bool isUser = m.messageType == MessageType.user;
     final characterId = ref.watch(currentGirlfriendProvider);
     final character = characters.firstWhere(
       (c) => c.id == characterId.asData?.value,

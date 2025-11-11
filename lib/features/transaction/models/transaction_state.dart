@@ -1,11 +1,14 @@
-class TransactionState {
+class AppTransactionState {
+  int dbId;
   final String id;
+
   final String type; // "expense" または "income"
   final DateTime date;
   final int amount;
   final String category;
 
-  TransactionState({
+  AppTransactionState({
+    this.dbId = 0,
     required this.id,
     required this.type,
     required this.date,
@@ -13,8 +16,8 @@ class TransactionState {
     required this.category,
   });
 
-  factory TransactionState.fromJson(Map<String, dynamic> json) {
-    return TransactionState(
+  factory AppTransactionState.fromJson(Map<String, dynamic> json) {
+    return AppTransactionState(
       id: json['id'] as String,
       type: json['type'] as String,
       date: DateTime.parse(json['date'] as String),
@@ -33,14 +36,16 @@ class TransactionState {
     };
   }
 
-  TransactionState copyWith({
+  AppTransactionState copyWith({
+    int? dbId,
     String? id,
     String? type,
     DateTime? date,
     int? amount,
     String? category,
   }) {
-    return TransactionState(
+    return AppTransactionState(
+      dbId: dbId ?? this.dbId,
       id: id ?? this.id,
       type: type ?? this.type,
       date: date ?? this.date,

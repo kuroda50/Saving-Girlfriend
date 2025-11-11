@@ -3,12 +3,19 @@ import 'dart:convert';
 
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// Project imports:
 import 'package:saving_girlfriend/common/constants/settings_defaults.dart';
-import 'package:saving_girlfriend/common/models/message.dart';
+// Drift related imports
+import 'package:saving_girlfriend/common/services/drift_service.dart';
 import 'package:saving_girlfriend/features/budget/models/budget_history.dart';
 import 'package:saving_girlfriend/features/settings/models/settings_state.dart';
-import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
+import 'package:saving_girlfriend/features/transaction/data/drift_message_history_data_source.dart';
+import 'package:saving_girlfriend/features/transaction/data/drift_transaction_history_data_source.dart';
+import 'package:saving_girlfriend/features/transaction/data/message_history_data_source.dart';
+import 'package:saving_girlfriend/features/transaction/data/transaction_history_data_source.dart';
+import 'package:saving_girlfriend/features/transaction/repositories/message_history_repository.dart';
+import 'package:saving_girlfriend/features/transaction/repositories/message_history_repository_impl.dart';
+import 'package:saving_girlfriend/features/transaction/repositories/transaction_history_repository.dart';
+import 'package:saving_girlfriend/features/transaction/repositories/transaction_history_repository_impl.dart';
 import 'package:saving_girlfriend/features/tribute/models/tribute_history_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,28 +41,16 @@ class LocalStorageService {
   static const String _bgmVolumeKey = 'bgm_volume';
 
   // 履歴関連のキー
-  static const String _transactionHistoryKey = 'transaction_history';
+  // static const String _transactionHistoryKey = 'transaction_history';
+  // static const String _messagesKey = 'chat_messages';
   static const String _tributionHistoryKey = 'tribution_history';
   static const String _budgetHistoryKey = 'budget_history';
-  static const String _messagesKey = 'chat_messages';
 
   // --- 保存 (Save) ---
-
-  /// 会話履歴を保存する
-  Future<void> saveMessages(List<Message> messages) async {
-    final String encodedData =
-        jsonEncode(messages.map((m) => m.toJson()).toList());
-    await _prefs.setString(_messagesKey, encodedData);
-  }
 
   /// 現在選択中のキャラクターを保存する
   Future<void> saveCurrentCharacter(String characterId) async {
     await _prefs.setString(_currentCharacterKey, characterId);
-  }
-
-  Future<void> saveTransactionHistory(List<TransactionState> history) async {
-    String jsonString = jsonEncode(history);
-    await _prefs.setString(_transactionHistoryKey, jsonString);
   }
 
   Future<void> saveTributionHistory(List<TributeState> history) async {
@@ -131,20 +126,6 @@ class LocalStorageService {
     return _prefs.getString(_currentCharacterKey) ?? '';
   }
 
-  Future<List<TransactionState>> getTransactionHistory() async {
-    final jsonString = _prefs.getString(_transactionHistoryKey);
-    if (jsonString != null && jsonString.isNotEmpty) {
-      final List<dynamic> decodedList = jsonDecode(jsonString);
-      final result = decodedList
-          .map((item) =>
-              TransactionState.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
-      return result;
-    }
-    // データがない場合は空のリストを返す
-    return [];
-  }
-
   Future<List<TributeState>> getTributionHistory() async {
     final jsonString = _prefs.getString(_tributionHistoryKey);
     if (jsonString != null && jsonString.isNotEmpty) {
@@ -201,16 +182,6 @@ class LocalStorageService {
     ];
   }
 
-  /// 会話履歴を読み込む
-  Future<List<Message>> loadMessages() async {
-    final String? encodedData = _prefs.getString(_messagesKey);
-    if (encodedData == null) {
-      return [];
-    }
-    final List<dynamic> decodedData = jsonDecode(encodedData);
-    return decodedData.map((item) => Message.fromJson(item)).toList();
-  }
-
   List<String> getPlayedReactionIdsForRule(String ruleId) {
     final key = 'played_reaction_ids_rule_$ruleId';
     return _prefs.getStringList(key) ?? [];
@@ -223,3 +194,31 @@ class LocalStorageService {
     _prefs.remove(key);
   }
 }
+
+// --- Transaction History Providers ---
+
+final transactionHistoryDataSourceProvider =
+    Provider<TransactionHistoryDataSource>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return DriftTransactionHistoryDataSource(db);
+});
+
+final transactionHistoryRepositoryProvider =
+    Provider<TransactionHistoryRepository>((ref) {
+  final dataSource = ref.watch(transactionHistoryDataSourceProvider);
+  return TransactionHistoryRepositoryImpl(dataSource);
+});
+
+// --- Message History Providers ---
+
+final messageHistoryDataSourceProvider =
+    Provider<MessageHistoryDataSource>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return DriftMessageHistoryDataSource(db);
+});
+
+final messageHistoryRepositoryProvider =
+    Provider<MessageHistoryRepository>((ref) {
+  final dataSource = ref.watch(messageHistoryDataSourceProvider);
+  return MessageHistoryRepositoryImpl(dataSource);
+});

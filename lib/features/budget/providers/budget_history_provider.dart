@@ -5,7 +5,7 @@ import 'package:saving_girlfriend/common/services/local_storage_service.dart';
 // Project imports:
 import 'package:saving_girlfriend/features/budget/models/budget_history.dart';
 
-part '../../transaction/providers/budget_history_provider.g.dart';
+part 'budget_history_provider.g.dart';
 
 /// 予算の変更履歴リストを提供するプロバイダー
 @Riverpod(keepAlive: true)

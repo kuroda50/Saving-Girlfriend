@@ -1,7 +1,8 @@
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/common/services/local_storage_service.dart';
+
 // Project imports:
+import 'package:saving_girlfriend/common/services/local_storage_service.dart';
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
 import 'package:saving_girlfriend/features/transaction/repositories/transaction_history_repository.dart';
 
@@ -11,32 +12,31 @@ final transactionsProvider =
 });
 
 class TransactionsNotifier extends AsyncNotifier<List<TransactionState>> {
-  Future<TransactionHistoryRepository>
-      get _transactionHistoryRepositoryFuture =>
-          ref.read(transactionHistoryRepositoryProvider.future);
+  // The repository is now provided synchronously, so we can read it directly.
+  TransactionHistoryRepository get _repository =>
+      ref.read(transactionHistoryRepositoryProvider);
 
   @override
   Future<List<TransactionState>> build() async {
-    final transactionHistoryRepository =
-        await _transactionHistoryRepositoryFuture;
-    final history = await transactionHistoryRepository.getTransactionHistory();
-    return history;
+    // Fetch initial history from the repository.
+    return _repository.getHistories();
   }
 
   Future<void> addTransaction(final TransactionState newTransaction) async {
-    final currentHistory = await future;
+    // Get the current state from the notifier.
+    final currentHistory = state.valueOrNull ?? [];
     final newHistory = [...currentHistory, newTransaction];
 
+    // Optimistically update the UI.
     state = AsyncData(newHistory);
 
-    final transactionHistoryRepository =
-        await _transactionHistoryRepositoryFuture;
-    await transactionHistoryRepository.saveTransactionHistory(newHistory);
+    // Persist the new state using the repository.
+    await _repository.saveHistories(newHistory);
   }
 
   Future<void> updateTransaction(
       String id, TransactionState updatedTransaction) async {
-    final currentHistory = await future;
+    final currentHistory = state.valueOrNull ?? [];
     final index =
         currentHistory.indexWhere((transaction) => transaction.id == id);
 
@@ -45,28 +45,15 @@ class TransactionsNotifier extends AsyncNotifier<List<TransactionState>> {
       newHistory[index] = updatedTransaction;
 
       state = AsyncData(newHistory);
-
-      final transactionHistoryRepository =
-          await _transactionHistoryRepositoryFuture;
-      await transactionHistoryRepository.saveTransactionHistory(newHistory);
+      await _repository.saveHistories(newHistory);
     }
   }
 
   Future<void> removeTransaction(String id) async {
-    final currentHistory = await future;
+    final currentHistory = state.valueOrNull ?? [];
     final newHistory = currentHistory.where((tx) => tx.id != id).toList();
 
     state = AsyncData(newHistory);
-
-    final transactionHistoryRepository =
-        await _transactionHistoryRepositoryFuture;
-    await transactionHistoryRepository.saveTransactionHistory(newHistory);
+    await _repository.saveHistories(newHistory);
   }
 }
-
-final transactionHistoryRepositoryProvider =
-    FutureProvider<TransactionHistoryRepository>((ref) async {
-  final localStorageService =
-      await ref.watch(localStorageServiceProvider.future);
-  return TransactionHistoryRepository(localStorageService);
-});
