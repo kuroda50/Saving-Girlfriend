@@ -16,6 +16,12 @@ import 'package:saving_girlfriend/common/services/local_storage_service.dart';
 import 'package:saving_girlfriend/features/story/models/story_model.dart';
 import 'package:saving_girlfriend/features/story/repositories/story_repository.dart';
 
+// ★追加: 分割したウィジェットをインポート
+import 'package:saving_girlfriend/features/story/widgets/story_chat_widget.dart';
+import 'package:saving_girlfriend/features/story/widgets/story_control_button.dart';
+import 'package:saving_girlfriend/features/story/widgets/story_error_screen.dart';
+import 'package:saving_girlfriend/features/story/widgets/story_log_dialog.dart';
+
 class StoryScreen extends ConsumerWidget {
   final int storyIndex;
   const StoryScreen({super.key, required this.storyIndex});
@@ -27,17 +33,20 @@ class StoryScreen extends ConsumerWidget {
     return characterIdAsync.when(
       data: (characterId) {
         if (characterId == null) {
-          return const _ErrorScreen('キャラクターが選択されていません');
+          // ★修正: const を削除
+          return const StoryErrorScreen('キャラクターが選択されていません');
         }
         final storyRepo = ref.read(storyRepositoryProvider);
         final story = storyRepo.getStoryByCharacterId(characterId);
         final character = storyRepo.getCharacterById(characterId);
 
         if (story == null || character == null) {
-          return const _ErrorScreen('ストーリーデータが見つかりません');
+          // ★修正: const を削除
+          return const StoryErrorScreen('ストーリーデータが見つかりません');
         }
         if (storyIndex < 0 || storyIndex >= story.dialogue.length) {
-          return const _ErrorScreen('エピソードが見つかりません');
+          // ★修正: const を削除
+          return const StoryErrorScreen('エピソードが見つかりません');
         }
 
         return _StoryPlayer(
@@ -48,7 +57,8 @@ class StoryScreen extends ConsumerWidget {
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, s) => _ErrorScreen('エラーが発生しました: $e'),
+      // ★修正: _ErrorScreen -> StoryErrorScreen (ここはconst不要)
+      error: (e, s) => StoryErrorScreen('エラーが発生しました: $e'),
     );
   }
 }
@@ -81,11 +91,9 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer>
   late AnimationController _animationController;
   late Animation<double> _animation;
 
-  // ★変更点: List<String> から List<DialogueLine> に変更
   List<DialogueLine> get _currentEpisodeDialogue =>
       widget.story.dialogue[widget.episodeIndex];
 
-  // ★変更点: 現在の行のDialogueLineを取得するgetterを追加
   DialogueLine get _currentLine => _currentEpisodeDialogue[_lineIndex];
 
   @override
@@ -120,7 +128,6 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer>
       _isStreaming = true;
     });
 
-    // ★変更点: _currentLine.text を使用
     final String fullText = _currentLine.text;
     String currentText = "";
     _textStreamController.add("");
@@ -129,7 +136,6 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer>
       if (!mounted) return;
 
       if (!_isStreaming) {
-        // ★変更点: fullText をストリームに追加
         _textStreamController.add(fullText);
         break;
       }
@@ -186,7 +192,6 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer>
     }
   }
 
-  // ★追加: ストーリー終了時の画面遷移ロジックを分離
   void _endStory() async {
     if (_isAutoPlay) {
       setState(() {
@@ -230,7 +235,6 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer>
     });
   }
 
-  // ★追加: スキップ機能
   void _skipToEnd() {
     if (_isProcessing) return;
 
@@ -293,8 +297,8 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer>
                           stream: _textStreamController.stream,
                           initialData: "",
                           builder: (context, snapshot) {
-                            // ★修正: fullTextを渡し、レイアウトを安定させる
-                            return _ChatWidget(
+                            // ★修正: _ChatWidget -> StoryChatWidget
+                            return StoryChatWidget(
                               speaker: _currentLine.speaker,
                               text: snapshot.data ?? "",
                               fullText: _currentLine.text,
@@ -304,7 +308,6 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer>
                       ),
 
                       // 2. セリフ送りを示す三角アイコン
-                      // 条件: 文字送りが完了していて、かつ次のセリフが残っている場合のみ表示
                       if (!_isStreaming &&
                           _lineIndex < _currentEpisodeDialogue.length - 1)
                         AnimatedBuilder(
@@ -329,22 +332,26 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer>
                             ],
                           ),
                         ),
-
                       // 3. 操作ボタン群（オートプレイ、スキップ、ログ）
                       Positioned(
                         top: 0,
                         left: 32,
                         child: Row(
                           children: [
-                            _CircleButton(
-                              _isAutoPlay ? Icons.pause : Icons.play_arrow,
+                            // ★修正: _circleButton -> StoryControlButton
+                            StoryControlButton(
+                              icon:
+                                  _isAutoPlay ? Icons.pause : Icons.play_arrow,
                               onPressed: _toggleAutoPlay,
                             ),
                             const SizedBox(width: 8),
-                            _CircleButton(Icons.skip_next,
-                                onPressed: _skipToEnd),
+                            // ★修正: _circleButton -> StoryControlButton
+                            StoryControlButton(
+                                icon: Icons.skip_next, onPressed: _skipToEnd),
                             const SizedBox(width: 8),
-                            _CircleButton(Icons.list_alt,
+                            // ★修正: _circleButton -> StoryControlButton
+                            StoryControlButton(
+                                icon: Icons.list_alt,
                                 onPressed: () => _showLogDialog(context)),
                           ],
                         ),
@@ -361,310 +368,24 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer>
     );
   }
 
-  Widget _CircleButton(IconData icon, {required VoidCallback onPressed}) {
-    return ClipOval(
-      child: Material(
-        color: AppColors.secondary,
-        child: InkWell(
-          splashColor: AppColors.primary.withOpacity(0.5),
-          onTap: onPressed,
-          child: SizedBox(
-            width: 40,
-            height: 40,
-            child: Icon(
-              icon,
-              size: 24,
-              color: AppColors.mainIcon,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   // 1. _showLogDialog メソッド (呼び出すメソッド名を変更)
   void _showLogDialog(BuildContext context) {
-    // 現在の行までのセリフリストを取得
     final logLines = _currentEpisodeDialogue.sublist(0, _lineIndex + 1);
-    // メインキャラクターの名前を取得（比較用）
     final mainCharacterName = widget.character.name;
 
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.6), // 背景の暗さは維持
+      barrierColor: Colors.black.withOpacity(0.6),
       builder: (context) {
-        return Dialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16), // ダイアログの角丸
-          ),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          // ★変更点: _buildCuteLogDialog を呼び出すように変更
-          child: _buildCuteLogDialog(context, mainCharacterName, logLines),
+        // ★修正: _CuteLogDialogContent -> StoryLogDialog
+        return StoryLogDialog(
+          mainCharacterName: mainCharacterName,
+          logLines: logLines,
         );
       },
     );
   }
 
-  // 2. _buildProsekaLogDialog を削除し、こちらの _buildCuteLogDialog に差し替え
-  Widget _buildCuteLogDialog(BuildContext context, String mainCharacterName,
-      List<DialogueLine> logLines) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: BoxDecoration(
-        // ★変更点: 背景を AppColors.mainBackground (白系) に
-        color: AppColors.mainBackground,
-        borderRadius: BorderRadius.circular(16), // 角丸
-        border: Border.all(
-            color: AppColors.primary.withOpacity(0.5), width: 2), // 枠線をピンクに
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.1), // 影もピンク系に
-            blurRadius: 10,
-            spreadRadius: 2,
-          )
-        ],
-      ),
-      child: Column(
-        children: [
-          // 1. ヘッダー ("ログ")
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
-            child: Text(
-              'ログ',
-              style: TextStyle(
-                // ★変更点: 文字色をメインテキストカラーに
-                color: AppColors.mainText,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          // 区切り線
-          Container(
-            height: 1,
-            // ★変更点: 区切り線をピンク系に
-            color: AppColors.primary.withOpacity(0.3),
-          ),
-
-          // 2. セリフのリスト
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: logLines.length,
-              itemBuilder: (context, index) {
-                final line = logLines[index];
-                final bool isMainCharacter = line.speaker == mainCharacterName;
-
-                // 話者名を表示するかどうかの判定
-                // 条件: 最初の行、または前の行と話者が違う場合
-                final bool showSpeaker =
-                    index == 0 || logLines[index - 1].speaker != line.speaker;
-
-                // ★変更点: メインキャラはピンク、その他はセカンダリカラー（青緑）
-                final Color speakerColor = isMainCharacter
-                    ? AppColors.primary // ピンク
-                    : AppColors.secondary; // 青緑
-                final String speakerName = line.speaker;
-
-                // セリフの背景色
-                final Color bubbleColor = isMainCharacter
-                    ? AppColors.primary.withOpacity(0.05) // 薄いピンク
-                    : AppColors.forthBackground; // 薄い青
-
-                // セリフの枠線色
-                final Color bubbleBorderColor = isMainCharacter
-                    ? AppColors.primary.withOpacity(0.4)
-                    : AppColors.secondary.withOpacity(0.4);
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 話者名
-                      if (showSpeaker)
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(left: 4.0, bottom: 4.0),
-                          child: Text(
-                            speakerName,
-                            style: TextStyle(
-                              color: speakerColor, // 動的な色を適用
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      // セリフの吹き出し
-                      Container(
-                        padding: const EdgeInsets.all(12.0),
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                            color: bubbleColor,
-                            borderRadius: BorderRadius.circular(12.0), // 角丸
-                            border: Border.all(
-                                color: bubbleBorderColor, width: 1.5)),
-                        child: Text(
-                          line.text,
-                          style: const TextStyle(
-                            color: AppColors.mainText, // 文字色を黒系に
-                            fontSize: 15,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // 3. 閉じるボタン
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary, // ボタン背景色をピンクに
-                  foregroundColor: AppColors.mainIcon, // ボタン文字色を白に
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30), // 角を丸く
-                  ),
-                  elevation: 2,
-                ),
-                child: const Text(
-                  '閉じる',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ChatWidget extends StatelessWidget {
-  final String speaker;
-  final String text;
-  final String fullText;
-  const _ChatWidget({
-    required this.speaker,
-    required this.text,
-    required this.fullText,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const textStyle = TextStyle(fontSize: 16, height: 1.4);
-
-    return Container(
-      height: 120,
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-      decoration: BoxDecoration(
-        color: AppColors.mainBackground.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-              color: AppColors.nonActive, blurRadius: 4, offset: Offset(0, 2))
-        ],
-      ),
-      child: Stack(
-        children: [
-          // 1. 話者名
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 24,
-            child: Visibility(
-              visible: speaker != 'モノローグ',
-              child: Text(
-                speaker,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ),
-          // 2. セリフ
-          Positioned(
-            top: speaker == 'モノローグ' ? 0 : 24,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Stack(
-              children: [
-                // 透明なテキストで事前にレイアウトを確保し、ちらつきを防ぐ
-                Text(
-                  fullText,
-                  maxLines: 3,
-                  style: textStyle.copyWith(color: Colors.transparent),
-                ),
-                // 表示用テキスト
-                Text(
-                  text,
-                  maxLines: 4,
-                  style: textStyle,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorScreen extends StatelessWidget {
-  final String message;
-  const _ErrorScreen(this.message);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(backgroundColor: AppColors.secondary),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error, color: Colors.red, size: 64),
-            const SizedBox(height: 16),
-            Text(message,
-                style: const TextStyle(fontSize: 20, color: AppColors.error)),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: 150,
-              child: ElevatedButton(
-                onPressed: () => context.pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.mainIcon,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                child: const Text('戻る'),
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
+  // ★削除: _CircleButton, _buildCuteLogDialog, _ChatWidget, _ErrorScreen, _CuteLogDialogContent
 }
