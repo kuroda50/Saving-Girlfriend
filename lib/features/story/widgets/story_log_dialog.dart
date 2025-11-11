@@ -89,12 +89,8 @@ class _StoryLogDialogState extends State<StoryLogDialog> {
                   final bool isMainCharacter =
                       line.speaker == widget.mainCharacterName;
 
-                  // モノローグ判定を追加
-                  final bool isMonologue = line.speaker == 'モノローグ';
-
-                  final bool showSpeaker = !isMonologue &&
-                      (index == 0 ||
-                          widget.logLines[index - 1].speaker != line.speaker);
+                  final bool showSpeaker = index == 0 ||
+                      widget.logLines[index - 1].speaker != line.speaker;
 
                   final Color speakerColor =
                       isMainCharacter ? AppColors.primary : AppColors.secondary;
