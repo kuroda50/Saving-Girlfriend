@@ -42,7 +42,7 @@ dependencies:
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
   flutter_glitter_effect: 1.0.3
-
+  flutter_svg: ^2.0.9
   riverpod: any
   audioplayers: ^6.5.1
 
