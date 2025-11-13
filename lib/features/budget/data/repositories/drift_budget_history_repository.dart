@@ -34,9 +34,13 @@ class DriftBudgetHistoryRepository implements BudgetHistoryRepository {
       amount: Value(newBudget),
     );
 
-    await _db
-        .into(_db.budgetHistories)
-        .insert(entry, onConflict: DoUpdate((_) => entry));
+    await _db.into(_db.budgetHistories).insert(
+          entry,
+          onConflict: DoUpdate(
+            (old) => entry,
+            target: [_db.budgetHistories.date],
+          ),
+        );
   }
 
   @override
