@@ -295,10 +295,6 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const Text("使った金額",
-                                  style: TextStyle(
-                                      fontSize: 12, color: AppColors.subText)),
-                              const SizedBox(height: 4),
                               Text(
                                   '使った金額 ￥${_formatCurrency(todaySpent)}/${_formatCurrency(data.dailyBudget)}',
                                   style: TextStyle(

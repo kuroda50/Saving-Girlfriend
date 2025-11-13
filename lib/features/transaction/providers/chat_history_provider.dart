@@ -4,7 +4,7 @@
 import 'package:intl/intl.dart';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:saving_girlfriend/app/providers/spendable_amount_provider.dart';
+import 'package:saving_girlfriend/app/providers/today_savings_provider.dart';
 import 'package:saving_girlfriend/common/models/message.dart';
 import 'package:saving_girlfriend/common/providers/uuid_provider.dart';
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
@@ -79,32 +79,24 @@ class ChatHistoryNotifier extends _$ChatHistoryNotifier {
     TransactionState oldTx,
     TransactionState newTx,
   ) async {
-    // 1. メッセージ文言を生成
-    final dateStr = DateFormat('M月d日', 'ja_JP').format(newTx.date);
     final categoryName = newTx.category;
-    // symbol: '' で '¥' マークをつけない
     final newAmountStr =
         NumberFormat.currency(locale: 'ja_JP', symbol: '').format(newTx.amount);
 
-    // 2. 残り利用可能額を取得
-    // (注: このプロバイダが更新されるのを待つため、futureをreadします)
-    final spendableAmount = await ref.read(spendableAmountProvider.future);
-    // ▼▼▼▼ ここから変更 ▼▼▼▼
-    // 3. 残額に応じてメッセージを分岐
+    final todayAmount = await ref.read(todaySavingsProvider.future);
     final String messageText;
-    if (spendableAmount > 0) {
+    if (todayAmount > 0) {
       // (A) 残額がプラスの場合
       final remainingAmountStr =
           NumberFormat.currency(locale: 'ja_JP', symbol: '¥')
-              .format(spendableAmount);
+              .format(todayAmount);
       messageText =
-          'あ、さっきの支出（$dateStrの$categoryName）、$newAmountStr円に直しといたよ！ 今日の残りは$remainingAmountStrになったね！';
+          'あ、さっきの$categoryName、$newAmountStr円に直しといたよ！ 今日の残りは$remainingAmountStrになったね！';
     } else {
       // (B) 残額が0円以下（マイナス）の場合
       messageText =
-          'あ、さっきの支出（$dateStrの$categoryName）、$newAmountStr円に直しといたよ！ あ、でも今日使えるお金超えちゃってるから気をつけてね…！';
+          'あ、さっきの支出$categoryName、$newAmountStr円に直しといたよ！ あ、でも今日使えるお金超えちゃってるから気をつけてね…！';
     }
-    // ▲▲▲▲ ここまで変更 ▲▲▲▲
 
     // 3. 新しいMessageオブジェクトを作成
     final newMessage = Message(
@@ -117,34 +109,29 @@ class ChatHistoryNotifier extends _$ChatHistoryNotifier {
     // 4. 既存の addMessage メソッドを呼び出して、状態更新と保存を行う
     await addMessage(newMessage);
   }
-  // ▲▲▲ -------------------------- ▲▲▲
 
-  // ▼▼▼ 以下のメソッドを丸ごと追加 ▼▼▼
-  /// 支出削除の報告メッセージをチャットに自動追加する
   Future<void> addDeleteReportMessage(
     TransactionState deletedTx,
   ) async {
     // 1. メッセージ文言を生成
-    final dateStr = DateFormat('M月d日', 'ja_JP').format(deletedTx.date);
     final categoryName = deletedTx.category;
 
     // 2. 残り利用可能額を取得 (削除 *後* の金額)
-    final spendableAmount = await ref.read(spendableAmountProvider.future);
+    final todayAmount = await ref.read(todaySavingsProvider.future);
 
     // ▼▼▼▼ ここから変更 ▼▼▼▼
     // 3. 残額に応じてメッセージを分岐
     final String messageText;
-    if (spendableAmount > 0) {
+    if (todayAmount > 0) {
       // (A) 残額がプラスの場合
       final remainingAmountStr =
           NumberFormat.currency(locale: 'ja_JP', symbol: '¥')
-              .format(spendableAmount);
+              .format(todayAmount);
       messageText =
-          'あ、さっきの支出（$dateStrの$categoryName）、消しといたよ！ 今日の残りは$remainingAmountStrになったね！';
+          'あ、さっきの$categoryName、消しといたよ！ 今日の残りは$remainingAmountStrになったね！';
     } else {
       // (B) 残額が0円以下（マイナス）の場合
-      messageText =
-          'あ、さっきの支出（$dateStrの$categoryName）、消しといたよ！ でも、まだ今日使えるお金超えちゃってるみたい…！';
+      messageText = 'あ、さっきの$categoryName、消しといたよ！ でも、まだ今日使えるお金超えちゃってるみたい…！';
     }
     // ▲▲▲▲ ここまで変更 ▲▲▲▲
 

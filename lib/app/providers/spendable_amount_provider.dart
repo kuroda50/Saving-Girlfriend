@@ -1,6 +1,8 @@
 // Dart imports:
+import 'dart:math';
 
 // Package imports:
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 // Project imports:
 import 'package:saving_girlfriend/features/budget/models/budget_history.dart';
@@ -8,37 +10,46 @@ import 'package:saving_girlfriend/features/budget/providers/budget_history_provi
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
 import 'package:saving_girlfriend/features/transaction/providers/transaction_history_provider.dart';
 import 'package:saving_girlfriend/features/tribute/models/tribute_history_state.dart';
+import 'package:saving_girlfriend/features/tribute/providers/tribute_history_provider.dart';
 
 part 'spendable_amount_provider.g.dart';
 
 @riverpod
-// ▼▼▼ 戻り値の型を Future<double> から Future<int> に変更 ▼▼▼
-Future<int> spendableAmount(SpendableAmountRef ref) async {
-  // 1. 予算履歴を取得
+Future<int> spendableAmount(Ref ref) async {
   final budgetHistory = await ref.watch(budgetHistoryProvider.future);
-  // 2. 支出履歴を取得
-  final transactions = await ref.watch(transactionsProvider.future);
+  final transactionHistory = await ref.watch(transactionsProvider.future);
+  final tributes = await ref.watch(tributeHistoryProvider.future);
 
-  // 3. 最新の予算額を取得
-  final latestBudget = budgetHistory.isNotEmpty ? budgetHistory.last : null;
+  // 予算が一度も設定されていない、または取引が一度もなければ計算不可
+  if (budgetHistory.isEmpty || transactionHistory.isEmpty) {
+    return 0;
+  }
 
-  // 今日の日付
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
+  // 1. 予算履歴を日付の昇順にソート
+  final sortedBudgetHistory = List<BudgetHistory>.from(budgetHistory)
+    ..sort((a, b) => a.date.compareTo(b.date));
 
-  // 今日の支出合計を計算
-  final todayExpenses = transactions
-      .where((tx) =>
-          tx.type == 'expense' &&
-          tx.date.year == today.year &&
-          tx.date.month == today.month &&
-          tx.date.day == today.day)
-      // ▼▼▼ double (0.0) から int (0) で計算するように変更 ▼▼▼
-      .fold(0, (sum, tx) => sum + tx.amount); // .toInt() を追加 (intで加算)
+  // 2. 計算の開始日を最初の取引日に設定
+  final firstTransactionDate = transactionHistory
+      .map((t) => t.date)
+      .reduce((a, b) => a.isBefore(b) ? a : b);
+  final startDate = DateTime(firstTransactionDate.year,
+      firstTransactionDate.month, firstTransactionDate.day);
 
-  // 4. 利用可能額を計算して返す
-  // ▼▼▼ double (0.0) から int (0) で計算するように変更 ▼▼▼
-  return (latestBudget?.amount ?? 0) - todayExpenses;
+  // 3. 貯金額を累積計算する
+  final cumulativeAmount = _calculateCumulativeSpendableAmount(
+    startDate: startDate,
+    endOfToday: DateTime.now(),
+    sortedBudgetHistory: sortedBudgetHistory,
+    transactions: transactionHistory,
+  );
+
+  // 4. 貢ぎ物の合計金額を計算する
+  final totalTributes = _calculateTotalTributes(tributes);
+
+  // 5. 最終的な利用可能額を計算して返す
+  final finalSpendableAmount = cumulativeAmount - totalTributes;
+  return max(finalSpendableAmount, 0);
 }
 
 /// 日々の利用可能額を startDate から endOfToday まで累積計算します。

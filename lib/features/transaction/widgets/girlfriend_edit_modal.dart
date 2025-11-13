@@ -50,7 +50,6 @@ class _GirlfriendEditModalState extends ConsumerState<GirlfriendEditModal> {
   // ▼▼▼ 【ここを修正】 int型で処理する ▼▼▼
   // 「OK！」ボタンが押されたときの処理
   void _onSubmit() {
-    // 1. テキストを int に変換してみる
     final parsedAmount = int.tryParse(_amountController.text);
 
     // 2. デフォルト（無効な入力の場合）は、元の金額を使用する (amount は int)
