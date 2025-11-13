@@ -4,6 +4,7 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Project imports:
 import 'package:saving_girlfriend/app/route/go_router.dart';
@@ -15,6 +16,10 @@ import 'package:timezone/timezone.dart' as tz;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   // タイムゾーンデータベースを初期化
   tz.initializeTimeZones();
   // デバイスのローカルタイムゾーンを設定（ここでは例として 'Asia/Tokyo'）
