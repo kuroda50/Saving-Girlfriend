@@ -1,19 +1,32 @@
 // Package imports:
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:saving_girlfriend/common/services/local_storage_service.dart';
+
 // Project imports:
+import 'package:saving_girlfriend/features/budget/data/local/database.dart'
+    hide BudgetHistory;
+import 'package:saving_girlfriend/features/budget/data/repositories/drift_budget_history_repository.dart';
+import 'package:saving_girlfriend/features/budget/domain/repositories/budget_history_repository.dart';
 import 'package:saving_girlfriend/features/budget/models/budget_history.dart';
 
 part 'budget_history_provider.g.dart';
 
-/// 予算の変更履歴リストを提供するプロバイダー
 @Riverpod(keepAlive: true)
-Future<List<BudgetHistory>> budgetHistory(Ref ref) async {
-  // LocalStorageService のインスタンスが準備できるのを待つ
-  final localStorage = await ref.watch(localStorageServiceProvider.future);
+AppDatabase appDatabase(AppDatabaseRef ref) {
+  return AppDatabase();
+}
 
-  // 予算履歴を取得して返す
-  final history = await localStorage.getBudgetHistory();
-  return history;
+@Riverpod(keepAlive: true)
+BudgetHistoryRepository budgetHistoryRepository(
+    BudgetHistoryRepositoryRef ref) {
+  return DriftBudgetHistoryRepository(ref.watch(appDatabaseProvider));
+}
+
+@riverpod
+Future<List<BudgetHistory>> budgetHistory(BudgetHistoryRef ref) {
+  return ref.watch(budgetHistoryRepositoryProvider).getBudgetHistory();
+}
+
+@riverpod
+Future<int> currentDailyBudget(CurrentDailyBudgetRef ref) {
+  return ref.watch(budgetHistoryRepositoryProvider).getCurrentDailyBudget();
 }

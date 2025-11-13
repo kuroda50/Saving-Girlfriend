@@ -5,11 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
 import '../../providers/particle_provider.dart';
-import 'swipe_sparkle.dart'; // ←★ これが 'SwipeSparkle' の定義
+import 'swipe_sparkle.dart';
+import 'tap_ripple_effect.dart'; // ← ★ 1. 新しいウィジェットをインポート
 import 'tap_sparkle_burst.dart';
 import 'trail_particle.dart';
-
-// ↑↑↑↑ ★ここまで★ ↑↑↑↑
 
 class ParticleRenderer extends ConsumerWidget {
   const ParticleRenderer({super.key});
@@ -22,29 +21,35 @@ class ParticleRenderer extends ConsumerWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Notifierが持つリストを描画する
+        // スワイプ中の「軌跡」
         for (final particle in particleState.trailParticles)
           TrailParticle(
-            // ★最重要：必ず ValueKey を指定する
+            key: ValueKey(particle.id),
+            position: particle.position,
+          ),
+
+        // (ボタン用) 小さい破裂
+        for (final particle in particleState.swipeSparkles)
+          SwipeSparkle(
+            key: ValueKey(particle.id),
+            position: particle.position,
+          ),
+
+        // (ボタン用) 大きい破裂
+        for (final particle in particleState.sparkles)
+          TapSparkleBurst(
             key: ValueKey(particle.id),
             position: particle.position,
           ),
 
         // ▼▼▼▼ ここから追加 ▼▼▼▼
-        for (final particle in particleState.swipeSparkles) // ← 小さい破裂
-          SwipeSparkle(
-            // ←★ 新しいウィジェットを呼ぶ
+        // タップ時の「波紋」
+        for (final particle in particleState.tapRipples) // ← ★ 2. 新しいリストを監視
+          TapRippleEffect(
             key: ValueKey(particle.id),
             position: particle.position,
           ),
         // ▲▲▲▲ ここまで追加 ▲▲▲▲
-
-        for (final particle in particleState.sparkles)
-          TapSparkleBurst(
-            // ★最重要：必ず ValueKey を指定する
-            key: ValueKey(particle.id),
-            position: particle.position,
-          ),
       ],
     );
   }
