@@ -1,9 +1,16 @@
 import 'dart:math' as math;
 
-String getGirlfriendComment(String category, int amount, String type) {
+// [修正] 必要な enum ファイルをインポート
+import 'package:saving_girlfriend/features/transaction/models/transaction_category.dart';
+import 'package:saving_girlfriend/features/transaction/models/transaction_type.dart';
+
+// [修正] 関数の引数を String から enum に変更
+String getGirlfriendComment(
+    TransactionCategoryType category, int amount, TransactionType type) {
   final random = math.Random(category.hashCode + amount);
 
-  if (type == "income") {
+  // [修正] "income" (String) との比較を enum との比較に変更
+  if (type == TransactionType.income) {
     final incomeComments = [
       "お給料入ったね！今月もお疲れ様💕 ちゃんと貯金してね！",
       "やった！収入だ✨ 今月も頑張ったね！",
@@ -12,53 +19,58 @@ String getGirlfriendComment(String category, int amount, String type) {
     return incomeComments[random.nextInt(incomeComments.length)];
   }
 
-  if (category.contains("コンビニ") || category.contains("お菓子")) {
-    final convenienceComments = [
-      "もう！またコンビニでお菓子買ってる～！ちゃんと貯金してよね💢",
-      "コンビニ寄りすぎ！自炊したら節約できるのに...😤",
-      "またコンビニ？毎日行ってない？ちゃんと管理してね！",
-    ];
-    return convenienceComments[random.nextInt(convenienceComments.length)];
+  // [修正] String.contains() のロジックを switch(category) に変更
+  switch (category) {
+    case TransactionCategoryType.food:
+      // 「食費」「コンビニ」「カフェ」のロジックを food に統合
+      if (amount > 3000) {
+        return "ちょっと贅沢しすぎじゃない？たまにはいいけどね🍽️";
+      }
+      final convenienceComments = [
+        "もう！またコンビニでお菓子買ってる～！ちゃんと貯金してよね💢",
+        "コンビニ寄りすぎ！自炊したら節約できるのに...😤",
+        "またコンビニ？毎日行ってない？ちゃんと管理してね！",
+      ];
+      final cafeComments = [
+        "今日はカフェで勉強かな？お疲れ様！でもスタバは高いよ～💦",
+        "カフェ代もバカにならないよ？たまには家で飲もうよ☕",
+        "またカフェ？リラックスするのもいいけどほどほどにね！",
+      ];
+      final foodComments = [
+        "美味しいもの食べた？栄養もちゃんと摂ってね！",
+        ...convenienceComments,
+        ...cafeComments
+      ];
+      return foodComments[random.nextInt(foodComments.length)];
+
+    case TransactionCategoryType.transport:
+      if (amount > 5000) {
+        return "タクシー使ったの？終電逃したなら仕方ないけど...次は気をつけてね！🚕";
+      }
+      return "交通費かぁ。仕方ないよね、お疲れ様！";
+
+    case TransactionCategoryType.entertainment:
+      // 「娯楽」「書籍」のロジックを entertainment に統合
+      final bookComments = [
+        "勉強熱心なところ好き♡ でも図書館も活用してね～📚",
+        "本買ったんだ！ちゃんと読んでね！積読禁止だよ？",
+        "自己投資は大事だけど、読み切れる分だけにしてね📖",
+      ];
+      final entertainmentComments = [
+        "遊ぶのもいいけど、使いすぎ注意だよ！🎮",
+        ...bookComments,
+      ];
+      return entertainmentComments[
+          random.nextInt(entertainmentComments.length)];
+
+    // social, daily, other はデフォルトのコメントを使用
+    case TransactionCategoryType.social:
+    case TransactionCategoryType.daily:
+    case TransactionCategoryType.other:
+      break; // デフォルトのコメント処理に進む
   }
 
-  if (category.contains("カフェ") ||
-      category.contains("スタバ") ||
-      category.contains("喫茶")) {
-    final cafeComments = [
-      "今日はカフェで勉強かな？お疲れ様！でもスタバは高いよ～💦",
-      "カフェ代もバカにならないよ？たまには家で飲もうよ☕",
-      "またカフェ？リラックスするのもいいけどほどほどにね！",
-    ];
-    return cafeComments[random.nextInt(cafeComments.length)];
-  }
-
-  if (category.contains("交通費") || category.contains("タクシー")) {
-    if (amount > 5000) {
-      return "タクシー使ったの？終電逃したなら仕方ないけど...次は気をつけてね！🚕";
-    }
-    return "交通費かぁ。仕方ないよね、お疲れ様！";
-  }
-
-  if (category.contains("書籍") || category.contains("本")) {
-    final bookComments = [
-      "勉強熱心なところ好き♡ でも図書館も活用してね～📚",
-      "本買ったんだ！ちゃんと読んでね！積読禁止だよ？",
-      "自己投資は大事だけど、読み切れる分だけにしてね📖",
-    ];
-    return bookComments[random.nextInt(bookComments.length)];
-  }
-
-  if (category.contains("食費") || category.contains("外食")) {
-    if (amount > 3000) {
-      return "ちょっと贅沢しすぎじゃない？たまにはいいけどね🍽️";
-    }
-    return "美味しいもの食べた？栄養もちゃんと摂ってね！";
-  }
-
-  if (category.contains("娯楽") || category.contains("ゲーム")) {
-    return "遊ぶのもいいけど、使いすぎ注意だよ！🎮";
-  }
-
+  // デフォルトのコメント
   final defaultComments = [
     "無駄遣いしないでね！一緒に貯金がんばろ✨",
     "ちゃんと必要なものだけ買ってる？考えてから使ってね💭",

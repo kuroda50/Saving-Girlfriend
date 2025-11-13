@@ -6,7 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Project imports:
 import 'package:saving_girlfriend/common/constants/color.dart';
 import 'package:saving_girlfriend/common/providers/uuid_provider.dart';
+// [修正] 2つの enum ファイルをインポート
+import 'package:saving_girlfriend/features/transaction/models/transaction_category.dart';
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
+import 'package:saving_girlfriend/features/transaction/models/transaction_type.dart';
 
 // モーダルを呼び出すためのグローバル関数
 void showTransactionModal(
@@ -50,16 +53,24 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
   bool _isExpense = true;
   final _amountController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  final List<String> _expenseCategories = [
-    '食費',
-    '交通費',
-    '趣味・娯楽',
-    '交際費',
-    '日用品',
-    'その他'
+
+  // [修正] List<String> から List<TransactionCategory> (enum) に変更
+  final List<TransactionCategory> _expenseCategories = [
+    TransactionCategory.food,
+    TransactionCategory.transport,
+    TransactionCategory.entertainment,
+    TransactionCategory.social,
+    TransactionCategory.daily,
+    TransactionCategory.other,
   ];
-  final List<String> _incomeCategories = ['給与', '副業', '臨時収入', 'その他'];
-  late String _selectedCategory;
+  final List<TransactionCategory> _incomeCategories = [
+    TransactionCategory.salary,
+    TransactionCategory.sideJob,
+    TransactionCategory.extraIncome,
+    TransactionCategory.other,
+  ];
+  // [修正] String から enum に変更
+  late TransactionCategory _selectedCategory;
 
   @override
   void initState() {
@@ -67,10 +78,14 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
     if (widget.initialTransaction != null) {
       final transaction = widget.initialTransaction!;
 
-      _isExpense = transaction.type == "expense";
+      // [修正] String 比較から enum 比較に変更
+      _isExpense = transaction.type == TransactionType.expense;
       _amountController.text = transaction.amount.toString();
       _selectedDate = transaction.date;
-      _selectedCategory = transaction.category;
+      _selectedCategory = transaction.category; // [修正] enum を代入
+    } else {
+      // [修正] 初期値を設定
+      _selectedCategory = _expenseCategories[0];
     }
   }
 
@@ -89,11 +104,14 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
       return;
     }
     TransactionState transactionData = TransactionState(
-        id: widget.initialTransaction?.id ?? ref.read(uuidProvider).v4(),
-        type: _isExpense ? "expense" : "income",
-        date: _selectedDate,
-        amount: amount,
-        category: _selectedCategory);
+      id: widget.initialTransaction?.id ?? ref.read(uuidProvider).v4(),
+      // [修正] String から enum に変更
+      type: _isExpense ? TransactionType.expense : TransactionType.income,
+      date: _selectedDate,
+      amount: amount,
+      // [修正] _selectedCategory (enum) をそのまま渡す
+      category: _selectedCategory,
+    );
     widget.onSave(transactionData);
     Navigator.of(context).pop();
   }
@@ -102,6 +120,12 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
   Widget build(BuildContext context) {
     final currentCategories =
         _isExpense ? _expenseCategories : _incomeCategories;
+
+    // [修正] 収入/支出を切り替えたときに、選択中のカテゴリがリストに含まれない場合、先頭のカテゴリを再選択する
+    if (!currentCategories.contains(_selectedCategory)) {
+      _selectedCategory = currentCategories[0];
+    }
+
     return SingleChildScrollView(
       padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -124,6 +148,7 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
               onPressed: (index) {
                 setState(() {
                   _isExpense = index == 0;
+                  // [修正] リスト切り替えと同時に、選択中のカテゴリも更新
                   if (_isExpense) {
                     _selectedCategory = _expenseCategories[0];
                   } else {
@@ -161,21 +186,25 @@ class _TransactionInputModalState extends ConsumerState<TransactionInputModal> {
             ),
           ),
           const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            initialValue: _selectedCategory,
+          // [修正] DropdownButtonFormField<String> から <TransactionCategory> に変更
+          DropdownButtonFormField<TransactionCategory>(
+            initialValue: _selectedCategory, // [修正] value を使用
             hint: const Text('カテゴリを選択'),
             decoration: const InputDecoration(
               labelText: 'カテゴリ',
               prefixIcon: Icon(Icons.category_outlined),
               border: OutlineInputBorder(),
             ),
-            items: currentCategories.map((String category) {
-              return DropdownMenuItem<String>(
+            // [修正] enum のリストから DropdownMenuItem を作成
+            items: currentCategories.map((TransactionCategory category) {
+              return DropdownMenuItem<TransactionCategory>(
                 value: category,
-                child: Text(category),
+                // [修正] 表示名 (displayName) を Text に表示
+                child: Text(category.displayName),
               );
             }).toList(),
-            onChanged: (String? newValue) {
+            // [修正] onChanged の型を <TransactionCategory?> に変更
+            onChanged: (TransactionCategory? newValue) {
               setState(() {
                 if (newValue != null) {
                   _selectedCategory = newValue;

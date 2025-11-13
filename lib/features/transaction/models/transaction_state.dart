@@ -1,44 +1,54 @@
+// [修正] 2つの enum ファイルをインポート
+import 'package:saving_girlfriend/features/transaction/models/transaction_category.dart';
+import 'package:saving_girlfriend/features/transaction/models/transaction_type.dart';
+
 class TransactionState {
   final String id;
-  final String type; // "expense" または "income"
+  // [修正] String -> enum
+  final TransactionType type;
   final DateTime date;
   final int amount;
-  final String category;
+  // [修正] String -> enum
+  final TransactionCategory category;
 
   TransactionState({
     required this.id,
-    required this.type,
+    required this.type, // [修正]
     required this.date,
     required this.amount,
-    required this.category,
+    required this.category, // [修正]
   });
 
   factory TransactionState.fromJson(Map<String, dynamic> json) {
     return TransactionState(
       id: json['id'] as String,
-      type: json['type'] as String,
+      // [修正] fromString を使用
+      type: TransactionType.fromString(json['type'] as String),
       date: DateTime.parse(json['date'] as String),
       amount: json['amount'] as int,
-      category: json['category'] as String,
+      // [修正] fromString を使用
+      category: TransactionCategory.fromString(json['category'] as String),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id.toString(),
-      'type': type,
+      // [修正] .name で String に変換
+      'type': type.name,
       'date': date.toIso8601String(),
       'amount': amount,
-      'category': category,
+      // [修正] .name で String に変換
+      'category': category.name,
     };
   }
 
   TransactionState copyWith({
     String? id,
-    String? type,
+    TransactionType? type, // [修正]
     DateTime? date,
     int? amount,
-    String? category,
+    TransactionCategory? category, // [修正]
   }) {
     return TransactionState(
       id: id ?? this.id,

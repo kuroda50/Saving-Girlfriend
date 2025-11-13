@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
+import 'package:saving_girlfriend/features/transaction/models/transaction_type.dart';
 import 'package:saving_girlfriend/features/transaction/providers/transaction_history_provider.dart';
 import 'package:saving_girlfriend/features/transaction/utils/utils.dart';
 import 'package:saving_girlfriend/features/transaction/widgets/transaction_modal.dart';
@@ -180,6 +181,7 @@ class _TransactionListItem extends ConsumerWidget {
     final type = transaction.type;
     final amount = transaction.amount;
     final category = transaction.category;
+    // [注意] この 'getGirlfriendComment' 関数も enum を受け取るように修正が必要です
     final comment = getGirlfriendComment(category, amount, type);
 
     return Container(
@@ -206,20 +208,23 @@ class _TransactionListItem extends ConsumerWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: type == "income"
+                    // [修正] type == "income" を enum 比較に変更
+                    colors: type == TransactionType.income
                         ? [const Color(0xFF98FB98), const Color(0xFF90EE90)]
                         : [const Color(0xFFFFB6C1), const Color(0xFFFFC0CB)],
                   ),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: type == "income"
+                    // [修正] type == "income" を enum 比較に変更
+                    color: type == TransactionType.income
                         ? const Color(0xFF32CD32)
                         : const Color(0xFFFF69B4),
                     width: 2.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: (type == "income"
+                      // [修正] type == "income" を enum 比較に変更
+                      color: (type == TransactionType.income
                               ? const Color(0xFF32CD32)
                               : const Color(0xFFFF69B4))
                           .withOpacity(0.3),
@@ -230,11 +235,13 @@ class _TransactionListItem extends ConsumerWidget {
                 ),
                 child: Center(
                   child: Text(
-                    type == "income" ? "↑" : "↓",
+                    // [修正] type == "income" を enum 比較に変更
+                    type == TransactionType.income ? "↑" : "↓",
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: type == "income"
+                      // [修正] type == "income" を enum 比較に変更
+                      color: type == TransactionType.income
                           ? const Color(0xFF228B22)
                           : const Color(0xFFFF1493),
                     ),
@@ -248,7 +255,8 @@ class _TransactionListItem extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      category,
+                      // [修正] category (enum) を .displayName (String) に変更
+                      category.displayName,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -268,7 +276,8 @@ class _TransactionListItem extends ConsumerWidget {
                           child: Container(
                             height: 12,
                             decoration: BoxDecoration(
-                              color: (type == "income"
+                              // [修正] type == "income" を enum 比較に変更
+                              color: (type == TransactionType.income
                                       ? const Color(0xFFFFFF00)
                                       : const Color(0xFFFFB6C1))
                                   .withOpacity(0.4),
@@ -282,7 +291,8 @@ class _TransactionListItem extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: type == "income"
+                            // [修正] type == "income" を enum 比較に変更
+                            color: type == TransactionType.income
                                 ? const Color(0xFF228B22)
                                 : const Color(0xFFFF1493),
                             fontFamily: 'Klee One',

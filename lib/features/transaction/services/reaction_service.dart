@@ -5,7 +5,7 @@ import 'package:saving_girlfriend/features/transaction/models/transaction_catego
 
 // ルールの評価に必要なコンテキスト情報
 class EvaluationContext {
-  final TransactionCategory category;
+  final TransactionCategoryType category;
   final int amount;
   final int oneYenCount;
   final int overOneMillionCount;
@@ -427,7 +427,7 @@ class ReactionService {
     _rules.add(ReactionRule(
       id: 'reaction_food',
       priority: 50,
-      condition: (ctx) => ctx.category.id == 'food',
+      condition: (ctx) => ctx.category == TransactionCategoryType.food,
       reaction: (ctx, playedIds) {
         if (ctx.amount < 800) {
           return _pickReaction('reaction_food', allFoodCheap, playedIds);
@@ -442,7 +442,7 @@ class ReactionService {
     _rules.add(ReactionRule(
       id: 'reaction_transport',
       priority: 50,
-      condition: (ctx) => ctx.category.id == 'transport',
+      condition: (ctx) => ctx.category == TransactionCategoryType.transport,
       reaction: (ctx, playedIds) =>
           _pickReaction('reaction_transport', allTransport, playedIds),
     ));
@@ -450,7 +450,7 @@ class ReactionService {
     _rules.add(ReactionRule(
       id: 'reaction_entertainment',
       priority: 50,
-      condition: (ctx) => ctx.category.id == 'entertainment',
+      condition: (ctx) => ctx.category == TransactionCategoryType.entertainment,
       reaction: (ctx, playedIds) =>
           _pickReaction('reaction_entertainment', allEntertainment, playedIds),
     ));
@@ -458,7 +458,7 @@ class ReactionService {
     _rules.add(ReactionRule(
       id: 'reaction_social',
       priority: 50,
-      condition: (ctx) => ctx.category.id == 'social',
+      condition: (ctx) => ctx.category == TransactionCategoryType.social,
       reaction: (ctx, playedIds) =>
           _pickReaction('reaction_social', allSocial, playedIds),
     ));
@@ -466,7 +466,7 @@ class ReactionService {
     _rules.add(ReactionRule(
       id: 'reaction_daily',
       priority: 50,
-      condition: (ctx) => ctx.category.id == 'daily',
+      condition: (ctx) => ctx.category == TransactionCategoryType.daily,
       reaction: (ctx, playedIds) =>
           _pickReaction('reaction_daily', allDaily, playedIds),
     ));
@@ -474,7 +474,7 @@ class ReactionService {
     _rules.add(ReactionRule(
       id: 'reaction_other',
       priority: 50,
-      condition: (ctx) => ctx.category.id == 'other',
+      condition: (ctx) => ctx.category == TransactionCategoryType.other,
       reaction: (ctx, playedIds) =>
           _pickReaction('reaction_other', allOther, playedIds),
     ));

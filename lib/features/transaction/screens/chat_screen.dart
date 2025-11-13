@@ -9,8 +9,13 @@ import 'package:saving_girlfriend/common/providers/current_girlfriend_provider.d
 import 'package:saving_girlfriend/common/providers/uuid_provider.dart';
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
 import 'package:saving_girlfriend/features/settings/providers/setting_provider.dart';
+// [修正] 古い 'transaction_category.dart' (class) を削除
+// import 'package:saving_girlfriend/features/transaction/models/transaction_category.dart';
+// [修正] 新しい 'transaction_category_type.dart' (enum) をインポート
 import 'package:saving_girlfriend/features/transaction/models/transaction_category.dart';
+// [修正] 'transaction_type.dart' (enum) もインポート
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
+import 'package:saving_girlfriend/features/transaction/models/transaction_type.dart';
 import 'package:saving_girlfriend/features/transaction/providers/chat_history_provider.dart';
 import 'package:saving_girlfriend/features/transaction/providers/transaction_history_provider.dart';
 import 'package:saving_girlfriend/features/transaction/services/reaction_service.dart';
@@ -24,17 +29,13 @@ class GirlfriendChatScreen extends ConsumerStatefulWidget {
 }
 
 class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
-  final List<TransactionCategory> _categories = [
-    TransactionCategory(id: 'food', name: '食費'),
-    TransactionCategory(id: 'transport', name: '交通費'),
-    TransactionCategory(id: 'entertainment', name: '趣味・娯楽'),
-    TransactionCategory(id: 'social', name: '交際費'),
-    TransactionCategory(id: 'daily', name: '日用品'),
-    TransactionCategory(id: 'other', name: 'その他'),
-  ];
+  // [修正] enum のすべての値をリストとして取得します
+  final List<TransactionCategoryType> _categories =
+      TransactionCategoryType.values;
 
-  TransactionCategory _selectedCategory =
-      TransactionCategory(id: 'food', name: '食費');
+  // [修正] enum の最初の値をデフォルトとして設定します ( .food など)
+  TransactionCategoryType _selectedCategory =
+      TransactionCategoryType.values.first;
   String _amountText = '';
   bool _isGirlfriendResponding = false; // 彼女が返信中かどうかを示す状態
   int oneYenCount = 0;
@@ -76,7 +77,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
   }
 
   Future<void> _girlfriendRespond(
-      TransactionCategory cat, int amt, int todaySpent) async {
+      TransactionCategoryType cat, int amt, int todaySpent) async {
     ref.read(chatHistoryNotifierProvider.notifier).addMessage(Message(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: MessageType.girlfriend,
@@ -89,7 +90,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
     final reactionService = ReactionService(localStorageService);
 
     final context = EvaluationContext(
-        category: cat,
+        category: cat, // [修正] 'cat' はすでに enum なので、そのまま渡します
         amount: amt,
         oneYenCount: oneYenCount,
         overOneMillionCount: overOneMillionCount,
@@ -144,9 +145,11 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
     }
     final amt = int.tryParse(_amountText);
     if (amt == null || amt <= 0) return;
-    final TransactionCategory category = _selectedCategory;
+    final TransactionCategoryType category = _selectedCategory;
 
-    _addMessage(MessageType.user, '${category.name}: ${_formatCurrency(amt)}円');
+    // [修正] category.name ('food') ではなく category.displayName ('食費') を使う
+    _addMessage(
+        MessageType.user, '${category.displayName}: ${_formatCurrency(amt)}円');
 
     setState(() {
       if (amt == 1) {
@@ -163,14 +166,15 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
 
     final newTransaction = TransactionState(
       id: ref.read(uuidProvider).v4(),
-      type: 'expense',
+      type: TransactionType.expense, // [修正] 'expense' (String) から enum に変更
       date: DateTime.now(),
       amount: amt,
-      category: category.name,
+      category:
+          category, // [修正] category.name (String) ではなく enum (category) をそのまま渡す
     );
     setState(() {
       _amountText = '';
-      _selectedCategory = _categories[0];
+      _selectedCategory = _categories[0]; // 最初のカテゴリ（.food）に戻す
       _isGirlfriendResponding = true; // 彼女の返信開始
     });
     await ref
@@ -288,28 +292,29 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
                   automaticallyImplyLeading: false, // 戻るボタンを非表示
                   flexibleSpace: SafeArea(
                     child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20.0, vertical: 10.0),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Text("使った金額",
-                                  style: TextStyle(
-                                      fontSize: 12, color: AppColors.subText)),
-                              const SizedBox(height: 4),
-                              Text(
-                                  '使った金額 ￥${_formatCurrency(todaySpent)}/${_formatCurrency(data.dailyBudget)}',
-                                  style: TextStyle(
-                                      fontSize: 19,
-                                      fontWeight: FontWeight.bold,
-                                      color: todaySpent > data.dailyBudget
-                                          ? AppColors.error
-                                          : AppColors.mainIcon)),
-                            ],
-                          ),
-                        )),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text("使った金額",
+                                style: TextStyle(
+                                    fontSize: 12, color: AppColors.subText)),
+                            const SizedBox(height: 4),
+                            Text(
+                                '使った金額 ￥${_formatCurrency(todaySpent)}/${_formatCurrency(data.dailyBudget)}',
+                                style: TextStyle(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.bold,
+                                    color: todaySpent > data.dailyBudget
+                                        ? AppColors.error
+                                        : AppColors.mainIcon)),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -358,7 +363,8 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
                                   const SizedBox(width: 8),
                               itemBuilder: (context, i) {
                                 final c = _categories[i];
-                                final selected = c.id == _selectedCategory.id;
+                                // [修正] .id での比較ではなく、enum インスタンス ('c') 同士で比較
+                                final selected = c == _selectedCategory;
                                 return GestureDetector(
                                   onTap: () {
                                     setState(() {
@@ -381,7 +387,8 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
                                                   .withOpacity(0.5)),
                                     ),
                                     child: Center(
-                                      child: Text(c.name,
+                                      // [修正] c.name ('food') ではなく c.displayName ('食費') を表示
+                                      child: Text(c.displayName,
                                           style: TextStyle(
                                               fontSize: 12,
                                               color: selected
