@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:saving_girlfriend/app/providers/reward_point_provider.dart';
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
 import 'package:saving_girlfriend/features/mission/date/all_missions.dart';
 import 'package:saving_girlfriend/features/mission/models/mission.dart'
@@ -242,6 +243,7 @@ class MissionNotifier extends _$MissionNotifier {
   }
 
   // ★ 3. `claimMission` 関数を追加
+  // ★ 3. `claimMission` 関数を修正
   Future<void> claimMission(String missionId) async {
     final currentState = state.valueOrNull ?? [];
     if (currentState.isEmpty) return;
@@ -255,8 +257,12 @@ class MissionNotifier extends _$MissionNotifier {
           progress.isClaimed = true;
           missionClaimed = true;
           print('報酬ゲット: ${progress.mission.reward} P');
-          // TODO: 実際の報酬（好感度など）を別Provider（likeability_provider.dartなど）に反映
-          // ref.read(likeabilityProvider.notifier).add(progress.mission.reward);
+
+          // ★ 2. TODO を実際の報酬反映処理に変更
+          // (エラー回避のため `await` はつけずに呼び出す)
+          ref
+              .read(rewardPointProvider.notifier)
+              .addPoints(progress.mission.reward);
         }
         break;
       }
@@ -268,7 +274,7 @@ class MissionNotifier extends _$MissionNotifier {
     }
   }
 
-  // ★ 4. `claimAllCompletedMissions` 関数を追加
+  // ★ 4. `claimAllCompletedMissions` 関数を修正
   Future<void> claimAllCompletedMissions() async {
     final currentState = state.valueOrNull ?? [];
     if (currentState.isEmpty) return;
@@ -287,8 +293,10 @@ class MissionNotifier extends _$MissionNotifier {
 
     if (anyMissionClaimed) {
       print('一括受取 報酬ゲット: $totalReward P');
-      // TODO: 実際の報酬（好感度など）を別Provider（likeability_provider.dartなど）に反映
-      // ref.read(likeabilityProvider.notifier).add(totalReward);
+
+      // ★ 3. TODO を実際の報酬反映処理に変更
+      // (エラー回避のため `await` はつけずに呼び出す)
+      ref.read(rewardPointProvider.notifier).addPoints(totalReward);
 
       await _saveState(newState);
       state = AsyncData(newState);

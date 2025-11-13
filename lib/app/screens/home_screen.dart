@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart'; // ★ 画面遷移のために追加
 import 'package:saving_girlfriend/app/providers/likeability_provider.dart';
+// ★ 1. 報酬ポイントプロバイダーをインポート
+import 'package:saving_girlfriend/app/providers/reward_point_provider.dart';
 import 'package:saving_girlfriend/app/providers/spendable_amount_provider.dart';
 import 'package:saving_girlfriend/common/constants/assets.dart';
 import 'package:saving_girlfriend/features/live_stream/data/scenario_data.dart';
@@ -821,18 +823,18 @@ class _TopRightUiArea extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 予算を監視
     final spendableAmountAsync = ref.watch(spendableAmountProvider);
+    // ★ 2. 報酬ポイントを監視
+    final rewardPointsAsync = ref.watch(rewardPointProvider);
     // ミッションを監視（バッジ表示のため）
     final missionState = ref.watch(missionNotifierProvider);
 
-    // ★★★ 修正箇所 1: 「受取可能なミッション」の数を計算 ★★★
+    // 受取可能なミッション数を計算 (変更なし)
     final int claimableCount = missionState.maybeWhen(
       data: (missions) {
-        // 「達成済み」かつ「未受取」のミッションをカウント
         return missions.where((p) => p.isCompleted && !p.isClaimed).length;
       },
-      orElse: () => 0, // ローディング中やエラー時は 0
+      orElse: () => 0,
     );
-    // ★★★ 修正ここまで ★★★
 
     return Positioned(
       top: 40,
@@ -840,7 +842,7 @@ class _TopRightUiArea extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // 1. 既存の予算表示
+          // 1. 既存の予算表示 (変更なし)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -871,18 +873,49 @@ class _TopRightUiArea extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: 12), // 予算とボタンの間隔
+          // ★ 3. 報酬ポイント表示を追加 (ここから)
+          const SizedBox(height: 8), // 予算とポイントの間隔
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: rewardPointsAsync.when(
+              data: (points) => Row(
+                children: [
+                  const Icon(Icons.star,
+                      color: Colors.pinkAccent, size: 16), // ★ ポイントのアイコン
+                  const SizedBox(width: 6),
+                  Text(
+                    '$points P', // ★ ポイント
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              loading: () => const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              ),
+              error: (err, stack) =>
+                  const Icon(Icons.error_outline, color: Colors.red, size: 20),
+            ),
+          ),
+          // ★ 3. 報酬ポイント表示 (ここまで)
 
-          // 2. ★ 新しいミッションボタン ★
+          const SizedBox(height: 12), // ポイントとボタンの間隔
+
+          // 2. ミッションボタン (変更なし)
           GestureDetector(
             onTap: () {
-              // ミッション画面へ遷移
               GoRouter.of(context).push('/missions');
             },
             child: Stack(
-              clipBehavior: Clip.none, // バッジをはみ出して表示
+              clipBehavior: Clip.none,
               children: [
-                // ボタン本体
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -890,34 +923,29 @@ class _TopRightUiArea extends ConsumerWidget {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.task_alt, // ミッションアイコン
+                    Icons.task_alt,
                     color: Colors.white,
                     size: 24,
                   ),
                 ),
-
-                // ★★★ 修正箇所 2: バッジの表示ロジックを修正 ★★★
-                // 未達成ミッションがある場合のバッジ
-                if (claimableCount > 0) // ★ カウントが 0 より大きい場合のみ表示
+                if (claimableCount > 0)
                   Positioned(
                     top: -4,
                     right: -4,
                     child: Container(
-                      padding: const EdgeInsets.all(4), // ★ パディングを追加
+                      padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.redAccent, // ★ 色を mission_screen と統一
+                        color: Colors.redAccent,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                            color: Colors.white, width: 1.5), // ★ 枠線を 1.5 に
+                        border: Border.all(color: Colors.white, width: 1.5),
                       ),
                       constraints: const BoxConstraints(
-                        // ★ 最小サイズを指定
                         minWidth: 18,
                         minHeight: 18,
                       ),
                       child: Center(
                         child: Text(
-                          '$claimableCount', // ★ カウント数を表示
+                          '$claimableCount',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
@@ -928,7 +956,6 @@ class _TopRightUiArea extends ConsumerWidget {
                       ),
                     ),
                   ),
-                // ★★★ 修正ここまで ★★★
               ],
             ),
           ),
