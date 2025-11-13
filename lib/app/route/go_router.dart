@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:saving_girlfriend/app/route/app_navigation_bar.dart';
 import 'package:saving_girlfriend/app/screens/home_screen.dart';
 import 'package:saving_girlfriend/common/utils/dialog_utils.dart';
+import 'package:saving_girlfriend/features/mission/screens/mission_screen.dart'; // ★ 新しく追加
 import 'package:saving_girlfriend/features/settings/providers/setting_provider.dart';
 import 'package:saving_girlfriend/features/story/screens/select_story_screen.dart';
 import 'package:saving_girlfriend/features/story/screens/story_screen.dart';
@@ -140,5 +141,18 @@ final router = GoRouter(
         return const MaterialPage(child: SelectGirlfriendScreen());
       },
     ),
+
+    // ↓↓↓ ★ ここにミッション画面のルートを追加 ★ ↓↓↓
+    GoRoute(
+      path: '/missions',
+      parentNavigatorKey: rootNavigatorKey, // ボトムバーの上に全画面表示
+      pageBuilder: (context, state) {
+        return const MaterialPage(
+          child: MissionScreen(),
+          fullscreenDialog: true, // 下からスライドアップするモーダル風
+        );
+      },
+    ),
+    // ↑↑↑ ★ ここにミッション画面のルートを追加 ★
   ],
 );
