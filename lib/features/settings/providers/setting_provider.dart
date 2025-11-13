@@ -1,24 +1,46 @@
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:saving_girlfriend/common/services/local_storage_service.dart';
+
 // Project imports:
+import 'package:saving_girlfriend/common/services/local_storage_service.dart';
+import 'package:saving_girlfriend/features/budget/providers/budget_history_provider.dart';
 import 'package:saving_girlfriend/features/settings/models/settings_state.dart';
 import 'package:saving_girlfriend/features/settings/repositories/settings_repository.dart';
 
 class SettingNotifier extends AsyncNotifier<SettingsState> {
   Future<SettingsRepository> get _settingsRepositoryFuture =>
       ref.read(settingsRepositoryProvider.future);
+
   @override
   Future<SettingsState> build() async {
+    // Fetch non-budget settings and budget concurrently
     final settingsRepository = await _settingsRepositoryFuture;
-    return settingsRepository.getSettings();
+    final nonBudgetSettingsFuture = settingsRepository.getSettings();
+    final dailyBudgetFuture = ref.watch(currentDailyBudgetProvider.future);
+
+    final results =
+        await Future.wait([nonBudgetSettingsFuture, dailyBudgetFuture]);
+
+    final nonBudgetSettings = results[0] as SettingsState;
+    final dailyBudget = results[1] as int;
+
+    return nonBudgetSettings.copyWith(dailyBudget: dailyBudget);
   }
 
   Future<void> saveSettings(SettingsState newSettings) async {
     final settingsRepository = await _settingsRepositoryFuture;
+    final budgetRepository = ref.read(budgetHistoryRepositoryProvider);
+
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await settingsRepository.saveSettings(newSettings);
+      // Save budget and other settings concurrently
+      final saveBudgetFuture =
+          budgetRepository.updateDailyBudget(newSettings.dailyBudget);
+      final saveOtherSettingsFuture =
+          settingsRepository.saveSettings(newSettings);
+
+      await Future.wait([saveBudgetFuture, saveOtherSettingsFuture]);
+
       return newSettings;
     });
   }
