@@ -53,20 +53,6 @@ class _MyAppState extends ConsumerState<MyApp> {
     await notificationService.requestPermissions();
   }
 
-  // ↓↓↓↓ _sparkles, _trailParticles, _lastSparkleTime はすべて削除 ↓↓↓↓
-  // final List<Offset> _sparkles = [];
-  // final List<Offset> _trailParticles = [];
-  // DateTime? _lastSparkleTime;
-
-  // ↓↓↓↓ _addSparkle, _addSwipeTrail のロジックは Notifier に移植したので削除 ↓↓↓↓
-  // void _addSparkle(PointerEvent details, BuildContext context) { ... }
-  // void _addSwipeTrail(Offset pos) { ... }
-
-  // ★ _addSwipeTrail で使っていた Random を Provider に移植し忘れていた場合、
-  //    Provider 側 (ParticleNotifier) に `final Random _random = Random();` を追加してください。
-  //    （もし main.dart の _addSwipeTrail で使っていなかったら不要です）
-  //    ※ 前の回答 (ID: 21) のコードには移植済みです。
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
@@ -81,51 +67,39 @@ class _MyAppState extends ConsumerState<MyApp> {
             builder: (localContext) => Stack(
               fit: StackFit.expand,
               children: [
+                // ★★★ 1. 各画面（story_screen など）を一番背後に配置
                 child ?? const SizedBox.shrink(),
 
-                // ★ ステップ3で作った描画専用ウィジェットをここに配置
-                const ParticleRenderer(),
-
-                // タップ・スワイプ検出用 Listener
+                // ★★★ 2. タップ検出用 Listener を中間に配置
                 Listener(
-                  behavior: HitTestBehavior.translucent,
-
-                  // ★ setState() の代わりに Notifier のメソッドを呼ぶ
+                  behavior: HitTestBehavior.translucent, // ★ 背後(child)の操作を妨害しない
                   onPointerDown: (details) {
                     final renderBox =
                         localContext.findRenderObject() as RenderBox?;
                     if (renderBox == null) return;
                     final pos = renderBox.globalToLocal(details.position);
-                    ref.read(particleProvider.notifier).addSparkle(pos);
+                    // タップした瞬間の「波紋」を呼ぶ
+                    ref.read(particleProvider.notifier).addTapRipple(pos);
                   },
                   onPointerMove: (details) {
                     final renderBox =
                         localContext.findRenderObject() as RenderBox?;
                     if (renderBox == null) return;
                     final pos = renderBox.globalToLocal(details.position);
-                    ref.read(particleProvider.notifier).addSparkle(pos);
+                    // スワイプ中の「軌跡」を呼ぶ
+                    ref.read(particleProvider.notifier).addTrail(pos);
                   },
                   onPointerUp: (details) {
-                    final renderBox =
-                        localContext.findRenderObject() as RenderBox?;
-                    if (renderBox == null) return;
-                    // ★ 元のコードの onPointerUp は local への変換をしていなかったので、
-                    //    もし 'details.position' をそのまま使いたい場合は
-                    //    `ref.read(particleProvider.notifier).addSwipeTrail(details.position);`
-                    //    としてください。
-                    //    ただし、 localContext に合わせるため local 座標を渡すことを推奨します。
-                    final pos = renderBox.globalToLocal(details.position);
-                    ref.read(particleProvider.notifier).addSwipeTrail(pos);
+                    // (処理なし)
                   },
-                  child: const IgnorePointer(
-                    ignoring: true,
-                    child: SizedBox.expand(),
-                  ),
+                  child: const SizedBox.expand(),
                 ),
 
-                // ↓↓↓↓ ここにあった for ループは ParticleRenderer に移動したので削除 ↓↓↓↓
-                // for (final pos in _trailParticles) TrailParticle(position: pos),
-                // for (final pos in _sparkles) TapSparkleBurst(position: pos),
+                // ★★★ 3. エフェクト描画（最前面、タップ操作は無視）
+                const IgnorePointer(
+                  ignoring: true, // ★ タップイベントを完全に無視させる
+                  child: ParticleRenderer(),
+                ),
               ],
             ),
           ),
