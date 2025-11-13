@@ -1,20 +1,34 @@
 // Package imports:
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:saving_girlfriend/common/providers/uuid_provider.dart';
-import 'package:saving_girlfriend/common/services/local_storage_service.dart';
+
 // Project imports:
+import 'package:saving_girlfriend/common/providers/uuid_provider.dart';
+import 'package:saving_girlfriend/features/tribute/data/local/database.dart'
+    as db;
+import 'package:saving_girlfriend/features/tribute/data/repositories/drift_tribute_history_repository.dart';
+import 'package:saving_girlfriend/features/tribute/domain/repositories/tribute_history_repository.dart';
 import 'package:saving_girlfriend/features/tribute/models/tribute_history_state.dart';
-import 'package:saving_girlfriend/features/tribute/repositories/tribute_history_repository.dart';
 
 part 'tribute_history_provider.g.dart';
 
 @Riverpod(keepAlive: true)
+TributeHistoryRepository tributeHistoryRepository(
+    TributeHistoryRepositoryRef ref) {
+  final database = ref.watch(tributeAppDatabaseProvider);
+  return DriftTributeHistoryRepository(database);
+}
+
+@Riverpod(keepAlive: true)
+db.TributeAppDatabase tributeAppDatabase(TributeAppDatabaseRef ref) {
+  return db.TributeAppDatabase();
+}
+
+@Riverpod(keepAlive: true)
 class TributeHistory extends _$TributeHistory {
-  // buildメソッドで初期データを非同期に取得する
   @override
   Future<List<TributeState>> build() async {
-    final repository = await ref.watch(tributeHistoryRepositoryProvider.future);
-    // 初期データをリポジトリから取得して返すだけ
+    // Repository is now provided synchronously
+    final repository = ref.watch(tributeHistoryRepositoryProvider);
     return repository.getTributionHistory();
   }
 
@@ -23,37 +37,28 @@ class TributeHistory extends _$TributeHistory {
     required String character,
     required int amount,
   }) async {
-    final repository = await ref.read(tributeHistoryRepositoryProvider.future);
+    // Repository is now provided synchronously
+    final repository = ref.read(tributeHistoryRepositoryProvider);
 
     final newTribute = TributeState(
-      id: ref.read(uuidProvider).v4(), // uuidのインスタンスから新しいIDを生成
+      id: ref.read(uuidProvider).v4(),
       character: character,
       date: DateTime.now(),
       amount: amount,
     );
 
-    // 現在の状態を取得
     final previousState = await future;
-
-    // 新しい状態リストを作成
     final newState = [...previousState, newTribute];
 
-    // UIを即座に更新（オプティミスティックUI）
     state = AsyncValue.data(newState);
 
-    // 永続化処理
     try {
+      // The interface remains the same, so this call is still valid.
       await repository.saveTributionHistory(newState);
     } catch (e, s) {
-      // 保存に失敗した場合、UIの状態を元に戻し、エラー状態にする
       state = AsyncValue.error(e, s);
+      // Optionally, revert to previous state
+      // state = AsyncValue.data(previousState);
     }
   }
 }
-
-final tributeHistoryRepositoryProvider =
-    FutureProvider<TributeHistoryRepository>((ref) async {
-  final localStorageService =
-      await ref.watch(localStorageServiceProvider.future);
-  return TributeHistoryRepository(localStorageService);
-});
