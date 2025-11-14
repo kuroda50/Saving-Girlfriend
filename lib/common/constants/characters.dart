@@ -10,14 +10,14 @@ final List<Character> characters = [
   ),
   const Character(
     id: 'coming_soon_1',
-    name: 'ComingSoon',
+    name: 'ちょっとまってね！',
     image: AppAssets.characterComingsoon,
-    description_tags: ['ComingSoon'],
+    description_tags: ['ちょっとまってね！'],
   ),
   const Character(
     id: 'coming_soon_2',
-    name: 'ComingSoon',
+    name: 'ちょっとまってね！',
     image: AppAssets.characterComingsoon,
-    description_tags: ['ComingSoon'],
+    description_tags: ['ちょっとまってね！'],
   ),
 ];

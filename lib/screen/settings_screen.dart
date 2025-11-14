@@ -11,9 +11,6 @@ import 'package:saving_girlfriend/features/settings/providers/setting_provider.d
 
 // Project imports:
 
-
-
-
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -31,7 +28,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late double _initialBgmVolume;
   late String _initialTargetSavings;
   late String _initialDailyBudget;
-
 
   @override
   void initState() {
@@ -134,6 +130,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   // ヘッダーウィジェットを構築 (buildメソッド外に移動したため、この位置に定義)
   Widget _buildSectionHeader(String title, IconData icon) {
+    // settingsResetTriggerProviderの変化を監視
+    ref.listen<int>(settingsResetTriggerProvider, (previous, next) {
+      if (previous != next) {
+        _resetLocalState();
+        // 必要ならトリガーをfalseに戻す
+        ref.read(settingsResetTriggerProvider.notifier).state = 0;
+      }
+    });
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
@@ -247,13 +251,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   borderRadius: BorderRadius.circular(10),
                                   children: const [
                                     Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 20),
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 20),
                                       child: Text('OFF'),
                                     ),
                                     Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 20),
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 20),
                                       child: Text('ON'),
                                     ),
                                   ],
@@ -349,12 +353,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     textAlign: TextAlign.right, // 右寄せにする
                                     decoration: InputDecoration(
                                       border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(10),
                                         borderSide: const BorderSide(
                                             color: AppColors.secondary),
                                       ),
@@ -408,16 +410,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ],
                         ),
-
                       ],
                     ),
                     const SizedBox(height: 40),
 
                     // Centerウィジェットの子にColumnウィジェットを配置する
                     Center(
-                      child: Column( // ✨ ここを Column に変更しました！
+                      child: Column(
+                        // ✨ ここを Column に変更しました！
                         mainAxisSize: MainAxisSize.min, // 余分なスペースを取らないように設定
-                        crossAxisAlignment: CrossAxisAlignment.stretch, // 子ウィジェットを横幅いっぱいに広げる
+                        crossAxisAlignment:
+                            CrossAxisAlignment.stretch, // 子ウィジェットを横幅いっぱいに広げる
                         children: [
                           // 1. OKボタン (SizedBoxで幅と高さを指定)
                           SizedBox(
