@@ -6,12 +6,12 @@ import 'package:saving_girlfriend/app/screens/home_screen.dart';
 import 'package:saving_girlfriend/common/utils/dialog_utils.dart';
 import 'package:saving_girlfriend/features/select_girlfriend/screen/select_girlfriend_screen.dart';
 import 'package:saving_girlfriend/features/settings/providers/setting_provider.dart';
+import 'package:saving_girlfriend/features/settings/screens/settings_screen.dart';
 import 'package:saving_girlfriend/features/story/screens/select_story_screen.dart';
 import 'package:saving_girlfriend/features/story/screens/story_screen.dart';
 import 'package:saving_girlfriend/features/title/screens/title_screen.dart';
 import 'package:saving_girlfriend/features/transaction/screens/chat_screen.dart';
 import 'package:saving_girlfriend/features/transaction/screens/transaction_history_screen.dart';
-import 'package:saving_girlfriend/screen/settings_screen.dart';
 
 // 各ブランチのナビゲーションスタックを管理するためのGlobalKey
 final rootNavigatorKey = GlobalKey<NavigatorState>();
