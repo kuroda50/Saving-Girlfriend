@@ -6,7 +6,7 @@ part of 'reward_point_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$rewardPointHash() => r'e09f885319f5f2df1f96242cb34b95c1516267ce';
+String _$rewardPointHash() => r'bfecf731a77be3677b944aa7ccccca55e638daaf';
 
 /// See also [RewardPoint].
 @ProviderFor(RewardPoint)

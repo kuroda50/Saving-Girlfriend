@@ -3,85 +3,128 @@ import 'dart:math';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:saving_girlfriend/app/providers/reward_point_provider.dart';
-import 'package:saving_girlfriend/common/services/local_storage_service.dart';
-import 'package:saving_girlfriend/features/mission/date/all_missions.dart';
+import 'package:saving_girlfriend/common/models/message.dart';
+import 'package:saving_girlfriend/common/services/local_storage_service.dart'; // ★ 1. 修正
+import 'package:saving_girlfriend/features/mission/data/all_missions.dart';
 import 'package:saving_girlfriend/features/mission/models/mission.dart'
     as mission_model;
-import 'package:shared_preferences/shared_preferences.dart';
+// ★ 2. `MissionProgress` の定義ファイルをインポート
+import 'package:saving_girlfriend/features/mission/models/mission_progress.dart';
+import 'package:saving_girlfriend/features/transaction/providers/chat_history_provider.dart';
+import 'package:saving_girlfriend/features/transaction/providers/transaction_history_provider.dart';
+// ★ 3. 'shared_preferences' の import を削除
+// import 'package:shared_preferences/shared_preferences.dart';
 
 part 'mission_provider.g.dart'; // riverpod_generator を使うため
 
-// ミッションの進捗状況
-class MissionProgress {
-  MissionProgress({
-    required this.mission,
-    this.currentProgress = 0,
-    this.isClaimed = false, // ★ 1. isClaimed を追加
-  });
-
-  final mission_model.Mission mission;
-  int currentProgress;
-  bool isClaimed; // ★ 1. isClaimed を追加
-
-  bool get isCompleted => currentProgress >= mission.goal;
-
-  // JSONシリアライズ/デシリアライズ（shared_preferences用）
-  Map<String, dynamic> toJson() => {
-        'id': mission.id,
-        'progress': currentProgress,
-        'isClaimed': isClaimed, // ★ 1. isClaimed を追加
-      };
-
-  factory MissionProgress.fromJson(Map<String, dynamic> json) {
-    final mission = allMissions.firstWhere((m) => m.id == json['id'],
-        orElse: () => allMissions.first);
-
-    return MissionProgress(
-      mission: mission,
-      currentProgress: json['progress'] as int,
-      // ★ 1. isClaimed を読み込む (存在しない場合は false)
-      isClaimed: json['isClaimed'] as bool? ?? false,
-    );
-  }
-}
+// (MissionProgress クラスの定義はここから削除されている)
 
 // 状態管理を AsyncNotifier に変更
-@Riverpod(keepAlive: true) // ★ keepAlive: true に戻す
+@Riverpod(keepAlive: true) // ★ keepAlive: true に修正
 class MissionNotifier extends _$MissionNotifier {
-  late SharedPreferences _prefs;
-  static const _prefsKey = 'mission_state';
-  static const _lastUpdatedKey = 'mission_last_updated';
-
-  // ★ 1. ウィークリー用の保存キーを追加
-  static const _lastWeeklyUpdatedKey = 'mission_last_weekly_updated';
+  // ★ 4. `_prefs` を `_localStorageService` に変更
+  late LocalStorageService _localStorageService;
+  // (キーの定義は LocalStorageService に移動)
 
   @override
   Future<List<MissionProgress>> build() async {
-    _prefs = await ref.watch(sharedPreferencesProvider.future);
+    // ★ 5. `localStorageServiceProvider` を watch するように変更
+    _localStorageService = await ref.watch(localStorageServiceProvider.future);
 
+    // --- 監視ロジック 1: (チャット画面からの入力) ---
+    ref.listen(chatHistoryNotifierProvider, (previousState, nextState) {
+      if (previousState?.value == null || nextState.value == null) return;
+      final prevList = previousState!.value!;
+      final nextList = nextState.value!;
+
+      if (nextList.length > prevList.length) {
+        final lastMessage = nextList.last;
+        if (lastMessage.type == MessageType.expense ||
+            lastMessage.type == MessageType.income) {
+          print('MissionNotifier (from Chat) が家計簿入力を検知！');
+          updateProgress(mission_model.MissionCondition.inputTransaction);
+        }
+      }
+    });
+
+    // --- 監視ロジック 2: (履歴画面からの入力) ---
+    ref.listen(transactionsProvider, (previousState, nextState) {
+      if (previousState?.value == null || nextState.value == null) return;
+      final prevList = previousState!.value!;
+      final nextList = nextState.value!;
+      if (nextList.length > prevList.length) {
+        print('MissionNotifier (from History) が家計簿入力を検知！');
+        updateProgress(mission_model.MissionCondition.inputTransaction);
+      }
+    });
+
+    // --- 初期データの読み込み ---
     List<MissionProgress> initialState = [];
-    final savedData = _prefs.getString(_prefsKey);
+    // ★ 6. `_localStorageService.loadMissions` に変更
+    final savedData = await _localStorageService.loadMissions();
     if (savedData != null) {
       try {
         final List<dynamic> jsonList = jsonDecode(savedData);
-        initialState =
-            jsonList.map((json) => MissionProgress.fromJson(json)).toList();
+        initialState = jsonList
+            .map((json) =>
+                MissionProgress.fromJson(Map<String, dynamic>.from(json)))
+            .toList();
       } catch (e) {
         print('Failed to load mission state: $e');
         initialState = [];
-        await _prefs.remove(_prefsKey);
+        // ★ 7. `_localStorageService.removeMissions` に変更
+        await _localStorageService.removeMissions();
       }
     }
 
+    // ★ リファクタリングされた関数を呼び出す
     final updatedState = await _updateMissionsIfNeeded(initialState);
     return updatedState;
   }
 
+  // ★★★ リファクタリング 1: メインの関数 ★★★
   Future<List<MissionProgress>> _updateMissionsIfNeeded(
       List<MissionProgress> currentState) async {
-    final lastUpdatedString = _prefs.getString(_lastUpdatedKey);
     final now = DateTime.now();
+    List<MissionProgress> newState = List.from(currentState);
+    bool missionsChanged = false;
 
+    // --- デイリー更新 ---
+    final (dailyUpdated, dailyState) =
+        await _updateDailyMissions(newState, now);
+    newState = dailyState;
+    if (dailyUpdated) missionsChanged = true;
+
+    // --- ウィークリー更新 ---
+    final (weeklyUpdated, weeklyState) =
+        await _updateWeeklyMissions(newState, now);
+    newState = weeklyState;
+    if (weeklyUpdated) missionsChanged = true;
+
+    // --- ランダム更新 ---
+    final (randomUpdated, randomState) = _updateRandomMissions(newState);
+    newState = randomState;
+    if (randomUpdated) missionsChanged = true;
+
+    // --- メイン更新 ---
+    final (mainUpdated, mainState) = _updateMainMissions(newState);
+    newState = mainState;
+    if (mainUpdated) missionsChanged = true;
+
+    // --- 変更があれば保存 ---
+    if (missionsChanged) {
+      await _saveState(newState);
+    }
+
+    return newState;
+  }
+
+  // ★★★ リファクタリング 2: デイリーミッション関数 ★★★
+  Future<(bool, List<MissionProgress>)> _updateDailyMissions(
+      List<MissionProgress> currentState, DateTime now) async {
+    // ★ 8. `_localStorageService.loadMissionLastUpdated` に変更
+    final lastUpdatedString =
+        await _localStorageService.loadMissionLastUpdated('daily');
     bool needsDailyUpdate = true;
     if (lastUpdatedString != null) {
       final lastUpdated = DateTime.parse(lastUpdatedString);
@@ -92,8 +135,36 @@ class MissionNotifier extends _$MissionNotifier {
       }
     }
 
-    // --- ★ 修正箇所 2: ウィークリー更新の判定を追加 ---
-    final lastWeeklyUpdatedString = _prefs.getString(_lastWeeklyUpdatedKey);
+    if (!needsDailyUpdate) return (false, currentState);
+
+    print("デイリーミッションをリセットします");
+    List<MissionProgress> newState = List.from(currentState);
+    final dailyMissions = allMissions
+        .where((m) => m.type == mission_model.MissionType.daily)
+        .toList();
+
+    if (dailyMissions.isNotEmpty) {
+      newState = newState
+          .where((p) => p.mission.type != mission_model.MissionType.daily)
+          .toList();
+      for (final dailyMission in dailyMissions) {
+        newState.add(MissionProgress(mission: dailyMission));
+      }
+      // ★ 9. `_localStorageService.saveMissionLastUpdated` に変更
+      await _localStorageService.saveMissionLastUpdated(
+          'daily', now.toIso8601String());
+      return (true, newState);
+    }
+
+    return (false, currentState);
+  }
+
+  // ★★★ リファクタリング 3: ウィークリーミッション関数 ★★★
+  Future<(bool, List<MissionProgress>)> _updateWeeklyMissions(
+      List<MissionProgress> currentState, DateTime now) async {
+    // ★ 10. `_localStorageService.loadMissionLastUpdated` に変更
+    final lastWeeklyUpdatedString =
+        await _localStorageService.loadMissionLastUpdated('weekly');
     bool needsWeeklyUpdate = true;
     if (lastWeeklyUpdatedString != null) {
       final lastWeeklyUpdated = DateTime.parse(lastWeeklyUpdatedString);
@@ -113,53 +184,31 @@ class MissionNotifier extends _$MissionNotifier {
       }
     }
 
-    bool missionsChanged = false;
+    if (!needsWeeklyUpdate) return (false, currentState);
+
+    print("ウィークリーミッションをリセットします");
     List<MissionProgress> newState = List.from(currentState);
-
-    if (needsDailyUpdate) {
-      // 1. デイリーミッションのリセットと再抽選
-      final dailyMissions = allMissions
-          .where((m) => m.type == mission_model.MissionType.daily)
-          .toList();
-
-      if (dailyMissions.isNotEmpty) {
-        // ★修正点: 既存のデイリーを削除 (リストをコピー)
-        newState = newState
-            .where((p) => p.mission.type != mission_model.MissionType.daily)
-            .toList();
-
-        // ★修正点: allMissions にある「すべて」のデイリーミッションを追加する
-        for (final dailyMission in dailyMissions) {
-          newState.add(MissionProgress(mission: dailyMission));
-        }
-        missionsChanged = true;
-      }
+    newState = newState
+        .where((p) => p.mission.type != mission_model.MissionType.weekly)
+        .toList();
+    final weeklyMissions = allMissions
+        .where((m) => m.type == mission_model.MissionType.weekly)
+        .toList();
+    for (final weeklyMission in weeklyMissions) {
+      newState.add(MissionProgress(mission: weeklyMission));
     }
+    // ★ 11. `_localStorageService.saveMissionLastUpdated` に変更
+    await _localStorageService.saveMissionLastUpdated(
+        'weekly', now.toIso8601String());
+    return (true, newState);
+  }
 
-// --- ★ 修正箇所 3: ウィークリーリセット処理を追加 ---
-    if (needsWeeklyUpdate) {
-      print("ウィークリーミッションをリセットします");
-      // 既存のウィークリーミッションを削除
-      newState = newState
-          .where((p) => p.mission.type != mission_model.MissionType.weekly)
-          .toList();
-
-      // allMissions からすべてのウィークリーミッションを追加
-      final weeklyMissions = allMissions
-          .where((m) => m.type == mission_model.MissionType.weekly)
-          .toList();
-
-      for (final weeklyMission in weeklyMissions) {
-        newState.add(MissionProgress(mission: weeklyMission));
-      }
-
-      // ウィークリー更新日を保存
-      await _prefs.setString(_lastWeeklyUpdatedKey, now.toIso8601String());
-      missionsChanged = true;
-    }
-
-    // ... (ランダムミッションの抽選ロジック - 変更なし)
+  // ★★★ リファクタリング 4: ランダムミッション関数 ★★★
+  (bool, List<MissionProgress>) _updateRandomMissions(
+      List<MissionProgress> currentState) {
     if (Random().nextDouble() < 0.1) {
+      // 10%の確率で抽選
+      List<MissionProgress> newState = List.from(currentState);
       final currentRandomIds = newState
           .where((p) => p.mission.type == mission_model.MissionType.random)
           .map((p) => p.mission.id);
@@ -168,22 +217,27 @@ class MissionNotifier extends _$MissionNotifier {
               m.type == mission_model.MissionType.random &&
               !currentRandomIds.contains(m.id))
           .toList();
-
       if (availableRandom.isNotEmpty) {
         final newRandom =
             availableRandom[Random().nextInt(availableRandom.length)];
         newState.add(MissionProgress(mission: newRandom));
-        missionsChanged = true;
+        print("ランダムミッションを追加しました: ${newRandom.title}");
+        return (true, newState);
       }
     }
+    return (false, currentState);
+  }
 
-// 現在のリストに含まれるメインミッションのIDをすべて取得
+  // ★★★ リファクタリング 5: メインミッション関数 ★★★
+  (bool, List<MissionProgress>) _updateMainMissions(
+      List<MissionProgress> currentState) {
+    bool missionsChanged = false;
+    List<MissionProgress> newState = List.from(currentState);
+
     final currentMainMissionIds = newState
         .where((p) => p.mission.type == mission_model.MissionType.main)
         .map((p) => p.mission.id)
-        .toSet(); // Set にして高速化
-
-    // allMissions から「メイン」ミッションを取得
+        .toSet();
     final allMainMissions = allMissions
         .where((m) => m.type == mission_model.MissionType.main)
         .toList();
@@ -194,23 +248,14 @@ class MissionNotifier extends _$MissionNotifier {
         // 新しく追加されたメインミッションをリストに追加
         // (デイリーと違い、リセットせずに追加するだけ)
         newState.add(MissionProgress(mission: mainMission));
+        print("新しいメインミッションを追加しました: ${mainMission.title}");
         missionsChanged = true;
       }
     }
-    // ↑↑↑ ★メインミッションのロジックここまで★ ↑↑↑
-
-    // --- ★ 修正箇所 4: 保存処理を修正 ---
-    if (missionsChanged) {
-      // デイリー更新日を保存（デイリーが更新された場合のみ）
-      if (needsDailyUpdate) {
-        // ★ if (needsDailyUpdate) を追加
-        await _prefs.setString(_lastUpdatedKey, now.toIso8601String());
-      }
-      await _saveState(newState);
-    }
-
-    return newState;
+    return (missionsChanged, newState);
   }
+
+  // --- 以下のメソッドは変更なし ---
 
   Future<void> updateProgress(mission_model.MissionCondition condition,
       [int amount = 1]) async {
@@ -307,6 +352,7 @@ class MissionNotifier extends _$MissionNotifier {
   Future<void> _saveState(List<MissionProgress> stateToSave) async {
     final List<Map<String, dynamic>> jsonList =
         stateToSave.map((p) => p.toJson()).toList();
-    await _prefs.setString(_prefsKey, jsonEncode(jsonList));
+    // ★ 12. `_localStorageService.saveMissions` に変更
+    await _localStorageService.saveMissions(jsonEncode(jsonList));
   }
 }

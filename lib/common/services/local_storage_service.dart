@@ -12,13 +12,16 @@ import 'package:saving_girlfriend/features/transaction/models/transaction_state.
 import 'package:saving_girlfriend/features/tribute/models/tribute_history_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final sharedPreferencesProvider =
+// ★ 1. `sharedPreferencesProvider` -> `_sharedPreferencesProvider` にリネーム
+final _sharedPreferencesProvider =
     FutureProvider<SharedPreferences>((ref) async {
   return SharedPreferences.getInstance();
 });
+
 final localStorageServiceProvider =
     FutureProvider<LocalStorageService>((ref) async {
-  final sharedPreferences = await ref.watch(sharedPreferencesProvider.future);
+  // ★ 2. `_sharedPreferencesProvider` を watch するように修正
+  final sharedPreferences = await ref.watch(_sharedPreferencesProvider.future);
   return LocalStorageService(sharedPreferences);
 });
 
@@ -39,6 +42,14 @@ class LocalStorageService {
   static const String _budgetHistoryKey = 'budget_history';
   static const String _messagesKey = 'chat_messages';
 
+  // ★★★ 3. ここからミッション用のキーを追加 ★★★
+  static const String _missionStateKey = 'mission_state';
+  static const String _missionDailyUpdatedKey = 'mission_last_updated';
+  static const String _missionWeeklyUpdatedKey = 'mission_last_weekly_updated';
+
+  // ★★★ 1. リワードポイント用のキーを追加 ★★★
+  static const String _rewardPointsKey = 'reward_points';
+
   // --- 保存 (Save) ---
 
   /// 会話履歴を保存する
@@ -54,12 +65,14 @@ class LocalStorageService {
   }
 
   Future<void> saveTransactionHistory(List<TransactionState> history) async {
-    String jsonString = jsonEncode(history);
+    String jsonString = jsonEncode(
+        history.map((tx) => tx.toJson()).toList()); // ★ .toJson() を追加
     await _prefs.setString(_transactionHistoryKey, jsonString);
   }
 
   Future<void> saveTributionHistory(List<TributeState> history) async {
-    String jsonString = jsonEncode(history);
+    String jsonString =
+        jsonEncode(history.map((t) => t.toJson()).toList()); // ★ .toJson() を追加
     await _prefs.setString(_tributionHistoryKey, jsonString);
   }
 
@@ -113,6 +126,26 @@ class LocalStorageService {
     }
   }
 
+  // ★★★ 4. ここからミッション用のセーブメソッドを追加 ★★★
+
+  // --- ミッション進捗のセーブ ---
+  Future<void> saveMissions(String missionsJson) async {
+    await _prefs.setString(_missionStateKey, missionsJson);
+  }
+
+  // --- 更新日のセーブ (キーを動的に指定) ---
+  Future<void> saveMissionLastUpdated(String keyType, String value) async {
+    final key = (keyType == 'daily')
+        ? _missionDailyUpdatedKey
+        : _missionWeeklyUpdatedKey;
+    await _prefs.setString(key, value);
+  }
+
+  // ★★★ 2. リワードポイント用の保存メソッドを追加 ★★★
+  Future<void> saveRewardPoints(int points) async {
+    await _prefs.setInt(_rewardPointsKey, points);
+  }
+
   // --- 読み込み (Load) ---
 
   /// 指定されたキャラクターの0話が再生済みかどうかを返す
@@ -150,11 +183,8 @@ class LocalStorageService {
     if (jsonString != null && jsonString.isNotEmpty) {
       final List<dynamic> decodedList = jsonDecode(jsonString);
       final List<TributeState> result = decodedList
-          .map((item) => TributeState(
-              id: item["id"] as String,
-              character: item["character"] as String,
-              date: item["date"] as DateTime,
-              amount: item["amount"] as int))
+          .map((item) => TributeState.fromJson(
+              Map<String, dynamic>.from(item))) // ★ .fromJson() を使用
           .toList();
       return result;
     }
@@ -176,8 +206,6 @@ class LocalStorageService {
     final int currentDailyBudget = budgetHistory.isNotEmpty
         ? budgetHistory.first.amount // 最新の予算を取得
         : SettingsDefaults.dailyBudget;
-    // final int dailyBudget =
-    //     _prefs.getInt(_budgetHistoryKey) ?? SettingsDefaults.dailyBudget;
 
     return SettingsState(
         targetSavingAmount: targetSavingAmount,
@@ -216,10 +244,36 @@ class LocalStorageService {
     return _prefs.getStringList(key) ?? [];
   }
 
+  // ★★★ 5. ここからミッション用のロード/削除メソッドを追加 ★★★
+
+  // --- ミッション進捗のロード ---
+  Future<String?> loadMissions() async {
+    return _prefs.getString(_missionStateKey);
+  }
+
+  // --- 更新日のロード (キーを動的に指定) ---
+  Future<String?> loadMissionLastUpdated(String keyType) async {
+    final key = (keyType == 'daily')
+        ? _missionDailyUpdatedKey
+        : _missionWeeklyUpdatedKey;
+    return _prefs.getString(key);
+  }
+
+  // ★★★ 3. リワードポイント用の読み込みメソッドを追加 ★★★
+  Future<int> loadRewardPoints() async {
+    // デフォルト値の 0 を返すロジックもここに含める
+    return _prefs.getInt(_rewardPointsKey) ?? 0;
+  }
+
   // --- 消去 (Remove) ---
 
   void clearPlayedReactionIdsForRule(String ruleId) {
     final key = 'played_reaction_ids_rule_$ruleId';
     _prefs.remove(key);
+  }
+
+  // --- ミッション進捗の削除 (エラー時) ---
+  Future<void> removeMissions() async {
+    await _prefs.remove(_missionStateKey);
   }
 }

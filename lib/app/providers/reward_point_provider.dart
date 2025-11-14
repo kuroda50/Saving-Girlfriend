@@ -1,31 +1,36 @@
+// reward_point_provider.dart の修正版
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart'; // ★ 削除
 
 part 'reward_point_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class RewardPoint extends _$RewardPoint {
-  late SharedPreferences _prefs;
-  static const _prefsKey = 'reward_points';
+  // late SharedPreferences _prefs; // ★ 削除
+  // static const _prefsKey = 'reward_points'; // ★ 削除
+
+  // ★ LocalStorageService を保持するように変更
+  late LocalStorageService _localStorageService;
 
   @override
   Future<int> build() async {
-    _prefs = await ref.watch(sharedPreferencesProvider.future);
-    // 起動時にSharedPreferencesから値を読み込む
-    final savedPoints = _prefs.getInt(_prefsKey);
-    if (savedPoints != null) {
-      return savedPoints;
-    }
-    // 初回起動時
-    return 0; // 初期ポイントは0
+    // ★ localStorageServiceProvider を watch するように変更
+    _localStorageService = await ref.watch(localStorageServiceProvider.future);
+
+    // ★ LocalStorageService 経由で読み込む
+    final savedPoints = await _localStorageService.loadRewardPoints();
+    return savedPoints;
   }
 
   // ポイントを加算する
   Future<void> addPoints(int amount) async {
     final currentPoints = state.value ?? 0;
     final newPoints = currentPoints + amount;
-    await _prefs.setInt(_prefsKey, newPoints);
+
+    // ★ LocalStorageService 経由で保存
+    await _localStorageService.saveRewardPoints(newPoints);
     state = AsyncData(newPoints);
   }
 
@@ -34,7 +39,9 @@ class RewardPoint extends _$RewardPoint {
     final currentPoints = state.value ?? 0;
     if (currentPoints >= amount) {
       final newPoints = currentPoints - amount;
-      await _prefs.setInt(_prefsKey, newPoints);
+
+      // ★ LocalStorageService 経由で保存
+      await _localStorageService.saveRewardPoints(newPoints);
       state = AsyncData(newPoints);
       return true; // 成功
     }

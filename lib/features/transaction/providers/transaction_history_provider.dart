@@ -1,9 +1,6 @@
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
-import 'package:saving_girlfriend/features/mission/models/mission.dart'
-    as mission_model;
-import 'package:saving_girlfriend/features/mission/providers/mission_provider.dart';
 // Project imports:
 import 'package:saving_girlfriend/features/transaction/models/transaction_state.dart';
 import 'package:saving_girlfriend/features/transaction/repositories/transaction_history_repository.dart';
@@ -35,16 +32,6 @@ class TransactionsNotifier extends AsyncNotifier<List<TransactionState>> {
     final transactionHistoryRepository =
         await _transactionHistoryRepositoryFuture;
     await transactionHistoryRepository.saveTransactionHistory(newHistory);
-
-    // ↓↓↓ ★ここから追記★ ↓↓↓
-    // 収支入力をしたら、ミッションの進捗を更新する
-    try {
-      ref
-          .read(missionNotifierProvider.notifier)
-          .updateProgress(mission_model.MissionCondition.inputTransaction);
-    } catch (e) {
-      print('ミッション(inputTransaction)の更新に失敗: $e');
-    }
   }
 
   Future<void> updateTransaction(

@@ -6,7 +6,7 @@ part of 'mission_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$missionNotifierHash() => r'a1dbc1b96f3d039a6a503e9ac80393e63d214671';
+String _$missionNotifierHash() => r'de080a67bcfbc4618d7ecff1455719d6eb763683';
 
 /// See also [MissionNotifier].
 @ProviderFor(MissionNotifier)
