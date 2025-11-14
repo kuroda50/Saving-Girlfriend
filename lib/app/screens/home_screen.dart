@@ -4,12 +4,18 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart'; // ★ 画面遷移のために追加
 import 'package:saving_girlfriend/app/providers/likeability_provider.dart';
+// ★ 1. 報酬ポイントプロバイダーをインポート
+import 'package:saving_girlfriend/app/providers/reward_point_provider.dart';
 import 'package:saving_girlfriend/app/providers/spendable_amount_provider.dart';
 import 'package:saving_girlfriend/common/constants/assets.dart';
 import 'package:saving_girlfriend/features/live_stream/data/scenario_data.dart';
 import 'package:saving_girlfriend/features/live_stream/models/comment_model.dart';
 import 'package:saving_girlfriend/features/live_stream/providers/live_stream_provider.dart';
+import 'package:saving_girlfriend/features/mission/models/mission.dart'
+    as mission_model;
+import 'package:saving_girlfriend/features/mission/providers/mission_provider.dart';
 import 'package:saving_girlfriend/features/tribute/widgets/super_chat_modal.dart';
 
 // HomeScreen 本体
@@ -50,6 +56,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     // ★ 最初の息遣いタイマーをスケジュール
     _scheduleNextBreath();
+    // ↓↓↓ ★ 2. ログインミッションの進捗を更新 ★ ↓↓↓
+    // (addPostFrameCallback で、build後の安全なタイミングで呼び出す)
+    // ↓↓↓ ★ 修正: ログインミッションの判定 ★ ↓↓↓
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // ★ 1. async に変更
+      try {
+        // ★ 2. 修正点:
+        // ミッションプロバイダー(AsyncNotifier)の
+        // 読み込みが完了するまで「待つ」
+        await ref.read(missionNotifierProvider.future);
+
+        // ★ 3. 読み込み完了後に、安全に「ログイン」の進捗を更新する
+        ref
+            .read(missionNotifierProvider.notifier)
+            .updateProgress(mission_model.MissionCondition.login);
+      } catch (e) {
+        // (もし provider の future がエラーで失敗した場合など)
+        print('ミッション(login)の更新に失敗: $e');
+      }
+    });
+    // ↑↑↑ ★ 修正ここまで ★ ↑↑↑
   }
 
   @override
@@ -114,6 +141,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           // UI要素をここから配置 (変更なし)
           const _LiveHeader(),
           const _DialogueBubble(),
+          // ↓↓↓ ここにミッションリストを追加 ↓↓↓
+          const _TopRightUiArea(),
           const _CommentsList(),
           const _BottomUiBar(),
           const _BudgetDisplay(),
@@ -285,7 +314,6 @@ class _LiveHeader extends ConsumerWidget {
   }
 }
 
-// 下部のUI (コメント入力欄 + スパチャボタン)
 // 下部のUI (コメント入力欄 + スパチャボタン)
 class _BottomUiBar extends ConsumerWidget {
   const _BottomUiBar();
@@ -778,6 +806,160 @@ class _BudgetDisplay extends ConsumerWidget {
           error: (err, stack) =>
               const Icon(Icons.error_outline, color: Colors.red, size: 20),
         ),
+      ),
+    );
+  }
+}
+
+/// ミッションリストを表示するウィジェット
+// ★★★ 修正: _BudgetDisplay を _TopRightUiArea に変更 ★★★
+// 予算とミッションボタンをまとめて配置するエリア
+// ★★★ 修正: _BudgetDisplay を _TopRightUiArea に変更 ★★★
+// 予算とミッションボタンをまとめて配置するエリア
+class _TopRightUiArea extends ConsumerWidget {
+  const _TopRightUiArea();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 予算を監視
+    final spendableAmountAsync = ref.watch(spendableAmountProvider);
+    // ★ 2. 報酬ポイントを監視
+    final rewardPointsAsync = ref.watch(rewardPointProvider);
+    // ミッションを監視（バッジ表示のため）
+    final missionState = ref.watch(missionNotifierProvider);
+
+    // 受取可能なミッション数を計算 (変更なし)
+    final int claimableCount = missionState.maybeWhen(
+      data: (missions) {
+        return missions.where((p) => p.isCompleted && !p.isClaimed).length;
+      },
+      orElse: () => 0,
+    );
+
+    return Positioned(
+      top: 40,
+      right: 16,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // 1. 既存の予算表示 (変更なし)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: spendableAmountAsync.when(
+              data: (amount) => Row(
+                children: [
+                  const Icon(Icons.wallet_outlined,
+                      color: Colors.yellow, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    '¥$amount',
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              loading: () => const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              ),
+              error: (err, stack) =>
+                  const Icon(Icons.error_outline, color: Colors.red, size: 20),
+            ),
+          ),
+
+          // ★ 3. 報酬ポイント表示を追加 (ここから)
+          const SizedBox(height: 8), // 予算とポイントの間隔
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: rewardPointsAsync.when(
+              data: (points) => Row(
+                children: [
+                  const Icon(Icons.star,
+                      color: Colors.pinkAccent, size: 16), // ★ ポイントのアイコン
+                  const SizedBox(width: 6),
+                  Text(
+                    '$points P', // ★ ポイント
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              loading: () => const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              ),
+              error: (err, stack) =>
+                  const Icon(Icons.error_outline, color: Colors.red, size: 20),
+            ),
+          ),
+          // ★ 3. 報酬ポイント表示 (ここまで)
+
+          const SizedBox(height: 12), // ポイントとボタンの間隔
+
+          // 2. ミッションボタン (変更なし)
+          GestureDetector(
+            onTap: () {
+              GoRouter.of(context).push('/missions');
+            },
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.task_alt,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                if (claimableCount > 0)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$claimableCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,22 +1,22 @@
 // select_girlfriend_screen.dart
 
+import 'dart:math' as math;
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'dart:math' as math;
 import 'package:flutter_svg/flutter_svg.dart';
-
+import 'package:go_router/go_router.dart';
 // Project imports:
 import 'package:saving_girlfriend/common/constants/assets.dart';
 import 'package:saving_girlfriend/common/constants/characters.dart';
 import 'package:saving_girlfriend/common/constants/color.dart';
 import 'package:saving_girlfriend/common/providers/current_girlfriend_provider.dart';
 import 'package:saving_girlfriend/common/services/local_storage_service.dart';
-import 'package:saving_girlfriend/features/story/services/notification_service.dart';
 // 切り出したウィジェットのインポート
 import 'package:saving_girlfriend/features/select_girlfriend/widgets/girlfriend_card.dart';
+import 'package:saving_girlfriend/features/story/services/notification_service.dart';
 
 class SelectGirlfriendScreen extends ConsumerStatefulWidget {
   const SelectGirlfriendScreen({super.key});
@@ -78,7 +78,7 @@ class _SelectGirlfriendScreenState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Text(
+                const Text(
                   '💖 Coming Soon 💖',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -173,7 +173,7 @@ class _SelectGirlfriendScreenState
                 Text(
                   '${selectedCharacter.name} を運命の彼女に決定しますか？',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     color: AppColors.primary,

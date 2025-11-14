@@ -2,11 +2,10 @@
 
 // Flutter imports:
 import 'package:flutter/material.dart';
-
+import 'package:saving_girlfriend/common/constants/color.dart';
 // Project imports:
 // Characterクラスが定義されているファイルをインポート
 import 'package:saving_girlfriend/common/models/character.dart'; // AppColorsが定義されているファイルをインポート
-import 'package:saving_girlfriend/common/constants/color.dart';
 
 class CharacterCard extends StatelessWidget {
   // 表示するキャラクターデータ

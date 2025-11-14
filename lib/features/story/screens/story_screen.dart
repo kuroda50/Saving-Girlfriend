@@ -32,10 +32,6 @@ class StoryScreen extends ConsumerWidget {
 
     return characterIdAsync.when(
       data: (characterId) {
-        if (characterId == null) {
-          // ★修正: const を削除
-          return const StoryErrorScreen('キャラクターが選択されていません');
-        }
         final storyRepo = ref.read(storyRepositoryProvider);
         final story = storyRepo.getStoryByCharacterId(characterId);
         final character = storyRepo.getCharacterById(characterId);

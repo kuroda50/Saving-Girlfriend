@@ -24,4 +24,24 @@ class TributeState {
       amount: amount ?? this.amount,
     );
   }
+
+  // ★★★★★ ここから追加 ★★★★★
+  factory TributeState.fromJson(Map<String, dynamic> json) {
+    return TributeState(
+      id: json['id'] as String,
+      character: json['character'] as String,
+      date: DateTime.parse(json['date'] as String),
+      amount: json['amount'] as int,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'character': character,
+      'date': date.toIso8601String(),
+      'amount': amount,
+    };
+  }
+  // ★★★★★ ここまで追加 ★★★★★
 }

@@ -10,6 +10,10 @@ import 'package:saving_girlfriend/features/live_stream/data/scenario_data.dart';
 // Project imports:
 import 'package:saving_girlfriend/features/live_stream/models/comment_model.dart';
 
+import 'package:saving_girlfriend/features/mission/models/mission.dart'
+    as mission_model;
+import 'package:saving_girlfriend/features/mission/providers/mission_provider.dart';
+
 // ★★★ ScenarioEventType と ScenarioEvent は scenario_data.dart に移動 ★★★
 
 // 画面の状態を定義するクラス
@@ -66,6 +70,22 @@ class LiveStreamNotifier extends Notifier<LiveStreamState> {
     );
     _addComment(newSuperChat);
     _showPredefinedResponse(comment);
+
+    // スパチャをしたら、ミッションの進捗を更新する
+    try {
+      // ★ 修正点: 2回呼び出すように変更
+
+      // 1. 「回数」ミッションの進捗を更新 (amount はデフォルトの 1)
+      ref
+          .read(missionNotifierProvider.notifier)
+          .updateProgress(mission_model.MissionCondition.sendTribute);
+
+      // 2. 「金額」ミッションの進捗を更新 (amount にスパチャ額を渡す)
+      ref.read(missionNotifierProvider.notifier).updateProgress(
+          mission_model.MissionCondition.sendTributeAmount, amount);
+    } catch (e) {
+      print('ミッション(sendTribute or sendTributeAmount)の更新に失敗: $e');
+    }
   }
 
   // ★★★ _showPredefinedResponseメソッド（変更なし） ★★★

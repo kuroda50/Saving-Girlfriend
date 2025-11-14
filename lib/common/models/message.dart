@@ -1,6 +1,8 @@
 enum MessageType {
   girlfriend,
   user,
+  expense,
+  income,
 }
 
 class Message {
