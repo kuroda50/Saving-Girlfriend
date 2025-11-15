@@ -30,12 +30,10 @@ class GirlfriendChatScreen extends ConsumerStatefulWidget {
 
 class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
   // [修正] enum のすべての値をリストとして取得します
-  final List<TransactionCategoryType> _categories =
-      TransactionCategoryType.values;
+  final List<TransactionCategory> _categories = TransactionCategory.values;
 
   // [修正] enum の最初の値をデフォルトとして設定します ( .food など)
-  TransactionCategoryType _selectedCategory =
-      TransactionCategoryType.values.first;
+  TransactionCategory _selectedCategory = TransactionCategory.values.first;
   String _amountText = '';
   bool _isGirlfriendResponding = false; // 彼女が返信中かどうかを示す状態
   int oneYenCount = 0;
@@ -77,7 +75,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
   }
 
   Future<void> _girlfriendRespond(
-      TransactionCategoryType cat, int amt, int todaySpent) async {
+      TransactionCategory cat, int amt, int todaySpent) async {
     ref.read(chatHistoryNotifierProvider.notifier).addMessage(Message(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: MessageType.girlfriend,
@@ -145,7 +143,7 @@ class GirlfriendChatScreenState extends ConsumerState<GirlfriendChatScreen> {
     }
     final amt = int.tryParse(_amountText);
     if (amt == null || amt <= 0) return;
-    final TransactionCategoryType category = _selectedCategory;
+    final TransactionCategory category = _selectedCategory;
 
     // [修正] category.name ('food') ではなく category.displayName ('食費') を使う
     _addMessage(

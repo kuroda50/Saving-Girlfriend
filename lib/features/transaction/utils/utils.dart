@@ -6,7 +6,7 @@ import 'package:saving_girlfriend/features/transaction/models/transaction_type.d
 
 // [修正] 関数の引数を String から enum に変更
 String getGirlfriendComment(
-    TransactionCategoryType category, int amount, TransactionType type) {
+    TransactionCategory category, int amount, TransactionType type) {
   final random = math.Random(category.hashCode + amount);
 
   // [修正] "income" (String) との比較を enum との比較に変更
@@ -21,7 +21,7 @@ String getGirlfriendComment(
 
   // [修正] String.contains() のロジックを switch(category) に変更
   switch (category) {
-    case TransactionCategoryType.food:
+    case TransactionCategory.food:
       // 「食費」「コンビニ」「カフェ」のロジックを food に統合
       if (amount > 3000) {
         return "ちょっと贅沢しすぎじゃない？たまにはいいけどね🍽️";
@@ -43,13 +43,13 @@ String getGirlfriendComment(
       ];
       return foodComments[random.nextInt(foodComments.length)];
 
-    case TransactionCategoryType.transport:
+    case TransactionCategory.transport:
       if (amount > 5000) {
         return "タクシー使ったの？終電逃したなら仕方ないけど...次は気をつけてね！🚕";
       }
       return "交通費かぁ。仕方ないよね、お疲れ様！";
 
-    case TransactionCategoryType.entertainment:
+    case TransactionCategory.entertainment:
       // 「娯楽」「書籍」のロジックを entertainment に統合
       final bookComments = [
         "勉強熱心なところ好き♡ でも図書館も活用してね～📚",
@@ -64,9 +64,12 @@ String getGirlfriendComment(
           random.nextInt(entertainmentComments.length)];
 
     // social, daily, other はデフォルトのコメントを使用
-    case TransactionCategoryType.social:
-    case TransactionCategoryType.daily:
-    case TransactionCategoryType.other:
+    case TransactionCategory.social:
+    case TransactionCategory.salary:
+    case TransactionCategory.sideJob:
+    case TransactionCategory.extraIncome:
+    case TransactionCategory.daily:
+    case TransactionCategory.other:
       break; // デフォルトのコメント処理に進む
   }
 
